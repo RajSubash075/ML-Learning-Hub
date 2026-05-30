@@ -267,6 +267,8 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
   <div class="nav-item nav-item-chapter" onclick="toggleChapter('timeseries')"><span class="icon">📚</span> Time Series Analysis<span class="chapter-arrow" id="arrow-timeseries">▾</span></div>
   <div class="nav-chapter-items" id="chapter-timeseries">
     <div class="nav-item nav-item-sub" onclick="nav('ts1')" id="nav-ts1"><span class="icon">📈</span> L1: Introduction to Time Series<span class="check" id="check-ts1"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('ts2')" id="nav-ts2"><span class="icon">🧹</span> L2: Preprocessing for Time Series<span class="check" id="check-ts2"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('ts3')" id="nav-ts3"><span class="icon">🔬</span> L3: Preprocessing Practical<span class="check" id="check-ts3"></span></div>
   </div>
 
   <div class="sidebar-section" style="margin-top:10px">Practice</div>
@@ -1293,6 +1295,8 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
           <div class="topic-chip" id="chip-ts1" onclick="toggleChip('ts1')">L1: Intro to Time Series</div>
+          <div class="topic-chip" id="chip-ts2" onclick="toggleChip('ts2')">L2: Preprocessing for Time Series</div>
+          <div class="topic-chip" id="chip-ts3" onclick="toggleChip('ts3')">L3: Preprocessing Practical</div>
         </div>
     </div>
     <div class="card" style="max-width:400px">
@@ -1407,6 +1411,8 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         <div class="topic-chip" id="fc-chip-ts1" onclick="fcFilter('ts1')">L1: Intro to Time Series</div>
+        <div class="topic-chip" id="fc-chip-ts2" onclick="fcFilter('ts2')">L2: Preprocessing for Time Series</div>
+        <div class="topic-chip" id="fc-chip-ts3" onclick="fcFilter('ts3')">L3: Preprocessing Practical</div>
       </div>
     </div>
   </div>
@@ -6806,6 +6812,499 @@ print(test_stationarity(alcohol_consumption.TotalWine))</pre></div>
   </div>
 </div>
 
+<!-- TS3: PREPROCESSING PRACTICAL -->
+<div class="page" id="page-ts3">
+  <div class="page-header">
+    <div class="chapter-badge">Time Series Analysis</div>
+    <h1>L3: Preprocessing Practical</h1>
+    <p class="subtitle">Worked exercises — custom date parsing, differencing, ACF/PACF, stationarity testing, resampling, and moving windows on real datasets.</p>
+  </div>
+
+  <div class="card">
+    <h2>Datasets Used</h2>
+    <table class="styled-table">
+      <thead><tr><th>Dataset</th><th>Description</th><th>Key feature</th></tr></thead>
+      <tbody>
+        <tr><td><strong>NZAlcoholConsumption.csv</strong></td><td>NZ quarterly alcohol consumption 2000–2012</td><td>Non-standard date format <code>YYYYQN</code> (e.g. <code>2009Q3</code>)</td></tr>
+        <tr><td><strong>bikes.csv</strong></td><td>Daily bike rentals with weather features</td><td>Standard date column — auto-parsed by pandas</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Part 1 — Custom Date Parser</h2>
+    <p>The alcohol dataset stores dates as <code>2009Q3</code> — a format pandas cannot parse automatically. We need a custom function that converts each string into a proper <code>pd.Timestamp</code>.</p>
+
+    <h3 style="margin-bottom:8px">Step 1: Extract year and quarter with regex</h3>
+    <div class="code-block"><pre><span class="kw">import</span> re
+
+<span class="cm"># re.search finds the pattern, .group(1, 2) extracts the two capture groups</span>
+year, qn = re.search(r<span class="str">"^(20[0-9][0-9])(Q[1-4])$"</span>, <span class="str">"2004Q3"</span>).group(<span class="num">1</span>, <span class="num">2</span>)
+<span class="cm"># year = "2004", qn = "Q3"  (both are strings at this point)</span></pre></div>
+    <div class="key-concept">
+      <div class="label">What the regex does</div>
+      <p><code>^</code> anchors to start, <code>(20[0-9][0-9])</code> captures a 4-digit year starting with 20, <code>(Q[1-4])</code> captures Q1–Q4, <code>$</code> anchors to end. The parentheses define the two capture groups that <code>.group(1, 2)</code> returns.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Step 2: Build the full parser function</h3>
+    <div class="code-block"><pre><span class="kw">import</span> re
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="kw">def</span> parse_quarter(string):
+    year, qn = re.search(r<span class="str">"^(20[0-9][0-9])(Q[1-4])$"</span>, string).group(<span class="num">1</span>, <span class="num">2</span>)
+    year = int(year)   <span class="cm"># regex returns strings — pd.Timestamp needs integers</span>
+
+    <span class="kw">if</span>   qn == <span class="str">"Q1"</span>: <span class="kw">return</span> pd.Timestamp(year, <span class="num">3</span>, <span class="num">31</span>)   <span class="cm"># end of March</span>
+    <span class="kw">elif</span> qn == <span class="str">"Q2"</span>: <span class="kw">return</span> pd.Timestamp(year, <span class="num">6</span>, <span class="num">30</span>)   <span class="cm"># end of June</span>
+    <span class="kw">elif</span> qn == <span class="str">"Q3"</span>: <span class="kw">return</span> pd.Timestamp(year, <span class="num">9</span>, <span class="num">30</span>)   <span class="cm"># end of September</span>
+    <span class="kw">else</span>:            <span class="kw">return</span> pd.Timestamp(year, <span class="num">12</span>, <span class="num">31</span>)  <span class="cm"># end of December</span>
+
+<span class="cm"># Test it</span>
+print(parse_quarter(<span class="str">"2000Q3"</span>))  <span class="cm"># → 2000-09-30</span></pre></div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Step 3: Load with the parser</h3>
+    <div class="code-block"><pre>alcohol_consumption = pd.read_csv(
+    <span class="str">"data/NZAlcoholConsumption.csv"</span>,
+    parse_dates=[<span class="str">"DATE"</span>],       <span class="cm"># tell pandas which column to parse as dates</span>
+    date_parser=parse_quarter,   <span class="cm"># use our custom function instead of the default</span>
+    index_col=<span class="str">"DATE"</span>,           <span class="cm"># make DATE the row index</span>
+)
+alcohol_consumption.sort_index(inplace=<span class="kw">True</span>)  <span class="cm"># ensure chronological order</span>
+alcohol_consumption.head()</pre></div>
+    <div class="key-concept">
+      <div class="label">Why bracket vs dot notation?</div>
+      <p><code>df['TotalWine']</code> and <code>df.TotalWine</code> return identical results. Prefer bracket notation — it works for column names with spaces, and avoids shadowing pandas methods (e.g. a column called <code>count</code> would break dot notation).</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Part 2 — Differencing</h2>
+    <p>Differencing subtracts the value from <em>l</em> steps ago at every point: <strong>y'<sub>t</sub> = y<sub>t</sub> − y<sub>t−l</sub></strong>. This removes trend (lag 1) or seasonality (lag = season length).</p>
+
+    <h3 style="margin-bottom:8px">Exercise: diff with lag 1</h3>
+    <div class="code-block"><pre><span class="cm"># These two lines are identical — bracket vs dot notation</span>
+diff_series = alcohol_consumption[<span class="str">'TotalWine'</span>].diff(<span class="num">1</span>)
+diff_series = alcohol_consumption.TotalWine.diff(<span class="num">1</span>)
+
+<span class="cm"># Plot both to compare</span>
+plt.figure(figsize=(<span class="num">8</span>, <span class="num">6</span>))
+plt.plot(alcohol_consumption.TotalWine, <span class="str">"-o"</span>, label=<span class="str">"original ts"</span>)
+plt.plot(diff_series, <span class="str">"-o"</span>, label=<span class="str">"differenced ts (lag=1)"</span>)
+plt.legend(fontsize=<span class="num">12</span>)</pre></div>
+
+    <div class="key-concept">
+      <div class="label">What to observe in the plot</div>
+      <p><strong>Trend is gone</strong> — the original series drifts upward from ~1.5 to ~3.5; the differenced series oscillates around zero throughout.<br><br>
+      <strong>Scale changes</strong> — original values are absolute units; differenced values are quarter-to-quarter changes (~−1.5 to +1.3).<br><br>
+      <strong>Seasonality is still there</strong> — both series show the same regular zigzag every ~4 quarters. <code>diff(1)</code> only removes trend. To remove quarterly seasonality you need <code>diff(4)</code>.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Interactive differencing with ipywidgets</h3>
+    <div class="code-block"><pre><span class="kw">from</span> ipywidgets <span class="kw">import</span> interact
+
+<span class="kw">def</span> differencing_plot(d):
+    differenced_ts = alcohol_consumption.TotalWine.diff(d)
+    plt.plot(differenced_ts, <span class="str">"-o"</span>)
+    plt.show()
+
+<span class="cm"># Creates a slider for d from 1 to 10</span>
+interact(differencing_plot, d=(<span class="num">1</span>, <span class="num">10</span>))</pre></div>
+    <p>The <code>interact</code> function from <code>ipywidgets</code> automatically creates a slider for any numeric parameter. Dragging it re-runs <code>differencing_plot</code> with the new value — a quick way to explore which lag removes the seasonal pattern.</p>
+  </div>
+
+  <div class="card">
+    <h2>Part 3 — ACF and PACF</h2>
+    <p>Before deciding which lag to difference by, plot the ACF and PACF to see the autocorrelation structure of the series.</p>
+    <div class="code-block"><pre><span class="kw">from</span> statsmodels.graphics.tsaplots <span class="kw">import</span> plot_acf, plot_pacf
+
+plot_acf(alcohol_consumption.TotalWine, lags=<span class="num">15</span>)
+plot_pacf(alcohol_consumption.TotalWine, lags=<span class="num">15</span>)</pre></div>
+
+    <div class="key-concept">
+      <div class="label">What the plots tell us</div>
+      <p><strong>ACF</strong> shows large spikes at lags 4, 8, 12 — values 4 quarters apart are highly similar. This is quarterly seasonality.<br><br>
+      <strong>PACF</strong> shows a spike only at lag 4, with lags 8 and 12 falling inside the significance band. This confirms lags 8 and 12 are <em>indirect</em> effects — they are only high because lag 4 is high. The <strong>direct</strong> seasonal dependency is exactly 4 quarters.<br><br>
+      <strong>Conclusion:</strong> use <code>diff(4)</code> to remove the seasonality.</p>
+    </div>
+    <table class="styled-table">
+      <thead><tr><th>ACF pattern</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Spikes at 4, 8, 12 …</td><td>Quarterly seasonality — use <code>diff(4)</code></td></tr>
+        <tr><td>Spikes at 7, 14, 21 …</td><td>Weekly seasonality — use <code>diff(7)</code></td></tr>
+        <tr><td>All lags slowly declining</td><td>Trend present — use <code>diff(1)</code></td></tr>
+        <tr><td>All lags near zero</td><td>Series is already stationary</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Part 4 — Testing for Stationarity</h2>
+    <p>After differencing, run the Augmented Dickey-Fuller test to confirm the series is now stationary.</p>
+    <div class="code-block"><pre><span class="kw">from</span> statsmodels.tsa.stattools <span class="kw">import</span> adfuller
+
+<span class="kw">def</span> testStationarity(x, alpha=<span class="num">0.05</span>):
+    results = adfuller(x)
+    pvalue = results[<span class="num">1</span>]          <span class="cm"># index 1 of the returned tuple is the p-value</span>
+    <span class="kw">if</span> pvalue &lt; alpha:
+        <span class="kw">return</span> <span class="str">"Reject the null: the time series is stationary"</span>
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="str">"Accept the null: the time series is non-stationary"</span>
+
+<span class="cm"># Test the seasonally differenced series — must drop NaN first</span>
+testStationarity(alcohol_consumption.TotalWine.diff(<span class="num">4</span>).dropna())</pre></div>
+
+    <div class="key-concept">
+      <div class="label">How the function works step by step</div>
+      <p>
+      1. <code>alcohol_consumption.TotalWine.diff(4)</code> — subtracts the value from 4 quarters ago at every row<br>
+      2. <code>.dropna()</code> — removes the first 4 NaN rows created by <code>diff(4)</code>; <code>adfuller</code> cannot handle NaNs<br>
+      3. The result is passed in as <code>x</code><br>
+      4. <code>adfuller(x)</code> runs the test; <code>results[1]</code> extracts the p-value<br>
+      5. <code>p &lt; 0.05</code> → reject H₀ (non-stationary) → series IS stationary ✓
+      </p>
+    </div>
+    <div class="alert alert-warn">⚠️ The ADF null hypothesis is that the series is <em>non-stationary</em>. So a small p-value (rejecting the null) is the <em>good</em> outcome — it means your differencing worked.</div>
+
+    <h3 style="margin-top:16px; margin-bottom:8px">Without the wrapper function</h3>
+    <div class="code-block"><pre><span class="cm"># Equivalent — no helper function needed</span>
+pvalue = adfuller(alcohol_consumption.TotalWine.diff(<span class="num">4</span>).dropna())[<span class="num">1</span>]
+print(pvalue)  <span class="cm"># &lt; 0.05 means stationary</span></pre></div>
+  </div>
+
+  <div class="card">
+    <h2>Part 5 — Resampling (bikes dataset)</h2>
+    <div class="code-block"><pre>bikes = pd.read_csv(<span class="str">"data/bikes.csv"</span>, parse_dates=[<span class="str">"date"</span>], index_col=<span class="str">"date"</span>)
+
+<span class="cm"># Downsample: monthly mean temperature</span>
+bikes_monthly = bikes.resample(<span class="str">"M"</span>).mean()
+plt.plot(bikes_monthly.temperature, <span class="str">"-o"</span>)
+
+<span class="cm"># Downsample: weekly mean humidity</span>
+bikes_weeks = bikes.resample(<span class="str">"W"</span>).mean()
+plt.plot(bikes_weeks.humidity, <span class="str">"-o"</span>)
+
+<span class="cm"># Upsample: every 6 hours (0.25 of a day), forward-fill gaps</span>
+bikes_6h = bikes.resample(<span class="str">"0.25D"</span>).ffill()
+plt.plot(bikes_6h.humidity, <span class="str">"-o"</span>)</pre></div>
+
+    <div class="key-concept">
+      <div class="label">Weekly vs monthly — what changes?</div>
+      <p>Monthly averages smooth more aggressively — the seasonal humidity pattern is still visible but the short-term noise is removed. Weekly averages preserve more short-term variation. The key observation: <strong>the more you downsample, the smoother the signal but the less detail you retain.</strong></p>
+    </div>
+    <div class="alert alert-warn">⚠️ Upsampling bike rental <em>counts</em> with <code>ffill</code> implies the same number of bikes rented every 6 hours — not realistic. For temperature or humidity, <code>ffill</code> or linear interpolation is more defensible. Always apply domain knowledge when choosing the fill method.</div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Yearly downsample (alcohol dataset)</h3>
+    <div class="code-block"><pre><span class="cm"># 12M = 12-month (yearly) average</span>
+alc_yearly = alcohol_consumption.resample(<span class="str">"12M"</span>).mean()
+
+plt.plot(alc_yearly.TotalWine, <span class="str">"-o"</span>, label=<span class="str">"Wine"</span>)
+plt.plot(alc_yearly.TotalBeer, <span class="str">"-o"</span>, label=<span class="str">"Beer"</span>)
+plt.legend(fontsize=<span class="num">12</span>)</pre></div>
+    <p>Yearly averages remove the quarterly seasonality entirely, making the long-term trends visible: wine consumption rises steadily, beer consumption stays flat.</p>
+  </div>
+
+  <div class="card">
+    <h2>Part 6 — Moving Windows</h2>
+    <h3 style="margin-bottom:8px">Rolling mean</h3>
+    <div class="code-block"><pre><span class="cm"># 4-quarter rolling mean — smooths the seasonal zigzag, reveals trend</span>
+rolling_mean = alcohol_consumption.TotalWine.rolling(window=<span class="num">4</span>).mean()
+
+plt.figure(figsize=(<span class="num">8</span>, <span class="num">6</span>))
+plt.plot(alcohol_consumption.TotalWine, <span class="str">"-o"</span>, label=<span class="str">"wine consumption"</span>)
+plt.plot(rolling_mean, label=<span class="str">"trend"</span>)
+plt.legend(fontsize=<span class="num">12</span>)</pre></div>
+    <p>A window of 4 covers one full year of quarters, so averaging across it cancels out the seasonal peaks and troughs — what remains is the underlying trend. The 2008 dip in wine consumption becomes clearly visible once the seasonal noise is removed.</p>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Exponential moving average</h3>
+    <div class="code-block"><pre><span class="cm"># EMA with span=5 — reacts faster than rolling mean of same size</span>
+ema = alcohol_consumption.TotalWine.ewm(span=<span class="num">5</span>, adjust=<span class="kw">False</span>).mean()
+
+plt.plot(alcohol_consumption.TotalWine, <span class="str">"-o"</span>, label=<span class="str">"wine consumption"</span>)
+plt.plot(ema, label=<span class="str">"EMA trend"</span>)
+plt.legend(fontsize=<span class="num">12</span>)</pre></div>
+    <p><code>adjust=False</code> uses a recursive formula that weights the newest point most heavily. The EMA tracks the series more closely than the rolling mean — it reacts to changes sooner because recent points carry more weight.</p>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Rolling sum</h3>
+    <div class="code-block"><pre><span class="cm"># Rolling sum over 4 quarters = annual total at each point</span>
+rolling_sum = alcohol_consumption.TotalWine.rolling(window=<span class="num">4</span>).sum()
+
+plt.plot(alcohol_consumption.TotalWine, <span class="str">"-o"</span>, label=<span class="str">"wine consumption"</span>)
+plt.plot(rolling_sum, label=<span class="str">"rolling sum"</span>)
+plt.legend(fontsize=<span class="num">12</span>)</pre></div>
+    <p>Rolling sum amplifies the scale (sum of 4 quarters ≈ 4× the average) and makes the annual totals visible at every point — useful for spotting cumulative growth.</p>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Custom rolling function with .apply()</h3>
+    <div class="code-block"><pre><span class="cm"># Apply any function to each window using .apply()</span>
+<span class="cm"># raw=False keeps the window as a pandas Series (needed for .autocorr())</span>
+rolling_autocorr = alcohol_consumption.TotalWine.rolling(<span class="num">4</span>).apply(
+    <span class="kw">lambda</span> x: x.autocorr(), raw=<span class="kw">False</span>
+)
+plt.plot(rolling_autocorr)</pre></div>
+    <div class="key-concept">
+      <div class="label">Why .apply() with raw=False?</div>
+      <p><code>.apply(func)</code> passes each window to <code>func</code>. By default (<code>raw=True</code>) the window arrives as a numpy array — fast, but no pandas methods. <code>raw=False</code> passes it as a pandas Series, which has <code>.autocorr()</code>, <code>.skew()</code>, and other methods. Use <code>raw=False</code> whenever your function needs pandas-specific methods.</p>
+    </div>
+
+    <table class="styled-table" style="margin-top:16px">
+      <thead><tr><th>Method</th><th>Code</th><th>Output</th></tr></thead>
+      <tbody>
+        <tr><td>Rolling mean</td><td><code>.rolling(4).mean()</code></td><td>Smoothed trend, NaN first 3 rows</td></tr>
+        <tr><td>Rolling sum</td><td><code>.rolling(4).sum()</code></td><td>Cumulative total per window</td></tr>
+        <tr><td>Rolling std</td><td><code>.rolling(4).std()</code></td><td>Local volatility</td></tr>
+        <tr><td>EMA</td><td><code>.ewm(span=4).mean()</code></td><td>Recency-weighted smooth, no NaN</td></tr>
+        <tr><td>Custom</td><td><code>.rolling(4).apply(func, raw=False)</code></td><td>Any pandas function per window</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-ts3"></div></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('ts3')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('ts2')">← L2: Preprocessing Theory</button>
+  </div>
+</div>
+
+<!-- TS2: PREPROCESSING FOR TIME SERIES -->
+<div class="page" id="page-ts2">
+  <div class="page-header">
+    <div class="chapter-badge">Time Series Analysis</div>
+    <h1>L2: Preprocessing for Time Series</h1>
+    <p class="subtitle">Handling missing data, resampling, smoothing, shifting, and making your series stationary.</p>
+  </div>
+
+  <div class="card">
+    <h2>Why Preprocess Time Series?</h2>
+    <p>Time series data comes with problems that standard ML doesn't face: <strong>gaps from sensor failures</strong>, <strong>irregular sampling</strong>, <strong>noise masking trends</strong>, and <strong>non-stationarity</strong>. Preprocessing turns raw recorded data into a clean, model-ready signal.</p>
+    <table class="styled-table">
+      <thead><tr><th>Problem</th><th>Preprocessing Fix</th></tr></thead>
+      <tbody>
+        <tr><td>Missing observations</td><td>Forward fill, backward fill, or interpolation</td></tr>
+        <tr><td>Wrong frequency (too coarse / too fine)</td><td>Resampling (downsample or upsample)</td></tr>
+        <tr><td>Noisy signal hiding the trend</td><td>Smoothing (moving average, EMA)</td></tr>
+        <tr><td>Need lag features for a model</td><td>Shifting</td></tr>
+        <tr><td>Non-stationary (trend / seasonality)</td><td>Differencing</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Handling Missing Data</h2>
+    <p>Time series often have gaps — a sensor goes offline, a market is closed, or data was never recorded. Unlike tabular ML where you drop rows, here <strong>every timestamp matters</strong>. You must fill the gap to keep the series contiguous.</p>
+    <table class="styled-table">
+      <thead><tr><th>Method</th><th>How it works</th><th>Best for</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Forward fill (ffill)</strong></td><td>Carry the last known value forward</td><td>Status signals (price, category) that don't change until an event</td></tr>
+        <tr><td><strong>Backward fill (bfill)</strong></td><td>Pull the next known value backward</td><td>When future context is available at fill time</td></tr>
+        <tr><td><strong>Linear interpolation</strong></td><td>Draw a straight line between neighbours</td><td>Smoothly changing values (temperature, humidity)</td></tr>
+        <tr><td><strong>Mean / median imputation</strong></td><td>Fill with the column average</td><td>Short random gaps — use sparingly as it flattens variance</td></tr>
+      </tbody>
+    </table>
+    <div class="code-block"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+df = pd.read_csv(<span class="str">'bikes.csv'</span>, parse_dates=[<span class="str">'date'</span>], index_col=<span class="str">'date'</span>)
+
+<span class="cm"># Forward fill — carry last value forward</span>
+df_ffill = df.fillna(method=<span class="str">'ffill'</span>)
+
+<span class="cm"># Backward fill — pull next value backward</span>
+df_bfill = df.fillna(method=<span class="str">'bfill'</span>)
+
+<span class="cm"># Linear interpolation — straight line between neighbours</span>
+df_interp = df.interpolate(method=<span class="str">'linear'</span>)</pre></div>
+    <div class="key-concept">
+      <div class="label">Which method to choose?</div>
+      <p>For stock prices or on/off signals, <strong>ffill</strong> makes sense — nothing changed until the next recorded event. For temperature or sensor readings, <strong>linear interpolation</strong> is more realistic. Avoid mean imputation for long gaps — it destroys the temporal structure.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Resampling</h2>
+    <p>Resampling changes the <strong>frequency</strong> of your time series. There are two directions:</p>
+    <table class="styled-table">
+      <thead><tr><th></th><th>Downsampling</th><th>Upsampling</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Direction</strong></td><td>High → low frequency (e.g. daily → monthly)</td><td>Low → high frequency (e.g. daily → 6-hourly)</td></tr>
+        <tr><td><strong>Operation</strong></td><td>Aggregate many rows into one</td><td>Create new rows between existing ones</td></tr>
+        <tr><td><strong>Method</strong></td><td><code>.resample('M').mean()</code></td><td><code>.resample('6h').ffill()</code></td></tr>
+        <tr><td><strong>Effect</strong></td><td>Reduces noise, smooths signal</td><td>Infers values — only as good as the assumption</td></tr>
+      </tbody>
+    </table>
+    <h3 style="margin-bottom:8px">Downsampling example</h3>
+    <div class="code-block"><pre><span class="cm"># Aggregate daily data to monthly mean</span>
+monthly = df[<span class="str">'count'</span>].resample(<span class="str">'M'</span>).mean()
+
+<span class="cm"># Weekly mean</span>
+weekly = df[<span class="str">'humidity'</span>].resample(<span class="str">'W'</span>).mean()
+
+<span class="cm"># Common offset aliases:</span>
+<span class="cm"># 'D' = day, 'W' = week, 'M' = month end, 'Q' = quarter, 'Y' = year</span></pre></div>
+    <h3 style="margin-bottom:8px">Upsampling example</h3>
+    <div class="code-block"><pre><span class="cm"># Create 6-hourly rows (0.25 days), then forward-fill the gaps</span>
+df_6h = df.resample(<span class="str">'6h'</span>).ffill()
+
+<span class="cm"># Or interpolate linearly instead</span>
+df_6h_interp = df.resample(<span class="str">'6h'</span>).interpolate(method=<span class="str">'linear'</span>)</pre></div>
+    <div class="alert alert-warn">⚠️ Upsampling with <code>ffill</code> on bike rental <em>counts</em> is misleading — it implies the same number of bikes were rented every 6 hours. Use domain knowledge to choose the right interpolation method.</div>
+  </div>
+
+  <div class="card">
+    <h2>Parsing Custom Date Formats</h2>
+    <p>Pandas auto-parses most date strings, but some datasets use non-standard formats (e.g. <strong>2010-Q3</strong> for quarterly data). You must supply a custom parser.</p>
+    <div class="code-block"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="cm"># Custom parser for "year-Q{n}" format, e.g. "2009-Q1"</span>
+<span class="kw">def</span> parse_quarter(s):
+    year, q = s.split(<span class="str">'-Q'</span>)
+    month = (int(q) - <span class="num">1</span>) * <span class="num">3</span> + <span class="num">1</span>   <span class="cm"># Q1→Jan, Q2→Apr, Q3→Jul, Q4→Oct</span>
+    <span class="kw">return</span> pd.Timestamp(year=int(year), month=month, day=<span class="num">1</span>)
+
+df = pd.read_csv(
+    <span class="str">'NZAlcoholConsumption.csv'</span>,
+    index_col=<span class="num">0</span>,
+    date_parser=parse_quarter,
+    parse_dates=<span class="kw">True</span>
+)
+
+<span class="cm"># Each row is now indexed by a proper Timestamp</span>
+<span class="cm"># e.g. 2009-01-01, 2009-04-01, 2009-07-01 …</span></pre></div>
+    <div class="key-concept">
+      <div class="label">Why does this matter?</div>
+      <p>Without a datetime index, pandas treats your date column as a plain string. You lose <code>.resample()</code>, <code>.rolling()</code>, and all time-aware plotting. Getting the index right is the foundation of every other preprocessing step.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Smoothing</h2>
+    <p>Raw time series often have high-frequency noise that masks the underlying trend. Smoothing replaces each point with a weighted average of nearby points, revealing the signal beneath.</p>
+    <h3 style="margin-bottom:8px">Moving Average</h3>
+    <p>A sliding window that averages the last <em>k</em> points. All points in the window have <strong>equal weight</strong>.</p>
+    <div class="code-block"><pre><span class="cm"># 7-day moving average</span>
+df[<span class="str">'count_ma7'</span>] = df[<span class="str">'count'</span>].rolling(window=<span class="num">7</span>).mean()
+
+<span class="cm"># Centre the window (uses points before AND after)</span>
+df[<span class="str">'count_ma7_c'</span>] = df[<span class="str">'count'</span>].rolling(window=<span class="num">7</span>, center=<span class="kw">True</span>).mean()
+
+<span class="cm"># Rolling std, min, max work the same way</span>
+df[<span class="str">'count_std7'</span>] = df[<span class="str">'count'</span>].rolling(window=<span class="num">7</span>).std()</pre></div>
+    <div class="alert alert-warn">⚠️ The first <code>window − 1</code> rows will be <code>NaN</code> because there aren't enough preceding points to fill the window.</div>
+    <h3 style="margin-top:16px; margin-bottom:8px">Exponential Moving Average (EMA)</h3>
+    <p>Weights <strong>decay exponentially</strong> — recent observations matter more than old ones. Controlled by <code>span</code> (higher span = smoother, slower to react) or <code>alpha</code> (weight of the newest point, 0–1).</p>
+    <div class="code-block"><pre><span class="cm"># EMA with span=7 (similar smoothness to a 7-day MA but more weight on recent data)</span>
+df[<span class="str">'count_ema7'</span>] = df[<span class="str">'count'</span>].ewm(span=<span class="num">7</span>).mean()
+
+<span class="cm"># Relationship: alpha ≈ 2 / (span + 1)</span>
+<span class="cm"># span=7 → alpha ≈ 0.25  (25% weight on newest point)</span></pre></div>
+    <table class="styled-table">
+      <thead><tr><th></th><th>Moving Average</th><th>EMA</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Weights</strong></td><td>Equal across window</td><td>Exponentially decaying (newest = most)</td></tr>
+        <tr><td><strong>Lag</strong></td><td>High — reacts slowly</td><td>Lower — reacts faster to changes</td></tr>
+        <tr><td><strong>NaN at start?</strong></td><td>Yes, first window−1 rows</td><td>No — uses all available history</td></tr>
+        <tr><td><strong>Use case</strong></td><td>Noise reduction, trend extraction</td><td>Forecasting where recency matters more</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Shifting</h2>
+    <p>Shifting moves the entire series forward or backward in time by <em>n</em> steps. This is used to create <strong>lag features</strong> (what was the value 1 day ago?) or to align two series that have a known time offset.</p>
+    <div class="code-block"><pre><span class="cm"># Shift forward 1 step — value at row t becomes value at row t+1</span>
+df[<span class="str">'count_lag1'</span>] = df[<span class="str">'count'</span>].shift(<span class="num">1</span>)
+
+<span class="cm"># Shift forward 7 steps — last week's count at each row</span>
+df[<span class="str">'count_lag7'</span>] = df[<span class="str">'count'</span>].shift(<span class="num">7</span>)
+
+<span class="cm"># Negative shift — peek at future values (use only in analysis, never in models)</span>
+df[<span class="str">'count_lead1'</span>] = df[<span class="str">'count'</span>].shift(-<span class="num">1</span>)
+
+<span class="cm"># Shifting creates NaN at the boundary:</span>
+<span class="cm"># shift(1) → first row becomes NaN</span>
+<span class="cm"># shift(-1) → last row becomes NaN</span></pre></div>
+    <div class="key-concept">
+      <div class="label">Creating lag features for models</div>
+      <p>Many time series models (and even standard ML models applied to time series) need lag features — the value from k steps back as an input variable. <code>shift(k)</code> creates these features. Drop the resulting NaN rows before training.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Stationarity and Differencing</h2>
+    <p>Most time series models assume the series is <strong>stationary</strong> — constant mean and variance with no trend or seasonality. If the ADF test shows non-stationarity (<code>p ≥ 0.05</code>), you need to transform the data.</p>
+    <h3 style="margin-bottom:8px">Differencing</h3>
+    <p>The most common fix: subtract the value from the previous step. This removes a linear trend in one pass.</p>
+    <div class="code-block"><pre><span class="cm"># First-order differencing: removes a linear trend</span>
+df[<span class="str">'count_diff1'</span>] = df[<span class="str">'count'</span>].diff(<span class="num">1</span>)
+
+<span class="cm"># Seasonal differencing (lag = season length): removes seasonality</span>
+<span class="cm"># e.g. for weekly seasonality in daily data, lag = 7</span>
+df[<span class="str">'count_diff7'</span>] = df[<span class="str">'count'</span>].diff(<span class="num">7</span>)
+
+<span class="cm"># Second-order differencing: removes a quadratic trend</span>
+df[<span class="str">'count_diff2'</span>] = df[<span class="str">'count'</span>].diff(<span class="num">1</span>).diff(<span class="num">1</span>)
+
+<span class="cm"># Check if it worked — ADF test after differencing</span>
+<span class="kw">from</span> statsmodels.tsa.stattools <span class="kw">import</span> adfuller
+result = adfuller(df[<span class="str">'count_diff1'</span>].dropna())
+<span class="kw">print</span>(<span class="str">f'p-value: {result[1]:.4f}'</span>)  <span class="cm"># want p < 0.05</span></pre></div>
+    <table class="styled-table">
+      <thead><tr><th>Problem</th><th>Differencing lag</th><th>What it removes</th></tr></thead>
+      <tbody>
+        <tr><td>Linear trend</td><td><code>diff(1)</code></td><td>Steady upward / downward drift</td></tr>
+        <tr><td>Weekly seasonality (daily data)</td><td><code>diff(7)</code></td><td>Day-of-week pattern</td></tr>
+        <tr><td>Annual seasonality (monthly data)</td><td><code>diff(12)</code></td><td>Month-of-year pattern</td></tr>
+        <tr><td>Quadratic trend</td><td><code>diff(1).diff(1)</code></td><td>Accelerating growth / decay</td></tr>
+      </tbody>
+    </table>
+    <div class="key-concept">
+      <div class="label">How many times to difference?</div>
+      <p>Start with <code>diff(1)</code> and re-run the ADF test. If still non-stationary, difference again. Most real-world series become stationary after 1–2 rounds. Over-differencing introduces unnecessary noise — stop once the ADF test passes.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Preprocessing Pipeline Summary</h2>
+    <p>A typical time series preprocessing workflow follows this order:</p>
+    <div class="code-block"><pre><span class="cm"># 1. Load with datetime index</span>
+df = pd.read_csv(<span class="str">'data.csv'</span>, parse_dates=[<span class="str">'date'</span>], index_col=<span class="str">'date'</span>)
+
+<span class="cm"># 2. Handle missing values</span>
+df = df.interpolate(method=<span class="str">'linear'</span>)
+
+<span class="cm"># 3. Resample to desired frequency (optional)</span>
+df = df.resample(<span class="str">'D'</span>).mean()
+
+<span class="cm"># 4. Smooth if needed (optional)</span>
+df[<span class="str">'count_smooth'</span>] = df[<span class="str">'count'</span>].rolling(<span class="num">7</span>).mean()
+
+<span class="cm"># 5. Create lag features for modelling</span>
+df[<span class="str">'count_lag1'</span>] = df[<span class="str">'count'</span>].shift(<span class="num">1</span>)
+
+<span class="cm"># 6. Make stationary if required by the model</span>
+df[<span class="str">'count_diff'</span>] = df[<span class="str">'count'</span>].diff(<span class="num">1</span>)
+
+<span class="cm"># 7. Drop NaN rows created by shifting / differencing</span>
+df = df.dropna()</pre></div>
+    <table class="styled-table">
+      <thead><tr><th>Technique</th><th>pandas function</th><th>Key parameter</th></tr></thead>
+      <tbody>
+        <tr><td>Forward fill</td><td><code>fillna(method='ffill')</code></td><td>—</td></tr>
+        <tr><td>Interpolation</td><td><code>interpolate(method='linear')</code></td><td><code>method</code>: linear, polynomial, spline</td></tr>
+        <tr><td>Downsampling</td><td><code>resample('M').mean()</code></td><td>offset alias: D, W, M, Q, Y</td></tr>
+        <tr><td>Upsampling</td><td><code>resample('6h').ffill()</code></td><td>fill method after resample</td></tr>
+        <tr><td>Moving average</td><td><code>rolling(7).mean()</code></td><td><code>window</code> size</td></tr>
+        <tr><td>EMA</td><td><code>ewm(span=7).mean()</code></td><td><code>span</code> or <code>alpha</code></td></tr>
+        <tr><td>Lag shift</td><td><code>shift(1)</code></td><td><code>periods</code>: positive=lag, negative=lead</td></tr>
+        <tr><td>Differencing</td><td><code>diff(1)</code></td><td><code>periods</code>: lag for seasonal diff</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-ts2"></div></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('ts2')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('ts1')">← L1: Intro to Time Series</button>
+  </div>
+</div>
+
 </div><!-- end main -->
 
 <script>
@@ -6844,7 +7343,9 @@ const TOPICS = {
   ul3: 'UL L3: Hierarchical Clustering',
   ul4: 'UL L4: DBSCAN',
   ul5: 'UL L5: t-SNE',
-  ts1: 'TS L1: Intro to Time Series'
+  ts1: 'TS L1: Intro to Time Series',
+  ts2: 'TS L2: Preprocessing for Time Series',
+  ts3: 'TS L3: Preprocessing Practical'
 };
 
 const ALL_QUESTIONS = [
@@ -7142,7 +7643,23 @@ const ALL_QUESTIONS = [
   {t:'ts1', q:'An ACF plot shows large spikes at lags 4, 8, and 12, with values near zero elsewhere. What does this indicate?', opts:['The series has a strong upward trend','The series is stationary and ready to model','The series has quarterly seasonality — it repeats every 4 periods. The spikes at 8 and 12 are echoes of the lag-4 effect.','The series has no structure and is pure noise'], ans:2, exp:'Regular spikes at multiples of k in an ACF plot = seasonality with period k. Here k=4 (quarterly). The spikes at 8 and 12 appear because lag 4 correlates with lag 8 which correlates with lag 12 — but they are indirect chain effects, not direct relationships. PACF would show a spike only at lag 4.'},
   {t:'ts1', q:'What is the key difference between ACF and PACF?', opts:['ACF uses Gaussian distributions; PACF uses t-distributions','ACF measures correlation between different variables; PACF measures correlation within one variable','ACF captures all correlations at each lag (direct and indirect chain effects); PACF isolates only the direct correlation at each lag by removing the influence of intermediate lags','ACF is for stationary series; PACF is for non-stationary series'], ans:2, exp:'ACF at lag 8 is high partly because: today correlates with lag 4, and lag 4 correlates with lag 8. It cannot separate direct from indirect. PACF at lag 8 removes the effects of lags 1–7 — if nothing is left, lag 8 has no direct relationship. This is why PACF is used to determine the AR order p for ARIMA: p = the last lag where PACF is significant.'},
   {t:'ts1', q:'What does it mean for a time series to be stationary, and why does it matter?', opts:['The series has no missing values and is ready to use','The series has constant mean, variance and autocorrelation structure over time — no trend, no seasonality. It matters because most time series models assume stationarity.','The series only contains positive values','The series has been scaled using StandardScaler'], ans:1, exp:'A stationary series looks flat — no upward or downward drift, no expanding variance, no repeating seasonal pattern. Most classical time series models (ARIMA, exponential smoothing) assume stationarity. If your data has a trend or seasonality, the model\'s assumptions are violated and forecasts will be unreliable. You must remove trend/seasonality first via preprocessing (differencing, log transforms, seasonal decomposition).'},
-  {t:'ts1', q:'In the Augmented Dickey-Fuller test, what does a p-value of 0.03 tell you?', opts:['The series is non-stationary — it has a unit root','The series is stationary — p < 0.05 means you reject the null hypothesis of a unit root','The series has strong seasonality at lag 3','The series needs 3 rounds of differencing'], ans:1, exp:'The ADF null hypothesis is that the series has a unit root (= non-stationary). A p-value of 0.03 is below the 0.05 threshold, so you reject the null — the series is stationary. A p-value ≥ 0.05 would mean you fail to reject the null, indicating non-stationarity that needs preprocessing before modelling.'}
+  {t:'ts1', q:'In the Augmented Dickey-Fuller test, what does a p-value of 0.03 tell you?', opts:['The series is non-stationary — it has a unit root','The series is stationary — p < 0.05 means you reject the null hypothesis of a unit root','The series has strong seasonality at lag 3','The series needs 3 rounds of differencing'], ans:1, exp:'The ADF null hypothesis is that the series has a unit root (= non-stationary). A p-value of 0.03 is below the 0.05 threshold, so you reject the null — the series is stationary. A p-value ≥ 0.05 would mean you fail to reject the null, indicating non-stationarity that needs preprocessing before modelling.'},
+
+  // TS2
+  {t:'ts2', q:'You have daily temperature readings with some missing days due to a sensor outage. Which fill method is most appropriate?', opts:['Forward fill — carry the last known temperature forward indefinitely','Mean imputation — fill all missing days with the monthly average','Linear interpolation — draw a straight line between the last known and next known value','Drop all rows with missing values'], ans:2, exp:'Temperature changes gradually and continuously. Linear interpolation draws a straight line between the surrounding valid readings, producing physically plausible values for the missing days. Forward fill is less accurate for a smoothly changing variable. Mean imputation destroys the local temporal pattern. Dropping rows breaks the contiguous index required for time-aware operations.'},
+  {t:'ts2', q:'What is the correct pandas call to downsample a daily series to monthly means?', opts:['df.rolling(30).mean()','df.resample(\'M\').mean()','df.shift(30)','df.diff(30)'], ans:1, exp:'resample() changes the frequency of a time series. \'M\' stands for month-end. Applying .mean() after aggregates all daily values within each month into one monthly average. rolling() computes a moving window — it does not change frequency. shift() and diff() are for lag features and differencing, not frequency conversion.'},
+  {t:'ts2', q:'After applying df["count"].rolling(7).mean(), why are the first 6 rows NaN?', opts:['Pandas has a bug with rolling windows','There are not yet 7 previous points to average — the window is incomplete until row 7','Rolling mean only works on numeric data','The series must be stationary before rolling can be applied'], ans:1, exp:'A rolling window of size 7 requires 7 data points to produce one output. Rows 0–5 have fewer than 7 predecessors, so the window cannot be filled — pandas returns NaN. The first valid output appears at row 6 (index 0-based). Setting min_periods=1 would allow partial windows if you prefer a value at every row.'},
+  {t:'ts2', q:'What does df["price"].shift(1) produce?', opts:['The price 1 step in the future at each row','The price 1 step in the past at each row — today\'s row now holds yesterday\'s value','The first-order difference (today minus yesterday)','The series lagged by 1 month'], ans:1, exp:'shift(n) moves every value n positions forward in the index. After shift(1), the value originally at time t now appears at time t+1 — so looking at any row, you see the value from one step back (yesterday). The first row becomes NaN because there is no preceding row to shift from. This is the standard way to create a lag-1 feature.'},
+  {t:'ts2', q:'A daily bike rental series has an upward trend and fails the ADF test (p = 0.12). Which transformation should you try first?', opts:['Apply StandardScaler to the values','Compute df["count"].diff(1) to first-order difference the series','Apply a 30-day rolling mean','Shift the series by 7 days'], ans:1, exp:'diff(1) subtracts each value from the one that preceded it: x_t − x_{t-1}. A linear trend adds a constant amount each step, so differencing removes it — the differenced series is roughly flat with constant mean. StandardScaler normalises values but does not remove trend. Rolling mean smooths noise but does not make a trending series stationary. Shifting creates a lag feature, not a stationarity fix.'},
+  {t:'ts2', q:'What is the key difference between a simple moving average (rolling mean) and an exponential moving average (EMA)?', opts:['Moving average is for downsampling; EMA is for upsampling','Moving average gives equal weight to all points in the window; EMA gives exponentially more weight to recent points','EMA requires the series to be stationary; rolling mean does not','Moving average produces NaN only at the start; EMA never produces NaN'], ans:1, exp:'In a moving average of window k, each of the k points contributes equally — weight = 1/k. In an EMA, the most recent point gets the highest weight and older points\' weights decay exponentially. The practical effect: EMA reacts faster to sudden changes (lower lag) while a simple MA is more stable but slower to respond. Both are useful for noise reduction; EMA is preferred when recent changes are more predictive.'},
+  {t:'ts2', q:'You have quarterly alcohol consumption data in the format "2009-Q3". What must you do before calling .resample()?', opts:['Nothing — pandas always parses this format automatically','Convert it to a proper datetime index using a custom date_parser so pandas can do time-aware operations','Rename the column to "date"','Sort the dataframe by the quarter column'], ans:1, exp:'"2009-Q3" is a non-standard date string pandas cannot parse automatically. You must write a custom function that splits on "-Q", maps the quarter to a month (Q1→Jan, Q2→Apr, Q3→Jul, Q4→Oct), and returns a pd.Timestamp. Pass it via date_parser= when reading the CSV. Without a proper DatetimeIndex, .resample(), .rolling(), and time-aware plotting all fail.'},
+
+  // TS3
+  {t:'ts3', q:'The NZAlcoholConsumption dataset stores dates as "2009Q3". Why can\'t pandas parse this automatically, and what is the fix?', opts:['Pandas can parse it — just use parse_dates=["DATE"]','It\'s a non-standard format. Write a custom function that extracts the year and quarter, maps the quarter to a month, returns a pd.Timestamp, and pass it as date_parser=','Rename the column from DATE to date before loading','Sort the CSV file chronologically before loading'], ans:1, exp:'Pandas auto-parser handles ISO formats like "2009-07-01" but not "2009Q3". You write a function that uses regex or string slicing to extract year and quarter number, maps Q1→March 31, Q2→June 30, Q3→Sept 30, Q4→Dec 31, and returns a pd.Timestamp. Passing this as date_parser= tells pandas to call your function on every value in the DATE column instead of its own parser.'},
+  {t:'ts3', q:'After calling alcohol_consumption.TotalWine.diff(1), the plot shows the differenced series oscillating around zero but still has a clear repeating 4-point zigzag. What does this tell you?', opts:['diff(1) failed — try diff(2) instead','The trend has been removed but quarterly seasonality remains — diff(1) removes linear trend, not seasonality. Use diff(4) next.','The series is now stationary — the zigzag is just noise','You need to apply StandardScaler before differencing'], ans:1, exp:'diff(1) subtracts consecutive values, which removes a steady upward or downward drift (linear trend). But a repeating quarterly pattern (Q4 always high, Q2 always low) survives because it is not a trend — it is a cycle. To remove quarterly seasonality you need diff(4), which subtracts the value from the same quarter one year ago. The ACF/PACF plots would confirm this by showing a large spike at lag 4.'},
+  {t:'ts3', q:'The PACF plot of TotalWine shows a significant spike only at lag 4, while the ACF shows spikes at lags 4, 8, and 12. How do you interpret this?', opts:['The series has three independent seasonal cycles of period 4, 8, and 12','Only lag 4 is a direct dependency — lags 8 and 12 are indirect chain effects caused by the lag-4 autocorrelation. Use diff(4) to remove the seasonality.','The series needs to be differenced 12 times','Lags 8 and 12 are more important than lag 4 because they have larger spikes'], ans:1, exp:'ACF measures all correlations — direct and indirect. If today correlates strongly with 4 quarters ago, and 4 quarters ago correlates with 8 quarters ago, ACF will show a spike at 8 too — even though there is no direct relationship spanning 8 quarters. PACF removes those chain effects and shows only direct relationships. A spike only at lag 4 in the PACF confirms the direct seasonality is 4 quarters. diff(4) is the correct remedy.'},
+  {t:'ts3', q:'What does testStationarity(alcohol_consumption.TotalWine.diff(4).dropna()) do, in order?', opts:['Drops NaN rows, then differences by 4, then runs ADF','Differences by 4 (creates NaN in first 4 rows), drops NaN, passes the result as x to testStationarity which runs adfuller and checks if p < 0.05','Runs ADF on the raw series, then differences, then checks stationarity','Smooths the series with a window of 4, then tests stationarity'], ans:1, exp:'Python evaluates the argument before calling the function. So: (1) .diff(4) subtracts the value from 4 quarters ago — the first 4 rows become NaN. (2) .dropna() removes those NaN rows so adfuller can run. (3) The clean differenced Series is passed in as x. Inside the function: adfuller(x) runs the test, results[1] is the p-value, and if p < 0.05 it returns "stationary". The ADF null is non-stationary, so a small p-value is the good outcome.'},
+  {t:'ts3', q:'You use rolling(4).apply(lambda x: x.autocorr(), raw=False). Why is raw=False needed here?', opts:['raw=False is faster than raw=True for large datasets','raw=False passes each window as a pandas Series instead of a numpy array — needed because .autocorr() is a pandas method not available on numpy arrays','raw=False skips NaN values automatically','raw=False centres the window instead of right-aligning it'], ans:1, exp:'By default (raw=True), rolling().apply() passes each window as a plain numpy array for speed. But numpy arrays do not have pandas methods like .autocorr(), .skew(), or .corr(). Setting raw=False passes the window as a pandas Series, making all Series methods available inside the lambda. The trade-off: raw=False is slower because it builds a Series object for every window.'}
 ];
 
 const FLASHCARDS = [
@@ -7439,7 +7956,20 @@ const FLASHCARDS = [
   {t:'ts1', front:'What is autocorrelation and what does an ACF plot reveal?', back:'Autocorrelation = correlation of a series with itself at a time lag k.\n\nACF plot spikes:\n• At regular intervals (e.g. 4, 8, 12) → seasonality (period = gap between spikes)\n• All lags high, slowly declining → trend (non-stationary)\n• Only lag 1 significant → AR(1) structure\n• All near zero → white noise (stationary)'},
   {t:'ts1', front:'ACF vs PACF — what is the difference?', back:'ACF: all correlations at each lag — direct AND indirect chain effects\nPACF: only DIRECT correlations — removes influence of shorter lags\n\nIf ACF shows spikes at 4, 8, 12 but PACF only at 4:\n→ Lags 8 and 12 were echoes. Only lag 4 is a direct dependency.\n\nUse PACF to choose AR order p: p = last significant PACF lag'},
   {t:'ts1', front:'What is stationarity and how do you test for it?', back:'Stationary = constant mean, variance, and autocorrelation over time (no trend, no seasonality).\n\nAugmented Dickey-Fuller (ADF) test:\nfrom statsmodels.tsa.stattools import adfuller\nresult = adfuller(series)\npvalue = result[1]\n\np < 0.05 → stationary ✓\np ≥ 0.05 → non-stationary ✗ (needs preprocessing)'},
-  {t:'ts1', front:'How to read a PACF plot?', back:'Shaded band = significance threshold\nSpike OUTSIDE band → statistically significant direct relationship at that lag\nSpike INSIDE band → not significant (just noise or chain effect)\n\nSharp cut-off after lag p → AR(p) model\nOnly lag 4 outside band → one seasonal dependency at period 4'}
+  {t:'ts1', front:'How to read a PACF plot?', back:'Shaded band = significance threshold\nSpike OUTSIDE band → statistically significant direct relationship at that lag\nSpike INSIDE band → not significant (just noise or chain effect)\n\nSharp cut-off after lag p → AR(p) model\nOnly lag 4 outside band → one seasonal dependency at period 4'},
+  {t:'ts2', front:'Three methods to handle missing values in a time series?', back:'1. ffill (forward fill): carry last known value forward\n   → good for prices or status signals\n2. bfill (backward fill): pull next value backward\n3. Linear interpolation: straight line between neighbours\n   → good for smoothly changing variables (temperature, humidity)\n\nAvoid mean imputation for long gaps — destroys temporal structure'},
+  {t:'ts2', front:'Downsampling vs upsampling in time series?', back:'Downsampling: high → low frequency (e.g. daily → monthly)\n  df.resample(\'M\').mean()  → aggregates many rows into one\n  Effect: reduces noise, smooths signal\n\nUpsampling: low → high frequency (e.g. daily → 6-hourly)\n  df.resample(\'6h\').ffill()  → creates new rows, fills by interpolation\n  Risk: quality depends on interpolation assumption'},
+  {t:'ts2', front:'How does rolling() work and what are common pitfalls?', back:'df["x"].rolling(window=7).mean()\n→ Slides a window of 7 rows, computes mean at each step\n\nPitfalls:\n• First window−1 rows are NaN (insufficient history)\n• Default: window must be full (set min_periods=1 to allow partial)\n• centre=True: uses points before AND after (only valid for offline analysis, not forecasting)'},
+  {t:'ts2', front:'Moving average vs EMA — which to choose?', back:'Moving Average (rolling mean):\n• Equal weight to all points in window\n• High lag — slow to react to changes\n• NaN at start (incomplete window)\n\nEMA (exponential moving average):\n• Exponentially more weight on recent points\n• Lower lag — reacts faster\n• No NaN at start (uses all history)\n\nUse MA for noise reduction; EMA when recency matters for forecasting'},
+  {t:'ts2', front:'What does shift() do and when do you use it?', back:'df["x"].shift(n):\n→ Moves every value n positions forward in the index\n→ Row t now holds value from time t−n\n→ Creates NaN at the first n rows\n\nUse cases:\n• Create lag features: shift(1) = "yesterday\'s value"\n• Compute returns: (df["price"] / df["price"].shift(1)) - 1\n• Align two series with a known time offset\n\nNever use shift(−n) as a model input — it leaks future data'},
+  {t:'ts2', front:'How to remove trend with differencing?', back:'df["x"].diff(1)  →  x_t − x_{t−1}\n\nRemoves a linear trend in one pass.\nFirst row becomes NaN.\n\nFor seasonal differencing (e.g. weekly pattern in daily data):\ndf["x"].diff(7)  →  x_t − x_{t−7}\n\nFor quadratic trend: diff(1).diff(1)\n\nRule: run ADF test after. If still non-stationary, difference again.\nMost series need only 1–2 rounds.'},
+  {t:'ts2', front:'How to parse a non-standard date format like "2009-Q3"?', back:'def parse_quarter(s):\n    year, q = s.split("-Q")\n    month = (int(q) - 1) * 3 + 1   # Q1→1, Q2→4, Q3→7, Q4→10\n    return pd.Timestamp(year=int(year), month=month, day=1)\n\npd.read_csv("file.csv", index_col=0,\n            date_parser=parse_quarter, parse_dates=True)\n\nWhy: without a DatetimeIndex, .resample() and .rolling() do not work'},
+  {t:'ts3', front:'parse_quarter function — what does each part do?', back:'year, qn = re.search(r"^(20\\d\\d)(Q[1-4])$", s).group(1, 2)\n→ regex extracts year string and quarter string (e.g. "2009", "Q3")\n\nyear = int(year)\n→ pd.Timestamp needs integers, regex gives strings\n\nif qn == "Q3": return pd.Timestamp(year, 9, 30)\n→ maps quarter to the last day of that quarter\n\nPassed as date_parser= in pd.read_csv → called on every DATE value'},
+  {t:'ts3', front:'df["col"] vs df.col — difference?', back:'Identical result — both select the same column.\n\nPrefer bracket notation df["col"] because:\n• Works for column names with spaces\n• Avoids shadowing pandas methods\n  (a column called "count" would break df.count)\n• More explicit and consistent\n\nDot notation df.col is just convenient shorthand for simple names'},
+  {t:'ts3', front:'diff(1) removes trend but not seasonality — why?', back:'diff(1) computes x_t − x_{t−1}: subtracts consecutive values.\nThis removes a constant upward/downward drift (linear trend).\n\nSeasonality is a cycle (e.g. Q4 always high) — not a drift.\nDiff(1) does not cancel repeating patterns.\n\nFix: diff(4) subtracts the value from the same quarter last year\n→ removes the quarterly cycle\n\nRule: diff(lag = season length) removes seasonality'},
+  {t:'ts3', front:'ACF spikes at 4, 8, 12 but PACF only at 4 — what does it mean?', back:'ACF captures ALL correlations (direct + indirect chain effects).\nPACF captures only DIRECT correlations.\n\nIf lag 4 is strong:\n• lag 4 → lag 8 → lag 12 chain appears in ACF\n• PACF strips the chain → only lag 4 survives\n\nConclusion: the ONLY direct seasonal dependency is 4 quarters.\nUse diff(4) — not diff(8) or diff(12).'},
+  {t:'ts3', front:'testStationarity function — how does it work?', back:'def testStationarity(x, alpha=0.05):\n    results = adfuller(x)\n    pvalue = results[1]       # index 1 = p-value\n    if pvalue < alpha:\n        return "stationary"   # reject H₀\n    else:\n        return "non-stationary"\n\nADF H₀ = series IS non-stationary (has unit root)\nSmall p-value → reject H₀ → series IS stationary ✓\n\nCall: testStationarity(df["col"].diff(4).dropna())\n→ .dropna() removes the NaN rows diff(4) creates'},
+  {t:'ts3', front:'rolling().apply() — when to use raw=False?', back:'raw=True (default): window passed as numpy array → fast\nraw=False: window passed as pandas Series → slower but richer\n\nUse raw=False when your function needs pandas methods:\n• .autocorr() — needs Series\n• .skew(), .kurt() — needs Series\n• .corr(other) — needs Series\n\nExample:\n.rolling(4).apply(lambda x: x.autocorr(), raw=False)\n\nIf only using numpy operations (sum, mean, std), keep raw=True'}
 ];
 
 // ===================== STATE =====================
@@ -7467,7 +7997,7 @@ function nav(page) {
   document.getElementById('main').scrollTop = 0;
   const navEl = document.querySelector(`[onclick="nav('${page}')"]`);
   if (navEl) navEl.classList.add('active');
-  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1'].includes(page)) {
+  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3'].includes(page)) {
     markVisited(page);
     renderInlineQuiz(page);
   }
