@@ -273,6 +273,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('ts5')" id="nav-ts5"><span class="icon">📉</span> L5: Autoregressive Models<span class="check" id="check-ts5"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ts6')" id="nav-ts6"><span class="icon">🔎</span> L6: Time Series Testing<span class="check" id="check-ts6"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ts7')" id="nav-ts7"><span class="icon">📊</span> L7: Exponential Smoothing<span class="check" id="check-ts7"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('ts8')" id="nav-ts8"><span class="icon">🔮</span> L8: Prophet<span class="check" id="check-ts8"></span></div>
   </div>
 
   <div class="sidebar-section" style="margin-top:10px">Practice</div>
@@ -1305,6 +1306,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
           <div class="topic-chip" id="chip-ts5" onclick="toggleChip('ts5')">L5: Autoregressive Models</div>
           <div class="topic-chip" id="chip-ts6" onclick="toggleChip('ts6')">L6: Time Series Testing</div>
           <div class="topic-chip" id="chip-ts7" onclick="toggleChip('ts7')">L7: Exponential Smoothing</div>
+          <div class="topic-chip" id="chip-ts8" onclick="toggleChip('ts8')">L8: Prophet</div>
         </div>
     </div>
     <div class="card" style="max-width:400px">
@@ -1425,6 +1427,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
         <div class="topic-chip" id="fc-chip-ts5" onclick="fcFilter('ts5')">L5: Autoregressive Models</div>
         <div class="topic-chip" id="fc-chip-ts6" onclick="fcFilter('ts6')">L6: Time Series Testing</div>
         <div class="topic-chip" id="fc-chip-ts7" onclick="fcFilter('ts7')">L7: Exponential Smoothing</div>
+        <div class="topic-chip" id="fc-chip-ts8" onclick="fcFilter('ts8')">L8: Prophet</div>
       </div>
     </div>
   </div>
@@ -8137,6 +8140,281 @@ print(<span class="str">"TES MAE:"</span>, mean_absolute_error(test, tes_pred))<
   </div>
 </div>
 
+<!-- TS8: PROPHET -->
+<div class="page" id="page-ts8">
+  <div class="page-header">
+    <div class="chapter-badge">Time Series Analysis</div>
+    <h1>L8: Prophet</h1>
+    <p class="subtitle">Facebook's open-source forecasting library — decompose time series into trend, seasonality, and one-off events, then forecast with minimal preprocessing.</p>
+  </div>
+
+  <div class="card">
+    <h2>Why Prophet?</h2>
+    <p>Every model we've built so far — AR, ARMA, ARIMA, Exponential Smoothing — requires you to understand and handle the structure of the series yourself: test for stationarity, difference to remove trend, identify seasonal periods, choose model orders. Prophet flips this around.</p>
+    <p><strong>Prophet's goal:</strong> make accurate forecasting accessible to analysts who are not time series experts, on real business data that has multiple overlapping patterns and irregular one-off events.</p>
+
+    <div class="key-concept">
+      <div class="label">What makes Prophet different</div>
+      <p><strong>AR/ARIMA:</strong> predicts y(t) from past values y(t−1), y(t−2)... The series must be stationary. You manage stationarity yourself.<br><br>
+      <strong>Prophet:</strong> predicts y(t) from time directly — it models growth, seasonality and events as explicit, interpretable components and adds them together. No stationarity requirement. No differencing. No lag selection.</p>
+    </div>
+
+    <h3 style="margin-top:18px; margin-bottom:8px">When to choose Prophet over other models</h3>
+    <ul style="margin: 0 0 0 20px; line-height:2">
+      <li><strong>Multiple overlapping seasonalities</strong> — e.g. weekly patterns on top of yearly patterns.</li>
+      <li><strong>Known one-off events</strong> — holidays, strikes, product launches — you can tell the model about them explicitly.</li>
+      <li><strong>Trend changepoints</strong> — the growth rate changed at some point in history; Prophet detects where.</li>
+      <li><strong>Missing data or irregular timestamps</strong> — Prophet handles gaps natively, unlike ARIMA which needs a regular index.</li>
+      <li><strong>Long-range forecasting</strong> — weeks to years ahead, not just the next few steps.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Important Things to Know Before You Start</h2>
+
+    <h3 style="margin-bottom:8px">1. The additive model — how Prophet works</h3>
+    <p>Prophet decomposes the series into three components that are added together:</p>
+    <div class="key-concept">
+      <div class="label">y(t) = g(t) + s(t) + h(t) + ε(t)</div>
+      <p><strong>g(t)</strong> — trend: the long-term growth direction, with changepoints where the rate shifts<br>
+      <strong>s(t)</strong> — seasonality: repeating patterns (weekly, yearly) modelled using Fourier series<br>
+      <strong>h(t)</strong> — holidays / one-off events: special days that push values up or down<br>
+      <strong>ε(t)</strong> — noise: what's left over</p>
+    </div>
+    <p style="margin-top:10px">Each component is estimated separately and is directly interpretable. You can plot them individually and ask: "how much does the summer contribute?" or "how much does a bank holiday suppress demand?"</p>
+
+    <h3 style="margin-top:18px; margin-bottom:8px">2. Prophet requires columns named "ds" and "y"</h3>
+    <p>This is non-negotiable. Prophet will not accept any other column names. <code>ds</code> must contain the dates (as datetime objects), <code>y</code> must contain the values to forecast. If your DataFrame has different column names you must rename them first.</p>
+
+    <h3 style="margin-top:18px; margin-bottom:8px">3. Seasonality is controlled by Fourier order</h3>
+    <p>Prophet models seasonal patterns using a Fourier series — a sum of sine and cosine waves. The <strong>Fourier order</strong> (set via <code>weekly_seasonality</code>, <code>yearly_seasonality</code>) controls how many waves are summed:</p>
+    <table class="styled-table" style="margin-top:8px">
+      <thead><tr><th>Order</th><th>Effect</th><th>Risk</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Low (e.g. 1)</strong></td><td>Very smooth seasonal curve — misses sharp weekly/yearly patterns</td><td>Underfitting</td></tr>
+        <tr><td><strong>Default (3–10)</strong></td><td>Good fit to typical seasonal shapes</td><td>Usually safe</td></tr>
+        <tr><td><strong>High (e.g. 20)</strong></td><td>Wiggly curve that fits training data tightly</td><td>Overfitting — forecasts will be unstable</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:18px; margin-bottom:8px">4. Changepoints are where the trend rate changes</h3>
+    <p>Real-world series rarely grow at a constant rate. Prophet automatically detects <strong>changepoints</strong> — moments in history where the trend shifted significantly (e.g. a new product launch caused faster growth, or a recession slowed it). You can visualise them to understand turning points in your data.</p>
+  </div>
+
+  <div class="card">
+    <h2>Dataset and Loading</h2>
+    <p>TFL daily Santander bike hire counts in London — approximately 7 years of daily data. The series has clear yearly seasonality (summer peaks, winter dips), a slight upward trend, and notable outliers around the 2015 tube strikes.</p>
+    <div class="code-block"><pre><span class="kw">from</span> prophet <span class="kw">import</span> Prophet
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="cm"># Read from Excel, select only the two relevant columns</span>
+df_data = pd.read_excel(<span class="str">"data/tfl-daily-cycle-hires.xls"</span>, sheet_name=<span class="str">"Data"</span>)
+df_data = df_data[[<span class="str">"Day"</span>, <span class="str">"Number of Bicycle Hires"</span>]]
+
+<span class="cm"># Convert datetime to date (Prophet expects dates, not full timestamps)</span>
+df_data[<span class="str">"Day"</span>] = df_data[<span class="str">"Day"</span>].dt.date
+
+<span class="cm"># Prophet requires exactly these column names — rename before doing anything else</span>
+df_data = df_data.rename(columns={
+    <span class="str">"Day"</span>: <span class="str">"ds"</span>,
+    <span class="str">"Number of Bicycle Hires"</span>: <span class="str">"y"</span>
+})
+
+df_data.head()</pre></div>
+    <div class="key-concept">
+      <div class="label">Explore before modelling</div>
+      <p>Always plot and check a histogram first. For this dataset:<br>
+      <strong>Time series plot:</strong> reveals seasonal rise/fall, upward trend, and outlier spike around 2015 strikes.<br>
+      <strong>Histogram:</strong> roughly Gaussian — no need for a log transform. The 2015 outliers are visible as a long right tail.</p>
+    </div>
+    <div class="code-block"><pre>plt.plot(df_data[<span class="str">"ds"</span>], df_data[<span class="str">"y"</span>])
+plt.xlabel(<span class="str">"Date"</span>)
+plt.ylabel(<span class="str">"Number of cycle hires"</span>)
+plt.show()
+
+plt.hist(df_data[<span class="str">"y"</span>], bins=<span class="num">50</span>)
+plt.show()</pre></div>
+  </div>
+
+  <div class="card">
+    <h2>Adding Special Events — Holidays and Strikes</h2>
+    <p>Prophet's biggest practical advantage is the ability to tell the model about specific days that break the normal pattern. Without this, the model would treat the 2015 tube strike spike as a random outlier and try to "explain" it with trend or seasonality — corrupting those components.</p>
+    <p>Special events are passed as a DataFrame with exactly two columns: <code>holiday</code> (a name string) and <code>ds</code> (the dates).</p>
+
+    <h3 style="margin-bottom:8px">Bank holidays</h3>
+    <div class="code-block"><pre><span class="cm"># Load bank holiday dates from CSV, convert to datetime</span>
+dates = pd.to_datetime(list(pd.read_csv(<span class="str">"data/BankHolidayLists.csv"</span>)[<span class="str">"Date"</span>]))
+bank_holidays = pd.DataFrame({<span class="str">"holiday"</span>: <span class="str">"BankHoliday"</span>, <span class="str">"ds"</span>: dates})</pre></div>
+
+    <h3 style="margin-top:16px; margin-bottom:8px">Tube strike days</h3>
+    <div class="code-block"><pre><span class="cm"># Manually specify known strike dates</span>
+dates = pd.to_datetime([
+    <span class="str">"2017-08-05"</span>, <span class="str">"2017-08-06"</span>, <span class="str">"2017-02-06"</span>,
+    <span class="str">"2015-07-09"</span>, <span class="str">"2015-07-08"</span>, <span class="str">"2015-03-08"</span>
+])
+strike_days = pd.DataFrame({<span class="str">"holiday"</span>: <span class="str">"strike"</span>, <span class="str">"ds"</span>: dates})</pre></div>
+
+    <h3 style="margin-top:16px; margin-bottom:8px">Combine into one DataFrame</h3>
+    <div class="code-block"><pre><span class="cm"># pd.concat stacks the two DataFrames vertically</span>
+all_holidays_strikes = pd.concat((bank_holidays, strike_days))
+<span class="cm"># Convert ds to plain date (no time component) for consistency</span>
+all_holidays_strikes[<span class="str">"ds"</span>] = all_holidays_strikes[<span class="str">"ds"</span>].dt.date</pre></div>
+    <div class="key-concept">
+      <div class="label">Why separate bank holidays from strikes?</div>
+      <p>By giving each event type a different <code>holiday</code> name, Prophet learns a <em>separate</em> effect size for each type. Bank holidays suppress bike hires (people don't commute). Tube strikes boost them (commuters switch to bikes). If you gave them the same name, Prophet would average the two effects into one, getting both wrong.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Fitting the Model and Forecasting</h2>
+    <div class="code-block"><pre><span class="cm"># Create model — pass the holidays DataFrame so Prophet knows about special days</span>
+forecast_model = Prophet(holidays=all_holidays_strikes)
+
+<span class="cm"># Fit on the full historical data</span>
+forecast_model.fit(df_data)
+
+<span class="cm"># Create a DataFrame of future dates — 365 days ahead, including past dates</span>
+<span class="cm"># include_history=True means the DataFrame covers both past and future</span>
+df_dates = forecast_model.make_future_dataframe(periods=<span class="num">365</span>, include_history=<span class="kw">True</span>)
+
+<span class="cm"># Generate predictions — returns a DataFrame with yhat (forecast),</span>
+<span class="cm"># yhat_lower and yhat_upper (uncertainty interval), plus each component</span>
+model_predictions = forecast_model.predict(df_dates)
+
+<span class="cm"># Built-in plot: black dots = observed, blue line = forecast, shaded = uncertainty</span>
+forecast_model.plot(model_predictions)
+plt.show()</pre></div>
+    <div class="key-concept">
+      <div class="label">The predict() output columns</div>
+      <p><code>yhat</code> — the point forecast<br>
+      <code>yhat_lower</code>, <code>yhat_upper</code> — 80% uncertainty interval (the shaded band)<br>
+      <code>trend</code>, <code>weekly</code>, <code>yearly</code>, <code>holidays</code> — each component's contribution at every time step</p>
+    </div>
+    <div class="key-concept" style="margin-top:12px">
+      <div class="label">What make_future_dataframe does</div>
+      <p>Prophet doesn't need lag features or a stationary series — it just needs a column of future dates. <code>make_future_dataframe(periods=365)</code> creates a DataFrame with one row per day: all historical dates plus 365 new ones. You pass this to <code>predict()</code> and Prophet fills in the forecast for every row.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Components Plot — Reading the Decomposition</h2>
+    <p>The components plot is what makes Prophet especially useful for understanding your data. It shows each component separately so you can answer questions that are impossible with a single forecast line.</p>
+    <div class="code-block"><pre><span class="cm"># uncertainty=False removes the shaded confidence bands from each panel</span>
+forecast_model.plot_components(model_predictions, uncertainty=<span class="kw">False</span>)
+plt.show()</pre></div>
+
+    <table class="styled-table" style="margin-top:12px">
+      <thead><tr><th>Panel</th><th>What it shows</th><th>What to look for</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Trend</strong></td><td>Long-term growth direction with changepoints</td><td>When did growth accelerate or slow? Any dips?</td></tr>
+        <tr><td><strong>Holidays</strong></td><td>Effect of each named event type</td><td>Bank holidays → negative (fewer commuters). Strikes → positive (commuters switch to bikes)</td></tr>
+        <tr><td><strong>Weekly seasonality</strong></td><td>Average pattern across days of the week</td><td>Weekdays higher (commuting). Weekends lower.</td></tr>
+        <tr><td><strong>Yearly seasonality</strong></td><td>Average pattern across months of the year</td><td>Summer peak. Winter dip. Clear and expected.</td></tr>
+      </tbody>
+    </table>
+    <div class="key-concept" style="margin-top:14px">
+      <div class="label">Why the components plot is more valuable than the forecast plot</div>
+      <p>The forecast line tells you "what will happen." The components tell you "why." You can quantify: summer adds ~8,000 hires per day on average, bank holidays subtract ~12,000, weekdays average 3,000 more than weekends. This kind of insight is impossible to extract from AR or Exponential Smoothing.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Seasonality Parameters — Fourier Order</h2>
+    <p>Prophet uses a Fourier series to model each seasonal component. Think of it as fitting a curve using sums of sine and cosine waves — more waves (higher Fourier order) means the curve can follow more complex, wiggly shapes.</p>
+
+    <h3 style="margin-bottom:8px">Experimenting with seasonality</h3>
+    <div class="code-block"><pre><span class="cm"># Good fit — smooth but captures the main seasonal pattern</span>
+model_good = Prophet(
+    holidays=all_holidays_strikes,
+    weekly_seasonality=<span class="num">3</span>,
+    yearly_seasonality=<span class="num">3</span>,
+    daily_seasonality=<span class="kw">False</span>
+).fit(df_data)
+
+<span class="cm"># Underfitting — too smooth, misses real seasonal variation</span>
+model_under = Prophet(
+    holidays=all_holidays_strikes,
+    weekly_seasonality=<span class="num">1</span>,
+    yearly_seasonality=<span class="num">1</span>,
+    daily_seasonality=<span class="kw">False</span>
+).fit(df_data)
+
+<span class="cm"># Overfitting — follows training noise, unstable forecasts</span>
+model_over = Prophet(
+    holidays=all_holidays_strikes,
+    weekly_seasonality=<span class="num">20</span>,
+    yearly_seasonality=<span class="num">20</span>,
+    daily_seasonality=<span class="kw">False</span>
+).fit(df_data)</pre></div>
+
+    <div class="key-concept">
+      <div class="label">How to spot underfitting vs overfitting in the seasonal components</div>
+      <p><strong>Underfitting (order=1):</strong> The weekly component is a smooth sine wave — it can't capture that Monday–Friday are all different. The yearly component misses the fine shape of the summer peak.<br><br>
+      <strong>Good fit (order=3):</strong> The weekly component shows distinct values for each weekday and weekend. The yearly component has the right summer/winter shape without being wiggly.<br><br>
+      <strong>Overfitting (order=20):</strong> The components have many sharp spikes and zigzags that don't correspond to any real pattern — the model is fitting noise. Forecasts will look erratic.</p>
+    </div>
+    <p>Default: Prophet uses order=3 for weekly and order=10 for yearly. These defaults work well for most datasets. Only change them if the components plot shows the seasonal shape is clearly wrong.</p>
+  </div>
+
+  <div class="card">
+    <h2>Changepoint Detection</h2>
+    <p>A <strong>changepoint</strong> is a moment in the history where the trend rate changed — growth accelerated, slowed, or reversed. Prophet automatically finds these rather than assuming a single constant growth rate throughout the series.</p>
+
+    <div class="key-concept">
+      <div class="label">How Prophet finds changepoints</div>
+      <p>Prophet places 25 <em>potential</em> changepoints uniformly across the first 80% of the training data. It then uses <strong>L1 regularisation</strong> (a penalty that pushes small changes to zero) to determine which potential changepoints are real — it uses as few as possible. Changepoints in the last 20% are excluded by default to avoid overfitting the end of the series.</p>
+    </div>
+
+    <div class="code-block"><pre><span class="kw">from</span> prophet.plot <span class="kw">import</span> add_changepoints_to_plot
+
+<span class="cm"># Re-fit with good seasonality parameters</span>
+forecast_model = Prophet(
+    holidays=all_holidays_strikes,
+    weekly_seasonality=<span class="num">3</span>,
+    yearly_seasonality=<span class="num">3</span>,
+    daily_seasonality=<span class="kw">False</span>
+)
+forecast_model.fit(df_data)
+df_dates = forecast_model.make_future_dataframe(periods=<span class="num">365</span>, include_history=<span class="kw">True</span>)
+model_predictions = forecast_model.predict(df_dates)
+
+<span class="cm"># Plot the forecast, then overlay the detected changepoints as vertical lines</span>
+fig = forecast_model.plot(model_predictions)
+add_changepoints_to_plot(fig.gca(), forecast_model, model_predictions)
+plt.show()</pre></div>
+    <div class="key-concept">
+      <div class="label">How to read the changepoint plot</div>
+      <p>Vertical dashed lines mark where Prophet detected a shift in trend rate. Compare them against the trend panel in <code>plot_components()</code> — each changepoint corresponds to a visible kink in the trend line. For the TFL bike data you should see a steep positive trend during 2011–2012 (initial adoption period), then a flattening, then possibly a dip around 2013. The changepoints mark exactly when those transitions happened.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Full Workflow Summary</h2>
+    <table class="styled-table">
+      <thead><tr><th>Step</th><th>Code</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>1. Load data</td><td><code>pd.read_excel()</code></td><td>Get raw time series</td></tr>
+        <tr><td>2. Rename columns</td><td><code>.rename({"Day":"ds", "y_col":"y"})</code></td><td>Prophet requires exactly ds and y</td></tr>
+        <tr><td>3. Build events</td><td>DataFrame with <code>holiday</code> and <code>ds</code> columns</td><td>Tell model about special days</td></tr>
+        <tr><td>4. Create model</td><td><code>Prophet(holidays=..., weekly_seasonality=3)</code></td><td>Configure components</td></tr>
+        <tr><td>5. Fit</td><td><code>model.fit(df_data)</code></td><td>Estimate all component parameters</td></tr>
+        <tr><td>6. Future dates</td><td><code>model.make_future_dataframe(periods=365)</code></td><td>Create dates to forecast into</td></tr>
+        <tr><td>7. Predict</td><td><code>model.predict(df_dates)</code></td><td>Generate yhat + uncertainty intervals</td></tr>
+        <tr><td>8. Plot forecast</td><td><code>model.plot(predictions)</code></td><td>Visualise forecast vs observed</td></tr>
+        <tr><td>9. Plot components</td><td><code>model.plot_components(predictions)</code></td><td>Understand trend, seasonality, events</td></tr>
+        <tr><td>10. Changepoints</td><td><code>add_changepoints_to_plot(fig.gca(), model, predictions)</code></td><td>See where trend rate shifted</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-ts8"></div></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('ts8')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('ts7')">← L7: Exponential Smoothing</button>
+  </div>
+</div>
+
 <!-- TS2: PREPROCESSING FOR TIME SERIES -->
 <div class="page" id="page-ts2">
   <div class="page-header">
@@ -8422,7 +8700,8 @@ const TOPICS = {
   ts4: 'TS L4: Preprocessing Practical 2',
   ts5: 'TS L5: Autoregressive Models',
   ts6: 'TS L6: Time Series Testing',
-  ts7: 'TS L7: Exponential Smoothing'
+  ts7: 'TS L7: Exponential Smoothing',
+  ts8: 'TS L8: Prophet'
 };
 
 const ALL_QUESTIONS = [
@@ -8768,7 +9047,15 @@ const ALL_QUESTIONS = [
   {t:'ts7', q:'Your monthly revenue data has a clear upward trend and a repeating 6-month pattern. Which exponential smoothing model should you use and why?', opts:['SES — it handles all types of data','DES (Holt\'s Linear) — it handles trend but not seasonality, so it is sufficient','TES (Holt-Winters) with seasonal_periods=6 — it explicitly models level, trend, and the 6-month seasonal cycle simultaneously','AR(6) — exponential smoothing cannot handle seasonality'], ans:2, exp:'SES models level only — wrong because there is trend and seasonality. DES models level and trend — better, but will miss the 6-month seasonal pattern so forecasts will be wrong at seasonal peaks and troughs. TES (Holt-Winters) adds a seasonal component that tracks each season\'s index within the cycle. With seasonal_periods=6, the model knows the cycle repeats every 6 months and adjusts forecasts accordingly. You confirm seasonal_periods=6 from the ACF plot — the largest significant spike would be at lag 6.'},
   {t:'ts7', q:'Why is exponential smoothing often preferred over AR/ARIMA when you want a quick, practical forecast?', opts:['Exponential smoothing is always more accurate than ARIMA','Exponential smoothing does not require stationarity — you can apply it directly to raw data without differencing, testing, or preprocessing. It is simpler, interpretable, and competitive in practice.','AR models cannot handle monthly data','Exponential smoothing ignores outliers automatically'], ans:1, exp:'AR and ARIMA require the series to be stationary before fitting — this means differencing, ADF testing, possibly differencing again. Exponential smoothing makes no such assumption. You load the data, split train/test, and fit. The α, β, γ parameters are optimised automatically. Despite this simplicity, ES methods routinely match or beat ARIMA on real benchmark datasets, especially for short to medium forecast horizons. The interpretability is also a practical advantage — business stakeholders can understand "we weight recent data more heavily" more easily than ARIMA(p,d,q).'},
   {t:'ts7', q:'How do you determine the seasonal_periods value to pass to Holt-Winters, and what happens if you choose the wrong value?', opts:['Always use seasonal_periods=12 for monthly data','Plot the ACF of the series — the largest significant spike beyond lag 1 is your season length. If you choose the wrong value, the model will fit a cycle of the wrong length and the seasonal corrections will be wrong, potentially making forecasts worse than DES alone.','seasonal_periods must be set to the number of years of data','Divide the total number of observations by 4'], ans:1, exp:'seasonal_periods tells Holt-Winters how long one complete seasonal cycle is — so it knows which past observations correspond to the "same season." To find it, plot the ACF of the raw series and look for the largest significant spike. For monthly data with annual seasonality it\'s 12; for monthly data with a 6-month business cycle it\'s 6. If you pass the wrong value, the model aligns the wrong observations as "same season" — the seasonal corrections will reinforce noise rather than the real pattern. When unsure, compare TES MAE with DES MAE: if TES is not clearly better, revisit the seasonal_periods choice.'},
-  {t:'ts7', q:'What is the difference between additive and multiplicative seasonality, and how do you decide which to use?', opts:['Additive means trend is included; multiplicative means seasonality is included','Additive: seasonal swings are a fixed amount regardless of the series level. Multiplicative: seasonal swings are a percentage of the level, so they grow as the series grows. Use multiplicative when seasonal peaks get bigger as the overall level rises.','Multiplicative always gives lower MAE than additive','Additive is for monthly data; multiplicative is for weekly data'], ans:1, exp:'With additive seasonality, every December adds the same fixed amount — say £2M — to the forecast regardless of whether revenue is £10M or £50M. With multiplicative seasonality, every December adds a percentage — say 20% — so the December bump grows with the series. In practice: if the seasonal swings look roughly constant in the plot, use additive. If they look like they are growing proportionally as the series rises (funnel-like seasonal pattern), use multiplicative. For revenue and sales data with rapid growth, multiplicative is usually the better choice.'}
+  {t:'ts7', q:'What is the difference between additive and multiplicative seasonality, and how do you decide which to use?', opts:['Additive means trend is included; multiplicative means seasonality is included','Additive: seasonal swings are a fixed amount regardless of the series level. Multiplicative: seasonal swings are a percentage of the level, so they grow as the series grows. Use multiplicative when seasonal peaks get bigger as the overall level rises.','Multiplicative always gives lower MAE than additive','Additive is for monthly data; multiplicative is for weekly data'], ans:1, exp:'With additive seasonality, every December adds the same fixed amount — say £2M — to the forecast regardless of whether revenue is £10M or £50M. With multiplicative seasonality, every December adds a percentage — say 20% — so the December bump grows with the series. In practice: if the seasonal swings look roughly constant in the plot, use additive. If they look like they are growing proportionally as the series rises (funnel-like seasonal pattern), use multiplicative. For revenue and sales data with rapid growth, multiplicative is usually the better choice.'},
+
+  // TS8
+  {t:'ts8', q:'What is the fundamental difference between how Prophet and AR models predict future values?', opts:['Prophet uses more data than AR','AR predicts y(t) from past values y(t-1), y(t-2)... and requires stationarity. Prophet predicts y(t) from time itself — it decomposes the series into trend, seasonality and events and adds them together. No stationarity or lag selection needed.','Prophet requires more hyperparameter tuning than AR','AR handles seasonality automatically; Prophet does not'], ans:1, exp:'AR is fundamentally about autocorrelation — each value is a function of the values that came before it. This requires the series to be stationary and you to identify the lag structure. Prophet treats forecasting as a curve-fitting problem: it fits explicit, interpretable components (trend growth function, Fourier seasonality terms, holiday dummy variables) to the time axis and adds them. The result is a forecast that is a function of t (calendar time), not of y(t-1). This means missing data, irregular timestamps and multiple overlapping seasonalities are all handled naturally.'},
+  {t:'ts8', q:'Prophet requires the input DataFrame to have columns named "ds" and "y". What happens if you forget to rename them?', opts:['Prophet automatically detects any date column and renames it','Prophet raises a ValueError — it will not accept any other column names. You must rename your columns before calling .fit().','Prophet uses the first two columns regardless of name','ds and y are optional — you can specify column names as parameters'], ans:1, exp:'Prophet is strict about column names. ds must contain the datetime values (dates or timestamps) and y must contain the values to forecast. These names are hardcoded in the Prophet codebase. If your DataFrame has columns called "Date" and "Revenue", you must rename them: df.rename(columns={"Date":"ds", "Revenue":"y"}). Forgetting this is one of the most common Prophet errors.'},
+  {t:'ts8', q:'You add bank holidays and tube strikes as separate named events to Prophet. Why give them different holiday names rather than combining them into one?', opts:['Prophet only accepts one event type per model','Giving them different names lets Prophet learn a separate effect size for each type. Bank holidays suppress bike hires; tube strikes boost them. Combined into one name, Prophet would average the two opposing effects and get both wrong.','Different names improve the Fourier order estimation','They must have different names because the dates cannot overlap'], ans:1, exp:'Prophet estimates one coefficient per named holiday group, representing the average effect of that event type on y. Bank holidays in the TFL bike data have a negative effect (people do not commute on holidays). Tube strikes have a strong positive effect (commuters switch to bikes). If both were labelled "event", Prophet would fit one average effect that is somewhere in between — positive enough to partially explain strikes, not negative enough to properly account for holidays. Separate names give the model the freedom to learn that these two event types push in opposite directions.'},
+  {t:'ts8', q:'The plot_components() output shows the yearly seasonality panel with many sharp spikes and rapid oscillations. What does this indicate and what should you do?', opts:['The data has a genuinely complex yearly pattern — this is correct','The yearly Fourier order is too high — the model is overfitting the seasonal component to training noise. Reduce yearly_seasonality to a lower value such as 3–5.','The model needs more training data','The ds column contains incorrect dates'], ans:1, exp:'The Fourier order controls how many sine/cosine waves are summed to model the seasonal curve. A high order (e.g. 20) allows the curve to have many oscillations — it can fit the training data very closely, including its noise. In the components plot, overfitting shows up as a wiggly, spiky seasonal curve rather than a smooth interpretable shape. The cure is to reduce the Fourier order. Start with weekly_seasonality=3 and yearly_seasonality=3 for most datasets and check if the component shapes are smooth and interpretable.'},
+  {t:'ts8', q:'What are changepoints in Prophet and why does it look only in the first 80% of the training data?', opts:['Changepoints are the seasonal peaks; 80% is the confidence threshold','Changepoints are moments where the trend rate shifts. Prophet places potential changepoints in the first 80% to prevent overfitting the recent end of the series — the last 20% is left as a buffer so the model does not mistake recent noise for a genuine trend change.','Changepoints are outliers identified by L1 regularisation','The 80% rule applies only to weekly seasonality'], ans:1, exp:'A changepoint is a date where the growth rate of the trend changed — growth could have sped up, slowed down, or reversed. Prophet automatically detects these by placing 25 candidate changepoints uniformly in the first 80% of the data, then using L1 regularisation (a sparsity penalty) to keep only those that genuinely improve the fit. The last 20% is excluded from changepoint placement as a safeguard: noisy fluctuations at the end of the series could be mistaken for trend changes, causing the forecast to extrapolate based on recent noise rather than the longer-term pattern.'},
+  {t:'ts8', q:'Why is plot_components() more useful for business insight than the main forecast plot?', opts:['plot_components() always gives lower uncertainty intervals','The forecast plot shows only the combined prediction. plot_components() separates each driver — trend, weekly pattern, yearly pattern, holiday effects — so you can quantify how much each factor contributes and explain the forecast in business terms.','plot_components() is faster to compute','The main forecast plot requires more data than plot_components()'], ans:1, exp:'The main forecast plot shows a single blue line (yhat) and a shaded uncertainty band. It answers "what will happen" but not "why." plot_components() decomposes the forecast into its parts: you can see that summer adds 8,000 hires per day, bank holidays subtract 12,000, and the long-term trend is slowly increasing. This decomposition is what makes Prophet valuable for stakeholder communication — you can say "our forecast for July is high because of seasonal demand, not because of underlying growth" rather than presenting a black-box number.'}
 ];
 
 const FLASHCARDS = [
@@ -9110,7 +9397,15 @@ const FLASHCARDS = [
   {t:'ts7', front:'Why ES does not require stationarity', back:'AR/ARIMA: must difference the series until stationary\n→ ADF test → diff → retest → pipeline\n\nExponential smoothing: no such requirement\n→ Apply directly to raw data\n→ SES handles level changes automatically\n→ DES handles linear trends\n→ TES handles seasonality on top\n\nThe weighted average structure adapts to\nnon-stationary behaviour without transformation.\n\nPractical advantage: load data → split → fit → forecast.\nNo preprocessing pipeline needed.'},
   {t:'ts7', front:'Holt-Winters seasonal_periods — how to choose', back:'seasonal_periods = number of time steps in one full cycle\n\nHow to find it:\nplot_acf(df, lags=15)\n→ largest significant spike beyond lag 1 = season length\n\nExamples:\n• Monthly data, annual seasonality → 12\n• Monthly data, 6-month business cycle → 6\n• Weekly data, annual seasonality → 52\n\nIf wrong: model fits cycle of wrong length\n→ seasonal corrections amplify noise\n→ TES MAE ≈ or > DES MAE\n→ re-read ACF and try again'},
   {t:'ts7', front:'Additive vs multiplicative seasonality', back:'seasonal="add" — additive\n→ seasonal swing is a FIXED AMOUNT\n→ December always adds £2M regardless of level\n→ Use when seasonal peaks stay same size in plot\n\nseasonal="mul" — multiplicative\n→ seasonal swing is a PERCENTAGE of level\n→ December always adds 20%, grows with series\n→ Use when seasonal peaks grow as series rises\n\nVisual check:\n• Constant amplitude → additive\n• Growing amplitude (funnel-shaped seasons) → multiplicative\n\nRevenue/sales with rapid growth → usually multiplicative'},
-  {t:'ts7', front:'forecast() vs predict() in exponential smoothing', back:'model.forecast(n)\n→ generates n steps into the FUTURE beyond training\n→ returns a Series indexed to future dates\n→ this is a genuine forecast\n\nmodel.predict(start, end)\n→ can generate in-sample OR out-of-sample values\n→ useful for visualising the fitted model\n\nTypical usage:\ny_pred = model.forecast(len(test))\nmean_absolute_error(test, y_pred)\n\nRemember: forecast() uses future dates from the\ntraining index — the training set must have a freq.'}
+  {t:'ts7', front:'forecast() vs predict() in exponential smoothing', back:'model.forecast(n)\n→ generates n steps into the FUTURE beyond training\n→ returns a Series indexed to future dates\n→ this is a genuine forecast\n\nmodel.predict(start, end)\n→ can generate in-sample OR out-of-sample values\n→ useful for visualising the fitted model\n\nTypical usage:\ny_pred = model.forecast(len(test))\nmean_absolute_error(test, y_pred)\n\nRemember: forecast() uses future dates from the\ntraining index — the training set must have a freq.'},
+
+  // TS8 Flashcards
+  {t:'ts8', front:'Prophet\'s additive model — the formula and what each part means', back:'y(t) = g(t) + s(t) + h(t) + ε(t)\n\ng(t) — trend: long-term growth direction\n        detected changepoints allow rate to vary\n\ns(t) — seasonality: repeating patterns\n        modelled with Fourier series\n        weekly + yearly by default\n\nh(t) — holidays / one-off events\n        user-supplied DataFrame of special days\n\nε(t) — noise: unexplained residual\n\nAll components are ADDED together.\nEach is separately interpretable via plot_components()'},
+  {t:'ts8', front:'ds and y — Prophet\'s strict column name requirement', back:'Prophet REQUIRES exactly these column names:\n• ds — datetime column (dates or timestamps)\n• y  — values to forecast\n\nRename before fitting:\ndf = df.rename(columns={"Date": "ds", "Revenue": "y"})\n\nForget to rename → ValueError at .fit()\n\nAlso: ds should be date objects (not strings)\ndf["ds"] = pd.to_datetime(df["ds"])\nor df["ds"] = df["ds"].dt.date'},
+  {t:'ts8', front:'Adding holidays and events to Prophet', back:'Build a DataFrame with two columns:\n• holiday: string name for each event type\n• ds: the dates\n\n# Bank holidays\nbank_df = pd.DataFrame({"holiday": "BankHoliday", "ds": holiday_dates})\n\n# Strikes (different name = separate effect learned)\nstrike_df = pd.DataFrame({"holiday": "strike", "ds": strike_dates})\n\n# Combine\nall_events = pd.concat((bank_df, strike_df))\n\n# Pass to model\nmodel = Prophet(holidays=all_events)\n\nSeparate names → separate effect sizes\n→ bank holidays can be negative, strikes positive'},
+  {t:'ts8', front:'Fit → make_future_dataframe → predict — the 3-step workflow', back:'# 1. Fit on historical data\nmodel = Prophet(holidays=events)\nmodel.fit(df_data)\n\n# 2. Create future dates DataFrame\n# periods=365 → forecast 1 year ahead\n# include_history=True → also includes past dates\ndf_dates = model.make_future_dataframe(periods=365, include_history=True)\n\n# 3. Predict\npredictions = model.predict(df_dates)\n# predictions["yhat"] = point forecast\n# predictions["yhat_lower/upper"] = 80% interval\n\n# 4. Plot\nmodel.plot(predictions)\nmodel.plot_components(predictions)'},
+  {t:'ts8', front:'Fourier order — underfitting vs overfitting seasonality', back:'Prophet models seasonality as sum of sine/cosine waves.\nFourier order = how many waves are summed.\n\nLow order (e.g. 1):\n→ smooth curve, misses sharp daily/weekly patterns\n→ underfitting\n\nDefault (weekly=3, yearly=10):\n→ good balance, works for most datasets\n\nHigh order (e.g. 20):\n→ wiggly curve that follows training noise\n→ overfitting → unstable forecasts\n\nHow to spot: check plot_components()\n→ smooth shape = good\n→ many sharp spikes = reduce the order'},
+  {t:'ts8', front:'Changepoints — what they are and how Prophet finds them', back:'A changepoint = a date where the trend rate changed\n(growth sped up, slowed, or reversed)\n\nHow Prophet finds them:\n1. Places 25 potential changepoints uniformly\n   in the FIRST 80% of training data\n2. Uses L1 regularisation (sparsity penalty)\n   to keep only real changes — as few as possible\n3. Last 20% excluded — prevents fitting end-of-series noise\n\nVisualise:\nfrom prophet.plot import add_changepoints_to_plot\nfig = model.plot(predictions)\nadd_changepoints_to_plot(fig.gca(), model, predictions)\n\nCompare to trend panel in plot_components() —\neach vertical line = kink in the trend'}
 ];
 
 // ===================== STATE =====================
@@ -9138,7 +9433,7 @@ function nav(page) {
   document.getElementById('main').scrollTop = 0;
   const navEl = document.querySelector(`[onclick="nav('${page}')"]`);
   if (navEl) navEl.classList.add('active');
-  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7'].includes(page)) {
+  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8'].includes(page)) {
     markVisited(page);
     renderInlineQuiz(page);
   }
@@ -9158,7 +9453,7 @@ function markVisited(w) {
 function updateGlobalProgress() {
   const pct = Math.round((visited.length / 25) * 100);
   document.getElementById('global-progress-bar').style.width = pct + '%';
-  document.getElementById('global-progress-label').textContent = `${visited.length} of 37 lessons visited`;
+  document.getElementById('global-progress-label').textContent = `${visited.length} of 38 lessons visited`;
 }
 
 // ===================== INLINE QUIZ =====================
