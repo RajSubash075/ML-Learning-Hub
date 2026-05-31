@@ -269,6 +269,8 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('ts1')" id="nav-ts1"><span class="icon">📈</span> L1: Introduction to Time Series<span class="check" id="check-ts1"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ts2')" id="nav-ts2"><span class="icon">🧹</span> L2: Preprocessing for Time Series<span class="check" id="check-ts2"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ts3')" id="nav-ts3"><span class="icon">🔬</span> L3: Preprocessing Practical<span class="check" id="check-ts3"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('ts4')" id="nav-ts4"><span class="icon">🧪</span> L4: Preprocessing Practical 2<span class="check" id="check-ts4"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('ts5')" id="nav-ts5"><span class="icon">📉</span> L5: Autoregressive Models<span class="check" id="check-ts5"></span></div>
   </div>
 
   <div class="sidebar-section" style="margin-top:10px">Practice</div>
@@ -1297,6 +1299,8 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
           <div class="topic-chip" id="chip-ts1" onclick="toggleChip('ts1')">L1: Intro to Time Series</div>
           <div class="topic-chip" id="chip-ts2" onclick="toggleChip('ts2')">L2: Preprocessing for Time Series</div>
           <div class="topic-chip" id="chip-ts3" onclick="toggleChip('ts3')">L3: Preprocessing Practical</div>
+          <div class="topic-chip" id="chip-ts4" onclick="toggleChip('ts4')">L4: Preprocessing Practical 2</div>
+          <div class="topic-chip" id="chip-ts5" onclick="toggleChip('ts5')">L5: Autoregressive Models</div>
         </div>
     </div>
     <div class="card" style="max-width:400px">
@@ -1413,6 +1417,8 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
         <div class="topic-chip" id="fc-chip-ts1" onclick="fcFilter('ts1')">L1: Intro to Time Series</div>
         <div class="topic-chip" id="fc-chip-ts2" onclick="fcFilter('ts2')">L2: Preprocessing for Time Series</div>
         <div class="topic-chip" id="fc-chip-ts3" onclick="fcFilter('ts3')">L3: Preprocessing Practical</div>
+        <div class="topic-chip" id="fc-chip-ts4" onclick="fcFilter('ts4')">L4: Preprocessing Practical 2</div>
+        <div class="topic-chip" id="fc-chip-ts5" onclick="fcFilter('ts5')">L5: Autoregressive Models</div>
       </div>
     </div>
   </div>
@@ -7064,6 +7070,435 @@ plt.plot(rolling_autocorr)</pre></div>
   </div>
 </div>
 
+<!-- TS4: PREPROCESSING PRACTICAL 2 -->
+<div class="page" id="page-ts4">
+  <div class="page-header">
+    <div class="chapter-badge">Time Series Analysis</div>
+    <h1>L4: Preprocessing Practical 2</h1>
+    <p class="subtitle">Resampling the bikes dataset, interactive exploration with ipywidgets, multi-column plotting, and rolling windows as feature engineering tools.</p>
+  </div>
+
+  <div class="card">
+    <h2>Part 1 — Resampling the Bikes Dataset</h2>
+    <p>The bikes dataset has <strong>daily</strong> ride counts with a standard date column pandas can parse automatically — no custom parser needed.</p>
+
+    <h3 style="margin-bottom:8px">Load and monthly downsample</h3>
+    <div class="code-block"><pre>bikes = pd.read_csv(<span class="str">"data/bikes.csv"</span>, parse_dates=[<span class="str">"date"</span>], index_col=<span class="str">"date"</span>)
+
+<span class="cm"># Downsample: one row per month, value = mean of all days in that month</span>
+bikes_monthly = bikes.resample(<span class="str">"M"</span>).mean()
+
+plt.figure(figsize=(<span class="num">12</span>, <span class="num">3</span>))
+plt.plot(bikes_monthly.temperature, <span class="str">"-o"</span>)</pre></div>
+    <div class="key-concept">
+      <div class="label">What "M" means</div>
+      <p><code>"M"</code> is month-end frequency — pandas groups all rows in the same calendar month and applies the aggregation (<code>.mean()</code> here). The resulting index lands on the last day of each month. Common aliases: <code>"D"</code> = daily, <code>"W"</code> = weekly, <code>"M"</code> = monthly, <code>"Q"</code> = quarterly, <code>"A"</code> = annual.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Weekly downsample — humidity</h3>
+    <div class="code-block"><pre><span class="cm"># First look at raw daily humidity</span>
+bikes.plot(y=<span class="str">"humidity"</span>, figsize=(<span class="num">12</span>, <span class="num">3</span>), fontsize=<span class="num">12</span>)
+
+<span class="cm"># Then weekly average</span>
+bikes_weeks = bikes.resample(<span class="str">"W"</span>).mean()
+
+plt.figure(figsize=(<span class="num">12</span>, <span class="num">3</span>))
+plt.plot(bikes_weeks.humidity, <span class="str">"-o"</span>)</pre></div>
+    <div class="key-concept">
+      <div class="label">What you observe comparing daily vs weekly</div>
+      <p>Daily humidity is noisy — jagged spikes up and down every few days. Weekly averages smooth out day-to-day variability and reveal a <strong>seasonal pattern</strong>: humidity rises in autumn/winter and falls in spring/summer. The shape of the cycle becomes much clearer at weekly resolution.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Upsampling to every 6 hours</h3>
+    <div class="code-block"><pre><span class="cm"># Upsample from daily to every 6 hours (0.25 of a day)</span>
+bikes_6h = bikes.resample(<span class="str">"0.25D"</span>).ffill()
+
+plt.figure(figsize=(<span class="num">12</span>, <span class="num">3</span>))
+plt.plot(bikes_6h.humidity, <span class="str">"-o"</span>)</pre></div>
+    <div class="alert alert-warn">⚠️ <strong>ffill on count data is misleading.</strong> Forward-filling a rental count creates 4 identical rows per day — implying the same number of bikes were rented in every 6-hour window. For a rate like temperature or humidity, ffill or linear interpolation is defensible. For counts, the right approach is to leave NaN or use a domain-specific model.</div>
+
+    <table class="styled-table" style="margin-top:16px">
+      <thead><tr><th>Direction</th><th>Example</th><th>Effect</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Downsample</strong></td><td>daily → monthly</td><td>Fewer rows, less noise, seasonal pattern clearer</td></tr>
+        <tr><td><strong>Upsample</strong></td><td>daily → 6-hourly</td><td>More rows, gaps filled with ffill/interpolation</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Part 2 — Multi-Column Plotting and Yearly Trends</h2>
+    <p>When comparing two variables (e.g. wine vs beer), pass a <strong>list</strong> to the <code>y</code> parameter — not two separate strings.</p>
+
+    <h3 style="margin-bottom:8px">Correct syntax for multiple columns</h3>
+    <div class="code-block"><pre><span class="cm"># Correct — list of column names</span>
+alcohol_consumption_year.plot(y=[<span class="str">"TotalBeer"</span>, <span class="str">"TotalWine"</span>], figsize=(<span class="num">12</span>, <span class="num">3</span>), fontsize=<span class="num">12</span>)
+
+<span class="cm"># Wrong — SyntaxError: positional arg after keyword arg</span>
+<span class="cm"># alcohol_consumption_year.plot(y="TotalBeer", "TotalWine", ...)</span></pre></div>
+    <div class="key-concept">
+      <div class="label">Why the wrong version fails</div>
+      <p><code>y="TotalBeer"</code> is a keyword argument. <code>"TotalWine"</code> without a keyword name is a positional argument. Python does not allow positional arguments to follow keyword arguments — it raises a <code>SyntaxError</code> before any code runs.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Yearly resampling to extract long-term trends</h3>
+    <div class="code-block"><pre><span class="cm"># 12M = 12-month period — one data point per year</span>
+alcohol_consumption_year = alcohol_consumption.resample(<span class="str">"12M"</span>).mean()
+
+alcohol_consumption_year.plot(
+    y=[<span class="str">"TotalBeer"</span>, <span class="str">"TotalWine"</span>],
+    figsize=(<span class="num">12</span>, <span class="num">3</span>),
+    fontsize=<span class="num">12</span>
+)</pre></div>
+    <div class="key-concept">
+      <div class="label">What the yearly plot reveals</div>
+      <p>Quarterly data has a strong seasonal cycle (Q4 is always the peak) that masks long-term trends. Resampling to yearly averages collapses each year into one point, removing the seasonal zigzag entirely. The result: <strong>beer consumption stays roughly flat over the decade</strong> while <strong>wine consumption climbs steadily</strong>. This trend would be invisible at quarterly resolution without differencing.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Part 3 — Interactive Exploration with ipywidgets</h2>
+    <p><code>ipywidgets.interact</code> automatically builds a slider or dropdown for any function parameter. It re-runs the function every time the slider moves — a fast way to understand how a hyperparameter (window size, lag) changes the output.</p>
+
+    <h3 style="margin-bottom:8px">Interactive rolling average</h3>
+    <div class="code-block"><pre><span class="kw">from</span> ipywidgets <span class="kw">import</span> interact
+
+<span class="kw">def</span> rolling_avg_plot(window_size):
+    plt.plot(alcohol_consumption.TotalWine, <span class="str">"-o"</span>, label=<span class="str">"wine consumption"</span>)
+    rolling = alcohol_consumption.TotalWine.rolling(window=window_size).mean()
+    plt.plot(rolling, label=<span class="str">"trend"</span>)
+    plt.legend()
+    plt.show()
+
+<span class="cm"># Creates a slider for window_size from 0 to 10</span>
+interact(rolling_avg_plot, window_size=(<span class="num">0</span>, <span class="num">10</span>))</pre></div>
+    <div class="key-concept">
+      <div class="label">What you observe as window_size increases</div>
+      <p><strong>Small window (1–2):</strong> the rolling line hugs the original series closely — very little smoothing, fast response to changes.<br><br>
+      <strong>Window = 4:</strong> covers one full year of quarters, cancels seasonal peaks and troughs, reveals the underlying trend.<br><br>
+      <strong>Large window (8–10):</strong> the line is very smooth but lags significantly behind the actual series — it misses the 2008 dip until much later.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Interactive EMA</h3>
+    <div class="code-block"><pre><span class="kw">def</span> rolling_avg_plot(window_size):
+    plt.plot(alcohol_consumption.TotalWine, <span class="str">"-o"</span>, label=<span class="str">"wine consumption"</span>)
+    rolling = alcohol_consumption.TotalWine.ewm(
+        span=window_size + <span class="num">1</span>, adjust=<span class="kw">False</span>
+    ).mean()
+    plt.plot(rolling, label=<span class="str">"trend"</span>)
+    plt.legend()
+    plt.show()
+
+interact(rolling_avg_plot, window_size=(<span class="num">0</span>, <span class="num">10</span>))</pre></div>
+    <div class="key-concept">
+      <div class="label">EMA vs rolling mean at the same span</div>
+      <p>At the same <code>window_size</code>, the EMA line tracks the original series more closely than the rolling mean — especially at turning points like the 2008 dip. This is because EMA gives recent points higher weight, so it reacts to direction changes faster. The rolling mean needs the full window to shift before the average changes meaningfully.</p>
+    </div>
+
+    <table class="styled-table" style="margin-top:16px">
+      <thead><tr><th></th><th>Rolling mean</th><th>EMA</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Weighting</strong></td><td>Equal across window</td><td>Exponential decay — recent points matter most</td></tr>
+        <tr><td><strong>NaN at start</strong></td><td>First window−1 rows are NaN</td><td>No NaN — uses all available history</td></tr>
+        <tr><td><strong>Lag at turns</strong></td><td>Higher — slower to react</td><td>Lower — reacts sooner to changes</td></tr>
+        <tr><td><strong>Use when</strong></td><td>Stable trend, seasonal removal</td><td>Recent changes are more predictive</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Part 4 — Rolling Windows as Feature Engineering</h2>
+    <p>Rolling statistics are not just for visualisation — they are standard ML features for time series models. Each row gets a feature derived from the recent history of the series.</p>
+
+    <h3 style="margin-bottom:8px">Rolling sum — cumulative window total</h3>
+    <div class="code-block"><pre><span class="cm"># Rolling sum over 4 quarters = trailing annual total at each point</span>
+rolling_sum = alcohol_consumption.TotalWine.rolling(window=<span class="num">4</span>).sum()
+
+plt.figure(figsize=(<span class="num">8</span>, <span class="num">6</span>))
+plt.plot(alcohol_consumption.TotalWine, <span class="str">"-o"</span>, label=<span class="str">"wine consumption"</span>)
+plt.plot(rolling_sum, label=<span class="str">"rolling sum"</span>)
+plt.legend(fontsize=<span class="num">12</span>)</pre></div>
+    <p>The rolling sum is approximately 4× the rolling mean — it shows the <em>total</em> consumption over the trailing year at every quarter. This amplifies scale but makes cumulative growth visible: a steady upward trend in the rolling sum means consumption is growing year-on-year.</p>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Rolling autocorrelation — local predictability</h3>
+    <div class="code-block"><pre><span class="cm"># raw=False: passes each window as a pandas Series so .autocorr() works</span>
+rolling_autocorr = alcohol_consumption.TotalWine.rolling(<span class="num">4</span>).apply(
+    <span class="kw">lambda</span> x: x.autocorr(), raw=<span class="kw">False</span>
+)
+
+plt.figure(figsize=(<span class="num">8</span>, <span class="num">6</span>))
+plt.plot(rolling_autocorr)</pre></div>
+    <div class="key-concept">
+      <div class="label">What rolling autocorrelation tells you</div>
+      <p>Each value measures the lag-1 autocorrelation <em>within that 4-quarter window</em> — i.e., how much each quarter predicts the next one locally. A period near <strong>+1</strong> means the local trend is smooth and predictable. Near <strong>0</strong> means the series is erratic at that point. Near <strong>−1</strong> means a strong alternating pattern (high-low-high). This is useful as a <strong>regime detector</strong>: sudden drops in rolling autocorrelation mark structural breaks or unusual periods.</p>
+    </div>
+
+    <div class="key-concept">
+      <div class="label">Why raw=False is required</div>
+      <p><code>rolling().apply()</code> passes each window as a <strong>numpy array</strong> by default (<code>raw=True</code>). NumPy arrays do not have a <code>.autocorr()</code> method — that is a pandas Series method. Setting <code>raw=False</code> forces pandas to wrap each window in a Series object before calling your function. Trade-off: <code>raw=False</code> is slower because it builds a new Series for every window position.</p>
+    </div>
+
+    <table class="styled-table" style="margin-top:16px">
+      <thead><tr><th>Feature</th><th>Code</th><th>What it captures</th></tr></thead>
+      <tbody>
+        <tr><td>Local mean</td><td><code>.rolling(k).mean()</code></td><td>Recent level</td></tr>
+        <tr><td>Local std</td><td><code>.rolling(k).std()</code></td><td>Recent volatility</td></tr>
+        <tr><td>Local sum</td><td><code>.rolling(k).sum()</code></td><td>Cumulative total over window</td></tr>
+        <tr><td>Local autocorr</td><td><code>.rolling(k).apply(lambda x: x.autocorr(), raw=False)</code></td><td>Local predictability / regime</td></tr>
+        <tr><td>EMA</td><td><code>.ewm(span=k).mean()</code></td><td>Recency-weighted level, no NaN</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-ts4"></div></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('ts4')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('ts3')">← L3: Preprocessing Practical</button>
+  </div>
+</div>
+
+<!-- TS5: AUTOREGRESSIVE MODELS -->
+<div class="page" id="page-ts5">
+  <div class="page-header">
+    <div class="chapter-badge">Time Series Analysis</div>
+    <h1>L5: Autoregressive Models</h1>
+    <p class="subtitle">Fitting AR and ARMA models on the NZ alcohol dataset — automatic lag selection, in-sample prediction, MAE evaluation, and implementing AR from scratch with sklearn.</p>
+  </div>
+
+  <div class="card">
+    <h2>Imports</h2>
+    <div class="code-block"><pre><span class="kw">import</span> re
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="kw">from</span> statsmodels.api <span class="kw">import</span> tsa
+<span class="kw">from</span> statsmodels.tsa.ar_model <span class="kw">import</span> ar_select_order
+<span class="kw">from</span> statsmodels.tsa.arima.model <span class="kw">import</span> ARIMA
+<span class="kw">from</span> sklearn.linear_model <span class="kw">import</span> LinearRegression
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> mean_absolute_error</pre></div>
+    <table class="styled-table" style="margin-top:12px">
+      <thead><tr><th>Import</th><th>What it provides</th></tr></thead>
+      <tbody>
+        <tr><td><code>tsa.AutoReg</code></td><td>Statsmodels AR model</td></tr>
+        <tr><td><code>ar_select_order</code></td><td>Automatic lag selection via AIC/BIC</td></tr>
+        <tr><td><code>ARIMA</code></td><td>ARIMA and ARMA models</td></tr>
+        <tr><td><code>LinearRegression</code></td><td>Used to implement AR manually with sklearn</td></tr>
+        <tr><td><code>mean_absolute_error</code></td><td>Measures average prediction error</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Step 1 — Load Data and Create Stationary Series</h2>
+    <p>AR models require a stationary series. The alcohol dataset has quarterly seasonality — <code>diff(4)</code> removes it by subtracting the value from the same quarter one year ago.</p>
+    <div class="code-block"><pre>alcohol_consumption = pd.read_csv(
+    <span class="str">'data/NZAlcoholConsumption.csv'</span>,
+    index_col=<span class="str">'DATE'</span>
+)
+alcohol_consumption.index = alcohol_consumption.index.map(parse_quarter)
+alcohol_consumption.sort_index(inplace=<span class="kw">True</span>)
+
+<span class="cm"># Difference by 4 to remove quarterly seasonality, drop NaN rows</span>
+time_series = alcohol_consumption.TotalWine.diff(<span class="num">4</span>).dropna()
+
+plt.figure(figsize=(<span class="num">8</span>, <span class="num">6</span>))
+plt.plot(time_series, <span class="str">"-o"</span>)
+plt.title(<span class="str">"Does this look stationary?"</span>)</pre></div>
+    <div class="key-concept">
+      <div class="label">What to look for in the plot</div>
+      <p>The series should oscillate around a constant mean (roughly zero) with no upward/downward drift and no expanding variance. After <code>diff(4)</code> on TotalWine the trend is gone and the seasonal zigzag is removed — the result looks stationary enough to fit an AR model.</p>
+    </div>
+    <div class="alert alert-warn">⚠️ Always visually inspect after differencing. If the plot still drifts or fans out, you may need an additional <code>diff(1)</code> on top of <code>diff(4)</code>.</div>
+  </div>
+
+  <div class="card">
+    <h2>Step 2 — Set Explicit Frequency</h2>
+    <p>Statsmodels requires the DatetimeIndex to have a known frequency before fitting. If you load data from CSV and map dates manually, the index has no frequency attached — statsmodels will refuse to fit.</p>
+    <div class="code-block"><pre><span class="cm"># '3ME' = every 3 months, month-end (quarterly)</span>
+<span class="cm"># method='ffill' fills any missing quarters by carrying the last value forward</span>
+time_series = time_series.asfreq(<span class="str">'3ME'</span>, method=<span class="str">'ffill'</span>)</pre></div>
+    <div class="key-concept">
+      <div class="label">Why this step is needed</div>
+      <p>Pandas DatetimeIndex can have timestamps without a declared frequency — it just knows the dates, not the spacing. Statsmodels uses the frequency to reason about lags in time terms. <code>asfreq('3ME')</code> declares "these points are spaced exactly 3 months apart" and creates any missing rows (filled with <code>ffill</code>). Without this, <code>ar_select_order</code> and <code>AutoReg</code> raise a frequency error.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Step 3 — Automatic Lag Selection with BIC</h2>
+    <p>Instead of reading the PACF by eye, <code>ar_select_order</code> fits every AR model from p=1 to p=maxlag and scores each one. You pick the p with the lowest BIC.</p>
+    <div class="code-block"><pre><span class="cm"># Fit AR(1) through AR(10), record AIC and BIC for each</span>
+set_of_models = ar_select_order(time_series, maxlag=<span class="num">10</span>, old_names=<span class="kw">False</span>)
+
+<span class="cm"># set_of_models.bic is a dict: {(1,): value, (2,): value, ..., (4,): value}</span>
+<span class="cm"># min(..., key=...) finds the key (lag tuple) with the lowest BIC value</span>
+<span class="cm"># [-1] extracts the integer from the tuple, e.g. (4,) → 4</span>
+optlag = min(set_of_models.bic, key=set_of_models.bic.get)[-1]
+print(<span class="str">'Optimal p ='</span>, optlag)</pre></div>
+    <div class="key-concept">
+      <div class="label">Breaking down the BIC extraction</div>
+      <p><code>set_of_models.bic</code> looks like <code>{(1,): 45.2, (2,): 43.1, (4,): 41.3, ...}</code> — keys are tuples of lag numbers, values are BIC scores.<br><br>
+      <code>min(..., key=set_of_models.bic.get)</code> — finds the key whose value is smallest, i.e. the lag tuple with the best BIC.<br><br>
+      <code>[-1]</code> — extracts the last element of the tuple. For <code>(4,)</code> that gives <code>4</code>. For a model like <code>(1, 4)</code> it gives <code>4</code> — the largest lag in the model.</p>
+    </div>
+    <table class="styled-table" style="margin-top:12px">
+      <thead><tr><th>Score</th><th>Penalty per parameter</th><th>Tendency</th></tr></thead>
+      <tbody>
+        <tr><td><strong>AIC</strong></td><td>2</td><td>Accepts slightly more complex models</td></tr>
+        <tr><td><strong>BIC</strong></td><td>log(n) — grows with data size</td><td>Prefers simpler models, less overfitting risk</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Step 4 — Fit the AR Model and Predict</h2>
+    <div class="code-block"><pre><span class="cm"># Build the model — nothing is fitted yet</span>
+ar = tsa.AutoReg(endog=time_series, lags=optlag)
+
+<span class="cm"># Fit: estimate the φ coefficients using least squares</span>
+ar_result = ar.fit()
+
+<span class="cm"># Predict in-sample — start=optlag skips the first p rows (no lag history yet)</span>
+prediction = ar_result.predict(start=optlag)
+
+plt.figure(figsize=(<span class="num">12</span>, <span class="num">4</span>))
+plt.plot(time_series, <span class="str">'-o'</span>, label=<span class="str">'true'</span>)
+plt.plot(prediction, <span class="str">'-o'</span>, label=<span class="str">'model'</span>)
+plt.legend(fontsize=<span class="num">12</span>)</pre></div>
+
+    <div class="key-concept">
+      <div class="label">Why start=optlag?</div>
+      <p>An AR(p) model needs p past values to make a prediction. Row 0 has no history. Row 1 has only 1 previous value. The first row with a full lag window is row p. Setting <code>start=optlag</code> skips straight to the first valid prediction — rows before it would be NaN anyway.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Evaluating with MAE</h3>
+    <div class="code-block"><pre><span class="cm"># Compare predictions against the true values from row optlag onwards</span>
+print(<span class="str">'MAE = {0:.3f}'</span>.format(mean_absolute_error(time_series[optlag:], prediction)))</pre></div>
+    <div class="key-concept">
+      <div class="label">What MAE tells you</div>
+      <p><strong>Mean Absolute Error</strong> = average of |true − predicted| across all points. It's in the same units as your series. A MAE of 0.15 on a differenced wine series means the model is on average 0.15 units off per quarter. Lower is better. Compare against a naive baseline (e.g. "predict the previous value") to judge whether the AR model actually helps.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Inspecting the fitted model</h3>
+    <div class="code-block"><pre><span class="cm"># Full summary: coefficients, p-values, AIC, BIC, residual diagnostics</span>
+print(ar_result.summary())</pre></div>
+    <p>Key things to read in the summary: <strong>coef</strong> — the φ values for each lag. <strong>P&gt;|t|</strong> — if &lt; 0.05, that lag is statistically significant. <strong>AIC/BIC</strong> — model quality. If some lags have p-value &gt; 0.05, consider reducing p.</p>
+  </div>
+
+  <div class="card">
+    <h2>Step 5 — AR with Sklearn (Same Model, Different Tool)</h2>
+    <p>AR is just linear regression where the features are lagged values of the target. You can implement it with sklearn by manually building the lag feature matrix.</p>
+
+    <h3 style="margin-bottom:8px">The organize_data helper</h3>
+    <div class="code-block"><pre><span class="kw">def</span> organize_data(to_forecast, window, horizon=<span class="num">1</span>):
+    <span class="cm">"""
+    Turns a 1D time series into a supervised learning problem.
+    Each row of X = one window of 'window' past values.
+    Each value of y = the value 'horizon' steps ahead of that window.
+    """</span>
+    shape = to_forecast.shape[:-<span class="num">1</span>] + (to_forecast.shape[-<span class="num">1</span>] - window + <span class="num">1</span>, window)
+    strides = to_forecast.values.strides + (to_forecast.values.strides[-<span class="num">1</span>],)
+    X = np.lib.stride_tricks.as_strided(to_forecast, shape=shape, strides=strides)
+    y = np.array([X[i+horizon][-<span class="num">1</span>] <span class="kw">for</span> i <span class="kw">in</span> range(len(X)-horizon)])
+    <span class="kw">return</span> X[:-horizon], y
+
+X, y = organize_data(time_series, optlag)</pre></div>
+    <div class="key-concept">
+      <div class="label">What organize_data produces</div>
+      <p>For a series <code>[a, b, c, d, e, f]</code> with <code>window=3</code>:<br><br>
+      X (features — 3 past values per row):<br>
+      <code>[a, b, c]</code><br>
+      <code>[b, c, d]</code><br>
+      <code>[c, d, e]</code><br><br>
+      y (target — next value):<br>
+      <code>[d, e, f]</code><br><br>
+      Each row of X is one "lookback window". LinearRegression then learns how to combine the 3 values in each window to predict the next one — which is exactly what AR does.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Fit LinearRegression as AR</h3>
+    <div class="code-block"><pre>lr = LinearRegression()
+lr.fit(X, y)
+prediction = lr.predict(X)
+
+plt.figure(figsize=(<span class="num">12</span>, <span class="num">4</span>))
+plt.plot(time_series.values, <span class="str">'-o'</span>)
+plt.plot(np.arange(optlag, len(time_series)), prediction, <span class="str">'-o'</span>, label=<span class="str">'prediction'</span>)
+plt.legend(fontsize=<span class="num">12</span>)</pre></div>
+    <div class="key-concept">
+      <div class="label">The result is identical to AutoReg</div>
+      <p>Both methods fit the same mathematical model — they minimise the same least squares objective. The sklearn approach gives you the same predictions and coefficients. The advantage of the sklearn route: you can swap <code>LinearRegression</code> for any other sklearn regressor (Ridge, GradientBoosting, etc.) to build a <strong>custom autoregressive model</strong> with different assumptions.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>ARMA — Adding Past Errors as Features</h2>
+    <p>In an AR model the residuals <code>e(t)</code> are assumed to be pure noise — discarded. But what if those errors carry information? <strong>ARMA</strong> adds the past errors as additional predictors.</p>
+
+    <div class="key-concept">
+      <div class="label">The ARMA formula</div>
+      <p>
+      <strong>AR part:</strong> φ₁·y(t−1) + φ₂·y(t−2) + ... + φₚ·y(t−p)<br>
+      <strong>MA part:</strong> θ₁·e(t−1) + θ₂·e(t−2) + ... + θ_q·e(t−q)<br><br>
+      Full: <strong>y(t) = c + AR(p) + MA(q) + e(t)</strong><br><br>
+      The AR part uses past <em>values</em>. The MA part uses past <em>forecast errors</em>. Together they model both the memory of the series and the memory of the mistakes.
+      </p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Fitting ARMA in statsmodels</h3>
+    <div class="code-block"><pre><span class="cm"># ARIMA(order=(p, d, q)) — setting d=0 turns ARIMA into ARMA</span>
+<span class="cm"># d is the differencing order — we already differenced manually so d=0</span>
+arma = ARIMA(time_series, order=(<span class="num">3</span>, <span class="num">0</span>, <span class="num">3</span>))
+arma_result = arma.fit()
+
+<span class="cm"># start=3 because p=3 — same reason as AR: need 3 past values first</span>
+prediction = arma_result.predict(start=<span class="num">3</span>)
+
+plt.figure(figsize=(<span class="num">12</span>, <span class="num">4</span>))
+plt.plot(time_series, <span class="str">'-o'</span>, label=<span class="str">'true'</span>)
+plt.plot(prediction, <span class="str">'-o'</span>, label=<span class="str">'model'</span>)
+plt.legend()
+
+print(<span class="str">'MAE = {0:.3f}'</span>.format(mean_absolute_error(time_series[<span class="num">3</span>:], prediction)))</pre></div>
+
+    <div class="key-concept">
+      <div class="label">Why ARIMA with d=0 is ARMA</div>
+      <p>ARIMA stands for <strong>A</strong>uto<strong>R</strong>egressive <strong>I</strong>ntegrated <strong>M</strong>oving <strong>A</strong>verage. The <strong>I</strong> (Integrated) part is the differencing step — <code>d</code> tells the model how many times to difference. Setting <code>d=0</code> means "don't difference" — the model reduces to plain ARMA. Since we already applied <code>diff(4)</code> manually before fitting, we pass <code>d=0</code>.</p>
+    </div>
+
+    <table class="styled-table" style="margin-top:16px">
+      <thead><tr><th>Model</th><th>order</th><th>What it uses</th></tr></thead>
+      <tbody>
+        <tr><td><strong>AR(p)</strong></td><td>(p, 0, 0)</td><td>Past values only</td></tr>
+        <tr><td><strong>MA(q)</strong></td><td>(0, 0, q)</td><td>Past errors only</td></tr>
+        <tr><td><strong>ARMA(p,q)</strong></td><td>(p, 0, q)</td><td>Past values + past errors</td></tr>
+        <tr><td><strong>ARIMA(p,d,q)</strong></td><td>(p, d, q)</td><td>ARMA + built-in differencing</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Full Workflow Summary</h2>
+    <table class="styled-table">
+      <thead><tr><th>Step</th><th>Code</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>1. Stationarise</td><td><code>.diff(4).dropna()</code></td><td>Remove seasonality so AR assumptions hold</td></tr>
+        <tr><td>2. Set frequency</td><td><code>.asfreq('3ME', method='ffill')</code></td><td>Tell statsmodels the time spacing</td></tr>
+        <tr><td>3. Select p</td><td><code>ar_select_order(...).bic</code></td><td>Find optimal lag via BIC</td></tr>
+        <tr><td>4. Fit AR</td><td><code>AutoReg(series, lags=p).fit()</code></td><td>Learn the φ coefficients</td></tr>
+        <tr><td>5. Predict</td><td><code>.predict(start=p)</code></td><td>In-sample fitted values</td></tr>
+        <tr><td>6. Evaluate</td><td><code>mean_absolute_error(...)</code></td><td>Average prediction error</td></tr>
+        <tr><td>7. Extend</td><td><code>ARIMA(series, order=(p,0,q))</code></td><td>Add MA terms if residuals have structure</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-ts5"></div></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('ts5')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('ts4')">← L4: Preprocessing Practical 2</button>
+  </div>
+</div>
+
 <!-- TS2: PREPROCESSING FOR TIME SERIES -->
 <div class="page" id="page-ts2">
   <div class="page-header">
@@ -7345,7 +7780,9 @@ const TOPICS = {
   ul5: 'UL L5: t-SNE',
   ts1: 'TS L1: Intro to Time Series',
   ts2: 'TS L2: Preprocessing for Time Series',
-  ts3: 'TS L3: Preprocessing Practical'
+  ts3: 'TS L3: Preprocessing Practical',
+  ts4: 'TS L4: Preprocessing Practical 2',
+  ts5: 'TS L5: Autoregressive Models'
 };
 
 const ALL_QUESTIONS = [
@@ -7659,7 +8096,23 @@ const ALL_QUESTIONS = [
   {t:'ts3', q:'After calling alcohol_consumption.TotalWine.diff(1), the plot shows the differenced series oscillating around zero but still has a clear repeating 4-point zigzag. What does this tell you?', opts:['diff(1) failed — try diff(2) instead','The trend has been removed but quarterly seasonality remains — diff(1) removes linear trend, not seasonality. Use diff(4) next.','The series is now stationary — the zigzag is just noise','You need to apply StandardScaler before differencing'], ans:1, exp:'diff(1) subtracts consecutive values, which removes a steady upward or downward drift (linear trend). But a repeating quarterly pattern (Q4 always high, Q2 always low) survives because it is not a trend — it is a cycle. To remove quarterly seasonality you need diff(4), which subtracts the value from the same quarter one year ago. The ACF/PACF plots would confirm this by showing a large spike at lag 4.'},
   {t:'ts3', q:'The PACF plot of TotalWine shows a significant spike only at lag 4, while the ACF shows spikes at lags 4, 8, and 12. How do you interpret this?', opts:['The series has three independent seasonal cycles of period 4, 8, and 12','Only lag 4 is a direct dependency — lags 8 and 12 are indirect chain effects caused by the lag-4 autocorrelation. Use diff(4) to remove the seasonality.','The series needs to be differenced 12 times','Lags 8 and 12 are more important than lag 4 because they have larger spikes'], ans:1, exp:'ACF measures all correlations — direct and indirect. If today correlates strongly with 4 quarters ago, and 4 quarters ago correlates with 8 quarters ago, ACF will show a spike at 8 too — even though there is no direct relationship spanning 8 quarters. PACF removes those chain effects and shows only direct relationships. A spike only at lag 4 in the PACF confirms the direct seasonality is 4 quarters. diff(4) is the correct remedy.'},
   {t:'ts3', q:'What does testStationarity(alcohol_consumption.TotalWine.diff(4).dropna()) do, in order?', opts:['Drops NaN rows, then differences by 4, then runs ADF','Differences by 4 (creates NaN in first 4 rows), drops NaN, passes the result as x to testStationarity which runs adfuller and checks if p < 0.05','Runs ADF on the raw series, then differences, then checks stationarity','Smooths the series with a window of 4, then tests stationarity'], ans:1, exp:'Python evaluates the argument before calling the function. So: (1) .diff(4) subtracts the value from 4 quarters ago — the first 4 rows become NaN. (2) .dropna() removes those NaN rows so adfuller can run. (3) The clean differenced Series is passed in as x. Inside the function: adfuller(x) runs the test, results[1] is the p-value, and if p < 0.05 it returns "stationary". The ADF null is non-stationary, so a small p-value is the good outcome.'},
-  {t:'ts3', q:'You use rolling(4).apply(lambda x: x.autocorr(), raw=False). Why is raw=False needed here?', opts:['raw=False is faster than raw=True for large datasets','raw=False passes each window as a pandas Series instead of a numpy array — needed because .autocorr() is a pandas method not available on numpy arrays','raw=False skips NaN values automatically','raw=False centres the window instead of right-aligning it'], ans:1, exp:'By default (raw=True), rolling().apply() passes each window as a plain numpy array for speed. But numpy arrays do not have pandas methods like .autocorr(), .skew(), or .corr(). Setting raw=False passes the window as a pandas Series, making all Series methods available inside the lambda. The trade-off: raw=False is slower because it builds a Series object for every window.'}
+  {t:'ts3', q:'You use rolling(4).apply(lambda x: x.autocorr(), raw=False). Why is raw=False needed here?', opts:['raw=False is faster than raw=True for large datasets','raw=False passes each window as a pandas Series instead of a numpy array — needed because .autocorr() is a pandas method not available on numpy arrays','raw=False skips NaN values automatically','raw=False centres the window instead of right-aligning it'], ans:1, exp:'By default (raw=True), rolling().apply() passes each window as a plain numpy array for speed. But numpy arrays do not have pandas methods like .autocorr(), .skew(), or .corr(). Setting raw=False passes the window as a pandas Series, making all Series methods available inside the lambda. The trade-off: raw=False is slower because it builds a Series object for every window.'},
+
+  // TS4
+  {t:'ts4', q:'bikes.resample("M").mean() and bikes.resample("W").mean() both compute averages of the humidity column. What is the key visual difference in the output plots?', opts:['Monthly and weekly produce identical plots — only the x-axis labels differ','Weekly averages show more short-term noise than monthly; monthly averages smooth more aggressively, making the seasonal shape clearer','Weekly averages always have a higher mean than monthly averages','Monthly resampling requires a custom date parser; weekly does not'], ans:1, exp:'Both compute averages within each period, but the period length differs. Weekly averages group ~7 days — enough to smooth day-to-day spikes but short enough to preserve within-season variation. Monthly averages group ~30 days — the seasonal shape (high in autumn/winter, low in spring/summer) becomes the dominant visible feature. The more you downsample, the smoother the signal but the less fine detail is retained.'},
+  {t:'ts4', q:'You write: bikes_6h = bikes.resample("0.25D").ffill(). Why is forward-filling problematic for the rental count column specifically?', opts:['Forward fill is always invalid for upsampling','Forward fill implies the same count of rentals occurred in every 6-hour window within each day, which is physically implausible for a count variable. It is more defensible for continuous measurements like temperature.','Forward fill requires the series to be stationary first','0.25D is not a valid resample frequency'], ans:1, exp:'ffill carries the last known value forward into all new rows. For temperature or humidity (continuous, slowly varying), assuming the value held constant for 6 hours is a reasonable approximation. For rental counts (discrete events, strongly time-of-day dependent), implying the same number of bikes were rented in every 6-hour window is not physically meaningful. Domain knowledge must guide the fill method choice.'},
+  {t:'ts4', q:'alcohol_consumption_year.plot(y="TotalBeer","TotalWine", figsize=(12,3)) raises a SyntaxError. What is the fix and why?', opts:['Change y="TotalBeer" to y=TotalBeer (no quotes)','Pass the columns as a list: y=["TotalBeer","TotalWine"]. A positional argument cannot follow a keyword argument in Python.','Use two separate .plot() calls','Add a comma after figsize=(12,3)'], ans:1, exp:'y="TotalBeer" is a keyword argument. "TotalWine" after it is a positional argument — Python forbids positional arguments after keyword arguments and raises SyntaxError before the code runs. The fix is to collect both column names into a list and assign the whole list to y: y=["TotalBeer","TotalWine"].'},
+  {t:'ts4', q:'After resampling quarterly alcohol data to yearly with resample("12M").mean() and plotting both TotalWine and TotalBeer, what trend becomes visible that was hard to see at quarterly resolution?', opts:['Quarterly seasonality becomes more pronounced','The long-term trend: wine consumption rises steadily over the decade while beer stays roughly flat. The seasonal zigzag is collapsed into one annual average, leaving only the multi-year direction.','The series becomes stationary after yearly resampling','The noise increases because fewer data points remain'], ans:1, exp:'Quarterly data has a strong Q4 peak and Q2 trough every year — this seasonal cycle visually dominates the plot and obscures whether the overall level is rising or falling. Averaging across the four quarters of each year removes the cycle entirely, leaving one point per year. The trend — wine rising, beer flat — becomes unmistakable. This is the main purpose of yearly resampling: trend extraction.'},
+  {t:'ts4', q:'Using ipywidgets interact to explore rolling window size, you drag the slider from 1 to 8. What do you observe about the rolling mean line as window_size increases?', opts:['The line becomes more jagged and closely tracks every spike','The line becomes smoother and lags further behind the original series — it misses the 2008 dip until later in the window','The line becomes identical to the EMA at large window sizes','The first half of the series disappears because of NaN expansion'], ans:1, exp:'Larger window = more averaging = smoother output. But smoothing comes at the cost of lag: the rolling mean at any point reflects the average of the last k points, so it responds slowly to abrupt changes. A window of 1 is just the original series. A window of 4 (one full year) removes the seasonal cycle and reveals the trend. A window of 8 or 10 is so smooth it misses the 2008 dip entirely until well after it occurred.'},
+  {t:'ts4', q:'Rolling autocorrelation is computed with rolling(4).apply(lambda x: x.autocorr(), raw=False). A sudden drop in the output toward zero indicates what?', opts:['The series has become stationary at that point','The local predictability dropped — consecutive quarters in that window are not following each other in a consistent pattern, possibly indicating a structural break or unusual period','The window size is too small to detect autocorrelation','The .autocorr() function failed silently'], ans:1, exp:'Rolling autocorrelation measures lag-1 self-similarity within each 4-quarter window. When the value is near +1, consecutive quarters follow a consistent direction (smooth, predictable). When it drops toward 0, the four quarters in that window have no consistent sequential relationship — the series is locally erratic. This is useful as a regime-change detector: a structural break, a sudden shock, or an anomalous period often shows up as a drop in rolling autocorrelation before other indicators catch it.'},
+
+  // TS5
+  {t:'ts5', q:'What is the core assumption behind an autoregressive model?', opts:['The series must have a positive trend','The current value of a series can be predicted from a weighted combination of its own past values','The series must have exactly one seasonal cycle','The model requires an external input variable to make predictions'], ans:1, exp:'An autoregressive model says: the past of a series is its best predictor. y(t) is modelled as a linear combination of y(t-1), y(t-2), ..., y(t-p) plus noise. This works because most real-world series have memory — last quarter\'s wine consumption tells you something about this quarter\'s. The model learns how much weight to give each past value.'},
+  {t:'ts5', q:'Why must a time series be stationary before fitting an AR model?', opts:['Stationary series always have more data points','AR models can only handle integer-valued series','If the mean or variance is drifting over time, the coefficients learned from early data will not apply to later data — the relationship between past and present is not stable','Stationarity reduces the number of parameters needed'], ans:2, exp:'AR models assume the statistical relationship between y(t) and its past values is constant over time — the same φ coefficients hold throughout the series. If the series has a trend, the mean shifts, and coefficients fit on early data become wrong for later data. If it has seasonality, the regular peaks and troughs introduce patterns the AR model will misinterpret as lag dependencies. Differencing first removes these instabilities.'},
+  {t:'ts5', q:'You try AR(2), AR(4), and AR(6) on a stationary quarterly series. AR(4) has the lowest BIC. What does this tell you?', opts:['AR(4) fits the training data best of all three','AR(4) gives the best balance between fit quality and model complexity — adding lags 5 and 6 does not improve the fit enough to justify the extra parameters','AR(4) is wrong because quarterly data always needs at least 6 lags','BIC only applies to non-stationary series'], ans:1, exp:'BIC scores both goodness of fit and complexity. AR(6) may fit the training data better than AR(4), but BIC penalises the two extra parameters. If AR(4) scores lower, those extra lags did not improve fit enough to earn their keep. This aligns with the domain knowledge: quarterly seasonality has period 4, so lag 4 is a natural direct dependency. BIC is the automated way to confirm what PACF suggests visually.'},
+  {t:'ts5', q:'An AR model and a LinearRegression model trained on lagged features of the same series produce identical predictions. Why?', opts:['They use the same library underneath','AR is mathematically linear regression — it predicts the current value as a weighted sum of past values, which is exactly what LinearRegression does when the features are lagged copies of the target','LinearRegression always overfits whereas AR does not','They only agree when the series has no seasonality'], ans:1, exp:'AR(p) is defined as y(t) = c + φ₁y(t-1) + ... + φₚy(t-p) + ε. If you build a feature matrix where each row is [y(t-1), y(t-2), ..., y(t-p)] and the target is y(t), then LinearRegression minimises the same least squares objective and learns the same weights. The two are the same model written in different libraries. The benefit of the sklearn route: you can replace LinearRegression with Ridge, GradientBoosting, or any other estimator to build custom variants.'},
+  {t:'ts5', q:'What additional information does ARMA use that AR does not?', opts:['Future values of the series','The past forecast errors — ARMA adds the residuals from previous time steps as extra predictors alongside the past values of y','The seasonally differenced version of the series','External covariates such as temperature or holidays'], ans:1, exp:'AR uses past values of y: y(t-1), y(t-2), ... ARMA adds past errors: e(t-1), e(t-2), ... — the difference between what the model predicted and what actually happened. The intuition: if the model consistently over-predicted last quarter, that mistake is a signal. The MA terms let the model correct for its own recent errors. If your AR residuals show autocorrelation structure in the ACF, adding MA terms (moving to ARMA) is the natural next step.'},
+  {t:'ts5', q:'After fitting an AR model, the ACF of the residuals shows large spikes at lags 1 and 2. What does this tell you and what should you do?', opts:['The model is good — residual spikes are expected','The model has not captured all the structure in the series — there is still autocorrelation in what it got wrong. Increase p or add MA terms to capture the remaining pattern.','The series needs to be differenced again','Spikes at lags 1 and 2 mean the series is non-stationary'], ans:1, exp:'Residuals should look like white noise — random, with no pattern. If the ACF of residuals shows significant spikes, it means consecutive errors are correlated: the model is systematically wrong in the same direction across nearby time steps. This is structure the model failed to explain. A spike at lag 1 suggests a lag-1 dependency was missed → try increasing p. Multiple spikes suggest the MA part of ARMA would help, since MA terms are specifically designed to absorb patterns in past errors.'}
 ];
 
 const FLASHCARDS = [
@@ -7969,7 +8422,23 @@ const FLASHCARDS = [
   {t:'ts3', front:'diff(1) removes trend but not seasonality — why?', back:'diff(1) computes x_t − x_{t−1}: subtracts consecutive values.\nThis removes a constant upward/downward drift (linear trend).\n\nSeasonality is a cycle (e.g. Q4 always high) — not a drift.\nDiff(1) does not cancel repeating patterns.\n\nFix: diff(4) subtracts the value from the same quarter last year\n→ removes the quarterly cycle\n\nRule: diff(lag = season length) removes seasonality'},
   {t:'ts3', front:'ACF spikes at 4, 8, 12 but PACF only at 4 — what does it mean?', back:'ACF captures ALL correlations (direct + indirect chain effects).\nPACF captures only DIRECT correlations.\n\nIf lag 4 is strong:\n• lag 4 → lag 8 → lag 12 chain appears in ACF\n• PACF strips the chain → only lag 4 survives\n\nConclusion: the ONLY direct seasonal dependency is 4 quarters.\nUse diff(4) — not diff(8) or diff(12).'},
   {t:'ts3', front:'testStationarity function — how does it work?', back:'def testStationarity(x, alpha=0.05):\n    results = adfuller(x)\n    pvalue = results[1]       # index 1 = p-value\n    if pvalue < alpha:\n        return "stationary"   # reject H₀\n    else:\n        return "non-stationary"\n\nADF H₀ = series IS non-stationary (has unit root)\nSmall p-value → reject H₀ → series IS stationary ✓\n\nCall: testStationarity(df["col"].diff(4).dropna())\n→ .dropna() removes the NaN rows diff(4) creates'},
-  {t:'ts3', front:'rolling().apply() — when to use raw=False?', back:'raw=True (default): window passed as numpy array → fast\nraw=False: window passed as pandas Series → slower but richer\n\nUse raw=False when your function needs pandas methods:\n• .autocorr() — needs Series\n• .skew(), .kurt() — needs Series\n• .corr(other) — needs Series\n\nExample:\n.rolling(4).apply(lambda x: x.autocorr(), raw=False)\n\nIf only using numpy operations (sum, mean, std), keep raw=True'}
+  {t:'ts3', front:'rolling().apply() — when to use raw=False?', back:'raw=True (default): window passed as numpy array → fast\nraw=False: window passed as pandas Series → slower but richer\n\nUse raw=False when your function needs pandas methods:\n• .autocorr() — needs Series\n• .skew(), .kurt() — needs Series\n• .corr(other) — needs Series\n\nExample:\n.rolling(4).apply(lambda x: x.autocorr(), raw=False)\n\nIf only using numpy operations (sum, mean, std), keep raw=True'},
+
+  // TS4 Flashcards
+  {t:'ts4', front:'resample("M") vs resample("W") — what changes in the humidity plot?', back:'"M" groups ~30 days → one point per month\n"W" groups ~7 days → one point per week\n\nMonthly: smoother, seasonal shape (high winter/low summer) dominates\nWeekly: more variation retained, day-to-day spikes averaged out\n\nRule: more downsampling = smoother signal but less detail\nChoose the resolution that answers your question'},
+  {t:'ts4', front:'Why is ffill bad for upsampled rental counts?', back:'ffill carries the last known daily count into every new 6-hour slot.\nResult: 4 identical rows per day.\n\nFor counts (discrete events): implies same rentals every 6h — physically wrong\nFor temperature/humidity (continuous): holding a value constant for 6h is defensible\n\nFix for counts: leave NaN, or use domain-specific model\nAlways match the fill method to what the variable represents'},
+  {t:'ts4', front:'Why does yearly resampling reveal the wine vs beer trend?', back:'Quarterly data: Q4 peak every year dominates the plot visually\n→ hard to see if the overall level is rising or falling\n\nresample("12M").mean(): collapses 4 quarters into 1 annual average\n→ seasonal cycle disappears\n→ long-term direction becomes the only visible feature\n\nResult: wine rising steadily, beer roughly flat\nUse yearly resampling for trend extraction'},
+  {t:'ts4', front:'SyntaxError: plot(y="col1","col2") — why and how to fix?', back:'"col1" is assigned to keyword y.\n"col2" has no keyword — positional after keyword → SyntaxError\n\nPython rule: no positional args after keyword args\n\nFix:\ndf.plot(y=["col1", "col2"])   # pass list to y\n\nPasses a list of column names → pandas plots all of them on one axes'},
+  {t:'ts4', front:'ipywidgets interact — what does it do and why is it useful?', back:'from ipywidgets import interact\n\ninteract(my_func, param=(min, max))\n→ creates a slider for param\n→ re-runs my_func every time slider moves\n\nUseful for exploring:\n• Rolling window size effect on smoothing\n• Differencing lag on stationarity\n• EMA span on responsiveness\n\nNo need to re-run cells manually — instant feedback'},
+  {t:'ts4', front:'What does rolling autocorrelation measure and when does it drop?', back:'rolling(k).apply(lambda x: x.autocorr(), raw=False)\n→ lag-1 autocorrelation computed on each sliding k-point window\n\nValue near +1: consecutive points are consistent, predictable locally\nValue near 0: no sequential pattern in this window — erratic\nValue near -1: alternating pattern (high-low-high)\n\nDrops when: structural break, shock, or anomalous period\nUseful as a regime-change detector in feature engineering'},
+
+  // TS5 Flashcards
+  {t:'ts5', front:'AR(p) model — formula and plain-English meaning', back:'y(t) = c + φ₁·y(t-1) + φ₂·y(t-2) + ... + φₚ·y(t-p) + ε(t)\n\nc = intercept\nφ₁...φₚ = learned coefficients (like linear regression weights)\ny(t-1)...y(t-p) = the p most recent past values (the features)\nε(t) = unpredictable noise\n\nPlain English: predict this quarter from the last p quarters.\nAR is just linear regression where features = lagged values of the target.'},
+  {t:'ts5', front:'asfreq + ar_select_order workflow — why and how', back:'Why asfreq:\nStatsmodels needs a declared frequency on the DatetimeIndex.\nManually mapped dates have no frequency → ValueError.\n\ntime_series = time_series.asfreq("3ME", method="ffill")\n→ declares quarterly spacing, fills missing rows with ffill\n\nThen:\nset_of_models = ar_select_order(series, maxlag=10, old_names=False)\noptlag = min(set_of_models.bic, key=set_of_models.bic.get)[-1]\n\n→ fits AR(1)–AR(10), picks p with lowest BIC'},
+  {t:'ts5', front:'AutoReg fit and predict — key parameters', back:'ar = tsa.AutoReg(endog=time_series, lags=optlag)\nar_result = ar.fit()\nprediction = ar_result.predict(start=optlag)\n\nendog: the series the model predicts from its own past\nlags: the order p\nfit(): estimates φ coefficients using least squares\npredict(start=p): skips first p rows (no lag history yet)\n\nMAE:\nmean_absolute_error(time_series[optlag:], prediction)'},
+  {t:'ts5', front:'organize_data — what it does and why', back:'Turns a 1D series into a supervised ML problem.\n\nFor series [a,b,c,d,e,f] with window=3:\nX = [[a,b,c], [b,c,d], [c,d,e]]   ← lag feature rows\ny = [d, e, f]                       ← next-step targets\n\nThen: LinearRegression().fit(X, y)\n→ learns the same φ coefficients as AutoReg\n→ result is mathematically identical\n\nBenefit: swap LinearRegression for any sklearn estimator\nto build custom AR models with different assumptions.'},
+  {t:'ts5', front:'ARMA vs AR — difference and statsmodels syntax', back:'AR(p): y(t) = c + φ₁y(t-1)+...+φₚy(t-p) + e(t)\n  → uses past VALUES only\n\nARMA(p,q): y(t) = c + AR(p) + θ₁e(t-1)+...+θ_qe(t-q) + e(t)\n  → adds past ERRORS as features too\n  → MA part captures patterns in what AR got wrong\n\nStatsmodels: ARIMA(series, order=(p, d, q))\nd=0 → no built-in differencing → becomes ARMA\nAlready differenced manually → always use d=0 here\n\nCheck: if ARMA MAE < AR MAE, the errors had structure.'},
+  {t:'ts5', front:'Residual check — how to know if the model is complete', back:'After fitting, plot ACF of residuals:\nfrom statsmodels.graphics.tsaplots import plot_acf\nplot_acf(ar_result.resid, lags=15)\n\nGood: all lags inside confidence band → white noise → done\nBad: significant spikes → model missed structure\n\nFixes for bad residuals:\n• Spike at lag k → increase p to k\n• Spikes at many lags → add MA terms (use ARMA)\n• Series still drifting → re-check stationarity'}
 ];
 
 // ===================== STATE =====================
@@ -7997,7 +8466,7 @@ function nav(page) {
   document.getElementById('main').scrollTop = 0;
   const navEl = document.querySelector(`[onclick="nav('${page}')"]`);
   if (navEl) navEl.classList.add('active');
-  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3'].includes(page)) {
+  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5'].includes(page)) {
     markVisited(page);
     renderInlineQuiz(page);
   }
@@ -8017,7 +8486,7 @@ function markVisited(w) {
 function updateGlobalProgress() {
   const pct = Math.round((visited.length / 25) * 100);
   document.getElementById('global-progress-bar').style.width = pct + '%';
-  document.getElementById('global-progress-label').textContent = `${visited.length} of 33 lessons visited`;
+  document.getElementById('global-progress-label').textContent = `${visited.length} of 35 lessons visited`;
 }
 
 // ===================== INLINE QUIZ =====================
