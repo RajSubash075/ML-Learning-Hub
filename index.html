@@ -271,6 +271,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('ts3')" id="nav-ts3"><span class="icon">🔬</span> L3: Preprocessing Practical<span class="check" id="check-ts3"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ts4')" id="nav-ts4"><span class="icon">🧪</span> L4: Preprocessing Practical 2<span class="check" id="check-ts4"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ts5')" id="nav-ts5"><span class="icon">📉</span> L5: Autoregressive Models<span class="check" id="check-ts5"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('ts6')" id="nav-ts6"><span class="icon">🔎</span> L6: Time Series Testing<span class="check" id="check-ts6"></span></div>
   </div>
 
   <div class="sidebar-section" style="margin-top:10px">Practice</div>
@@ -1301,6 +1302,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
           <div class="topic-chip" id="chip-ts3" onclick="toggleChip('ts3')">L3: Preprocessing Practical</div>
           <div class="topic-chip" id="chip-ts4" onclick="toggleChip('ts4')">L4: Preprocessing Practical 2</div>
           <div class="topic-chip" id="chip-ts5" onclick="toggleChip('ts5')">L5: Autoregressive Models</div>
+          <div class="topic-chip" id="chip-ts6" onclick="toggleChip('ts6')">L6: Time Series Testing</div>
         </div>
     </div>
     <div class="card" style="max-width:400px">
@@ -1419,6 +1421,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
         <div class="topic-chip" id="fc-chip-ts3" onclick="fcFilter('ts3')">L3: Preprocessing Practical</div>
         <div class="topic-chip" id="fc-chip-ts4" onclick="fcFilter('ts4')">L4: Preprocessing Practical 2</div>
         <div class="topic-chip" id="fc-chip-ts5" onclick="fcFilter('ts5')">L5: Autoregressive Models</div>
+        <div class="topic-chip" id="fc-chip-ts6" onclick="fcFilter('ts6')">L6: Time Series Testing</div>
       </div>
     </div>
   </div>
@@ -7499,6 +7502,356 @@ print(<span class="str">'MAE = {0:.3f}'</span>.format(mean_absolute_error(time_s
   </div>
 </div>
 
+<!-- TS6: TIME SERIES TESTING -->
+<div class="page" id="page-ts6">
+  <div class="page-header">
+    <div class="chapter-badge">Time Series Analysis</div>
+    <h1>L6: Time Series Testing</h1>
+    <p class="subtitle">Residual diagnostics, genuine forecasting on held-out data, automatic ARMA selection, and cross-validation for time series — using Google Trends climate change data.</p>
+  </div>
+
+  <div class="card">
+    <h2>Why Testing Matters</h2>
+    <p>Building a model is only half the job. A model that <em>looks</em> good on the data it was trained on might be completely useless on new data — or worse, confidently wrong. Testing is how you find out before it matters.</p>
+
+    <p>For time series specifically, testing is harder than in standard ML because:</p>
+    <ul style="margin: 10px 0 10px 20px; line-height:1.9">
+      <li><strong>You cannot shuffle the data.</strong> Rows are not independent — the order is the information. A random split contaminates the future into training.</li>
+      <li><strong>In-sample fit is not the same as forecast accuracy.</strong> A model that perfectly explains past data may fail to predict the future if it overfit to historical noise.</li>
+      <li><strong>The model can look complete but still be wrong.</strong> Even if predictions visually track the series, the residuals may reveal hidden structure the model missed.</li>
+    </ul>
+
+    <p>Testing for time series therefore involves two distinct questions:</p>
+    <div class="key-concept">
+      <div class="label">Question 1 — Did the model capture everything it could from the training data?</div>
+      <p>Answered by <strong>residual diagnostics</strong>: check that what the model got wrong (the residuals) is truly random — no mean bias, no autocorrelation, no growing variance. If residuals have structure, the model is incomplete and could be improved.</p>
+    </div>
+    <div class="key-concept" style="margin-top:12px">
+      <div class="label">Question 2 — Can the model actually forecast unseen future data?</div>
+      <p>Answered by <strong>held-out test evaluation</strong>: train on the past, predict the future, measure the error on data the model never saw. This is the only honest measure of forecast accuracy.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Important Things to Know Before You Start</h2>
+
+    <h3 style="margin-bottom:8px">1. In-sample fit ≠ forecast accuracy</h3>
+    <p>When you call <code>.predict(start=optlag)</code> on a fitted model, you get <em>in-sample</em> predictions — the model is predicting data it already trained on. This always looks better than real forecasting. It tells you how well the model describes the past, not how well it predicts the future. Always evaluate on a separate test set.</p>
+
+    <h3 style="margin-top:18px; margin-bottom:8px">2. The split must be chronological</h3>
+    <p>Training set = all points before a cutoff. Test set = all points after. Never random. If a future point leaks into training, the model can "remember" it — your test MAE will look great but the model is useless in deployment.</p>
+
+    <h3 style="margin-top:18px; margin-bottom:8px">3. Forecasting the future is genuinely hard</h3>
+    <p>Simple models like AR and ARMA capture structure well but don't perform miracles on real-world data. A high test MAE doesn't mean the model is broken — it might mean the series has genuine unpredictability. The right question is: <em>does this model beat a simple baseline?</em> (e.g. "always predict the last known value"). If yes, the model is adding value.</p>
+
+    <h3 style="margin-top:18px; margin-bottom:8px">4. Residual checks and test evaluation answer different questions</h3>
+    <table class="styled-table" style="margin-top:8px">
+      <thead><tr><th></th><th>Residual diagnostics</th><th>Test set evaluation</th></tr></thead>
+      <tbody>
+        <tr><td><strong>What it checks</strong></td><td>Is the model structurally complete?</td><td>Can the model forecast unseen data?</td></tr>
+        <tr><td><strong>Data used</strong></td><td>Training data (in-sample)</td><td>Held-out future data (out-of-sample)</td></tr>
+        <tr><td><strong>Tools</strong></td><td>Mean residual, ACF plot, Shapiro-Wilk</td><td>MAE, plot predictions vs test</td></tr>
+        <tr><td><strong>When to do it</strong></td><td>After fitting, before forecasting</td><td>After fitting, on genuinely future data</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:12px">You need both. A model can pass all residual checks (complete on training data) and still forecast poorly (overfit). And a model with poor residuals should be improved before trusting its forecasts at all.</p>
+  </div>
+
+  <div class="card">
+    <h2>Dataset — Google Trends</h2>
+    <p>This practical uses weekly Google search interest in "climate change" worldwide — a real-world series with trend and noise. The CSV has 2 header rows, so <code>skiprows=2</code> is needed.</p>
+    <div class="code-block"><pre><span class="cm"># skiprows=2 skips the two header rows pandas can't auto-parse</span>
+df = pd.read_csv(<span class="str">'data/climate_change.csv'</span>, skiprows=<span class="num">2</span>)
+
+<span class="cm"># Convert Week column to proper datetime objects</span>
+df[<span class="str">'Week'</span>] = pd.to_datetime(df[<span class="str">'Week'</span>])
+df.set_index(<span class="str">'Week'</span>, inplace=<span class="kw">True</span>)
+
+<span class="cm"># Select just the one column to get a Series</span>
+time_series = df[<span class="str">'climate change: (Worldwide)'</span>]
+
+<span class="cm"># Attach inferred frequency to avoid statsmodels warnings</span>
+time_series.index = pd.DatetimeIndex(
+    time_series.index.values,
+    freq=time_series.index.inferred_freq
+)</pre></div>
+    <div class="key-concept">
+      <div class="label">Why attach a frequency?</div>
+      <p>When you build an index manually from a CSV, pandas knows the dates but not the spacing. <code>inferred_freq</code> looks at the gaps between dates and guesses the pattern (e.g. <code>"W-SUN"</code> for weekly). Assigning it back tells statsmodels the series is weekly — required for lag-aware operations to work without warnings.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Part 1 — Fit AR Model Using AIC</h2>
+    <p>Same workflow as L5 but using <strong>AIC</strong> instead of BIC for lag selection, and extracting <code>optlag</code> from <code>mod.ar_lags</code> instead of the BIC dictionary.</p>
+    <div class="code-block"><pre><span class="cm"># ic="aic" — slightly more permissive than BIC, accepts larger p if fit justifies it</span>
+mod = ar_select_order(time_series, maxlag=<span class="num">10</span>, ic=<span class="str">"aic"</span>)
+
+<span class="cm"># mod.ar_lags is a tuple of selected lag indices, e.g. (1, 3) or (2,)</span>
+<span class="cm"># max() picks the largest lag number — this becomes p</span>
+optlag = max(mod.ar_lags)
+print(<span class="str">'Optimal p ='</span>, optlag)
+
+ar = tsa.AutoReg(time_series, lags=optlag)
+ar_result = ar.fit()
+prediction = ar_result.predict(start=optlag)
+
+plt.figure(figsize=(<span class="num">12</span>, <span class="num">4</span>))
+plt.plot(time_series, <span class="str">'-o'</span>, label=<span class="str">'true'</span>)
+plt.plot(prediction, <span class="str">'-o'</span>, label=<span class="str">'model'</span>)
+plt.legend(fontsize=<span class="num">12</span>)</pre></div>
+    <div class="key-concept">
+      <div class="label">max(mod.ar_lags) vs the L5 BIC approach</div>
+      <p><code>mod.ar_lags</code> contains the lag indices that the selection algorithm included in the best model — e.g. <code>(1, 3)</code> means lags 1 and 3 are both significant. <code>max()</code> gives you the highest lag, which is the order <code>p</code> you pass to <code>AutoReg</code>.<br><br>
+      In L5 we used <code>min(set_of_models.bic, key=...)</code> to find the best BIC key. Both approaches produce the same integer <code>p</code> — just read from different attributes of the result.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Part 2 — What Are Residuals and Why Do They Matter?</h2>
+    <p>A <strong>residual</strong> is simply the difference between what the model predicted and what actually happened at each point:</p>
+    <div class="key-concept">
+      <div class="label">The residual formula</div>
+      <p style="font-size:1.05rem"><strong>e(t) = y(t) − ŷ(t)</strong><br><br>
+      <code>y(t)</code> — the actual observed value<br>
+      <code>ŷ(t)</code> — what the model predicted<br>
+      <code>e(t)</code> — the leftover error (the residual)</p>
+    </div>
+    <p style="margin-top:14px">If the model has captured all the structure in the data, the residuals should be <strong>pure noise</strong> — random, unpredictable, with no pattern. If there is still a pattern in the residuals, it means the model missed something it could have used to make better predictions. Residual diagnostics are how you verify the model is actually complete.</p>
+    <div class="code-block"><pre><span class="cm"># time_series[optlag:] aligns true values with the predictions (same length)</span>
+<span class="cm"># .values.flatten() converts to a plain numpy array for arithmetic</span>
+fit_residuals = time_series[optlag:].values.flatten() - prediction</pre></div>
+  </div>
+
+  <div class="card">
+    <h2>Part 2a — Property 1: Zero Mean</h2>
+    <p><strong>What it means:</strong> the average of all residuals should be approximately zero — the model isn't consistently over-predicting or under-predicting.</p>
+    <p><strong>Why it matters:</strong> if the mean residual is, say, +5, it means the model is on average 5 units below the true value at every step. That's a systematic bias you could fix by simply adding 5 to every forecast. A non-zero mean is the easiest problem to fix — but it tells you the model is fundamentally miscalibrated.</p>
+    <div class="code-block"><pre>print(<span class="str">"Mean residual:"</span>, np.mean(fit_residuals))
+<span class="cm"># Want: a number very close to zero, e.g. 0.002 or -0.001</span>
+<span class="cm"># Bad:  a number like 4.7 or -3.2 — model has a bias</span>
+
+plt.plot(fit_residuals)
+plt.axhline(<span class="num">0</span>, color=<span class="str">'red'</span>, linestyle=<span class="str">'--'</span>)
+plt.title(<span class="str">"Residuals should scatter randomly around zero"</span>)
+plt.show()</pre></div>
+    <div class="key-concept">
+      <div class="label">What to look for in the residual plot</div>
+      <p><strong>Good:</strong> random scatter above and below the red zero line, no overall direction.<br><br>
+      <strong>Drifting upward:</strong> model is consistently under-predicting — the mean isn't zero.<br><br>
+      <strong>Funnel shape (spread grows over time):</strong> the variance isn't constant — the model is less accurate in some periods than others (called heteroscedasticity).<br><br>
+      <strong>Repeating zigzag:</strong> there's a seasonal or cyclical pattern the model missed entirely.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Part 2b — Property 2: Uncorrelated Residuals (ACF)</h2>
+    <p><strong>What it means:</strong> knowing the error at time t should tell you nothing about the error at time t+1, t+2, etc. The residuals should have no memory of each other.</p>
+    <p><strong>Why it matters:</strong> if consecutive residuals are correlated — e.g. every time the model under-predicts this week it also under-predicts next week — then the past errors contain information about future errors. That means there's structure left in the data the model could have captured but didn't. Correlated residuals = incomplete model.</p>
+
+    <h3 style="margin-top:16px; margin-bottom:8px">What ACF measures on residuals</h3>
+    <p>You already know ACF from preprocessing — it measures how correlated a series is with a lagged version of itself. When applied to <em>residuals</em>, it answers: <strong>"does the error at time t predict the error k steps later?"</strong></p>
+    <p>If <code>ACF(lag=1)</code> is high, last period's mistake predicts this period's mistake — there's a lag-1 pattern in the errors. If <code>ACF(lag=4)</code> is high, there's a quarterly pattern in the errors. Either way the model missed it.</p>
+    <div class="code-block"><pre><span class="kw">from</span> statsmodels.graphics.tsaplots <span class="kw">import</span> plot_acf
+
+plot_acf(fit_residuals, lags=<span class="num">10</span>)
+plt.title(<span class="str">"ACF of residuals — should show no significant spikes"</span>)
+plt.show()</pre></div>
+    <div class="key-concept">
+      <div class="label">How to read the ACF plot of residuals</div>
+      <p>The plot shows a vertical bar at each lag. The <strong>blue shaded region</strong> is the 95% confidence band — bars inside it are not statistically different from zero.<br><br>
+      <strong>All bars inside the band</strong> → residuals are white noise → model is complete ✓<br><br>
+      <strong>Spike at lag 1</strong> → the model missed a lag-1 dependency → increase p by 1<br><br>
+      <strong>Spike at lag 4</strong> → quarterly pattern left unexplained → add AR(4) term or use ARMA<br><br>
+      <strong>Many spikes</strong> → model is fundamentally missing structure → try ARMA or revisit stationarity<br><br>
+      This is the <strong>most important residual check</strong>. A biased mean can be corrected trivially; leftover autocorrelation means the model is structurally wrong.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Part 2c — Property 3: Constant Variance</h2>
+    <p><strong>What it means:</strong> the size of the errors should be roughly the same throughout the series — not small early on and large later, or vice versa.</p>
+    <p><strong>Why it matters:</strong> if the errors grow over time (a funnel shape), the model is less reliable for certain periods. This is called <strong>heteroscedasticity</strong>. It doesn't bias the forecasts but it makes your error estimates unreliable — you can't trust that the MAE you measured on one period applies to another.</p>
+    <p><strong>How to check:</strong> just look at the residual plot. The vertical spread of the scatter should be roughly the same from left to right. No funnel, no dramatic increase in range.</p>
+    <p><strong>Fix if violated:</strong> apply a log-transform to the original series before fitting. Log compression squashes large values, which often stabilises variance.</p>
+  </div>
+
+  <div class="card">
+    <h2>Part 2d — Property 4: Normally Distributed Residuals</h2>
+    <p><strong>What it means:</strong> the errors should follow a bell curve — most errors small and near zero, fewer large errors, roughly symmetric on both sides.</p>
+    <p><strong>Why it matters:</strong> normality of residuals is needed if you want to build <strong>prediction intervals</strong> — the confidence bands around a forecast (e.g. "I predict 75 ± 8"). The maths behind those intervals assumes the errors follow a normal distribution. If they don't, the intervals will be wrong widths. For the point forecasts themselves, normality doesn't matter.</p>
+
+    <h3 style="margin-top:16px; margin-bottom:8px">Visual check — histogram</h3>
+    <div class="code-block"><pre>plt.hist(fit_residuals, bins=<span class="num">15</span>)
+plt.title(<span class="str">"Should look like a bell curve centred at zero"</span>)
+plt.show()</pre></div>
+    <p>Look for a roughly symmetric hump centred at zero. Heavy tails, a skewed shape, or two humps all suggest non-normality.</p>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Formal check — Shapiro-Wilk test</h3>
+    <p>The histogram is subjective — the Shapiro-Wilk test gives you a statistical answer.</p>
+    <p><strong>What it does:</strong> tests whether a dataset could plausibly have been drawn from a normal distribution, by comparing the actual data to what a perfect normal distribution of the same size would look like.</p>
+    <p><strong>The null hypothesis H₀:</strong> the data <em>is</em> normally distributed.</p>
+    <div class="code-block"><pre><span class="kw">from</span> scipy.stats <span class="kw">import</span> shapiro
+
+test = shapiro(fit_residuals)
+print(<span class="str">"p-value:"</span>, test.pvalue)</pre></div>
+    <div class="key-concept">
+      <div class="label">How to interpret the p-value</div>
+      <p><strong>p &gt; 0.05</strong> — fail to reject H₀ → the data is consistent with a normal distribution → residuals are approximately normal ✓<br><br>
+      <strong>p &lt; 0.05</strong> — reject H₀ → the data is unlikely to have come from a normal distribution → residuals are not normal<br><br>
+      Remember: the null hypothesis here is normality (the thing you <em>want</em> to be true). So a <strong>high p-value is the good outcome</strong> — unlike the ADF test where a low p-value was good. Always check which direction a test points before interpreting.</p>
+    </div>
+    <div class="alert alert-warn">⚠️ If residuals fail the Shapiro-Wilk test, try a log-transform on the original series before fitting: <code>time_series = np.log(time_series)</code>. This often normalises residuals for data with multiplicative growth (like revenue or search interest).</div>
+
+    <table class="styled-table" style="margin-top:20px">
+      <thead><tr><th>Property</th><th>Why it matters</th><th>How to check</th><th>What you want</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Zero mean</strong></td><td>No systematic bias in forecasts</td><td><code>np.mean(residuals)</code></td><td>≈ 0</td></tr>
+        <tr><td><strong>Uncorrelated</strong></td><td>No exploitable structure left in errors</td><td>ACF plot of residuals</td><td>All lags inside blue band</td></tr>
+        <tr><td><strong>Constant variance</strong></td><td>Error size is consistent across time</td><td>Residual plot shape</td><td>Even spread, no funnel</td></tr>
+        <tr><td><strong>Normal distribution</strong></td><td>Prediction intervals are valid</td><td>Histogram + Shapiro-Wilk</td><td>Bell curve, p &gt; 0.05</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Part 3 — Genuine Forecasting on a Test Set</h2>
+    <p>In-sample predictions show how well the model <em>fits</em> data it already saw. To test if it can actually <em>forecast</em>, you need genuinely unseen future data.</p>
+
+    <div class="key-concept">
+      <div class="label">The time series train/test rule</div>
+      <p>Always split chronologically — train on the past, test on the future. Never shuffle or randomly sample. Using future data in training is data leakage and will make the model look far better than it really is.</p>
+    </div>
+
+    <h3 style="margin-top:16px; margin-bottom:8px">AR forecast on held-out test set</h3>
+    <div class="code-block"><pre><span class="cm"># Hold out the last 40 points as test — always the END of the series</span>
+train = time_series[:-<span class="num">40</span>]
+test  = time_series[-<span class="num">40</span>:]
+
+<span class="cm"># Select lag using BIC on training data only</span>
+mod = ar_select_order(train, maxlag=<span class="num">10</span>, ic=<span class="str">"bic"</span>)
+optlag = max(mod.ar_lags)
+
+<span class="cm"># Fit on training data only</span>
+ar = tsa.AutoReg(train, lags=optlag)
+arfit = ar.fit()
+
+<span class="cm"># Predict up to the end of the full series, then slice the last 40</span>
+prediction = arfit.predict(end=time_series.index[-<span class="num">1</span>])[-len(test):]
+
+plt.figure(figsize=(<span class="num">8</span>, <span class="num">6</span>))
+plt.plot(test, <span class="str">'-o'</span>, label=<span class="str">'test data'</span>)
+plt.plot(prediction, <span class="str">'--o'</span>, label=<span class="str">'prediction'</span>)
+plt.legend(fontsize=<span class="num">12</span>)
+
+print(<span class="str">'AR MAE:'</span>, mean_absolute_error(test, prediction))</pre></div>
+    <div class="key-concept">
+      <div class="label">Why predict(end=...) then slice [-len(test):]?</div>
+      <p><code>arfit.predict(end=time_series.index[-1])</code> generates predictions from where the training data ends all the way to the last date in the full series. Slicing <code>[-len(test):]</code> keeps only the last 40 predictions — the ones that correspond to the test period. This is cleaner than computing exact start/end indices manually.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Part 4 — ARMA with Automatic p and q Selection</h2>
+    <p>For AR we only needed to find <code>p</code>. For ARMA we need both <code>p</code> and <code>q</code>. <code>arma_order_select_ic</code> tries every combination up to <code>max_ar</code> and <code>max_ma</code> and picks the best one.</p>
+    <div class="code-block"><pre><span class="cm"># Try all combinations of p ∈ [0,2] and q ∈ [0,2], score with BIC</span>
+param_choice = tsa.arma_order_select_ic(
+    train, max_ar=<span class="num">2</span>, max_ma=<span class="num">2</span>, ic=<span class="str">'bic'</span>, trend=<span class="str">'c'</span>
+)
+p, q = param_choice[<span class="str">'bic_min_order'</span>]
+print(<span class="str">'Best ARMA(p,q) ='</span>, p, q)
+
+<span class="cm"># d=0 — already stationary, no built-in differencing needed</span>
+arma = tsa.ARIMA(train, order=(p, <span class="num">0</span>, q))
+arma_fit = arma.fit()
+
+prediction = arma_fit.predict(end=time_series.index[-<span class="num">1</span>])[-len(test):]
+
+plt.figure(figsize=(<span class="num">8</span>, <span class="num">6</span>))
+plt.plot(test, <span class="str">'-o'</span>, label=<span class="str">'test data'</span>)
+plt.plot(prediction, <span class="str">'--o'</span>, label=<span class="str">'ARMA prediction'</span>)
+plt.legend(fontsize=<span class="num">12</span>)
+
+print(<span class="str">'ARMA MAE:'</span>, mean_absolute_error(test, prediction))</pre></div>
+    <div class="key-concept">
+      <div class="label">What param_choice['bic_min_order'] gives you</div>
+      <p><code>arma_order_select_ic</code> returns a results object. <code>bic_min_order</code> is a tuple <code>(p, q)</code> — the combination of AR order and MA order that had the lowest BIC across all combinations tried. If <code>bic_min_order</code> is <code>(1, 0)</code>, the best ARMA is actually just AR(1) — the MA terms added nothing.</p>
+    </div>
+    <div class="alert alert-warn">⚠️ If the ARMA MAE is lower than the AR MAE, the past errors contained information the AR model was ignoring. If it's similar or worse, the series is well described by AR alone and the MA terms are noise.</div>
+  </div>
+
+  <div class="card">
+    <h2>Part 5 — Cross-Validation for Time Series</h2>
+    <p>A single train/test split gives one MAE number which may be lucky or unlucky depending on which 40 points ended up in the test set. Cross-validation gives a more robust estimate by averaging over many splits.</p>
+
+    <div class="key-concept">
+      <div class="label">Forward chaining — the only valid CV for time series</div>
+      <p>Standard k-fold randomly assigns rows to folds — invalid for time series because future data would leak into training. Forward chaining always trains on the past and tests on the future:<br><br>
+      Fold 1: train [1..30], test [31]<br>
+      Fold 2: train [1..31], test [32]<br>
+      Fold 3: train [1..32], test [33]<br>
+      ...<br><br>
+      Each fold expands the training window by one point. Every test point is genuinely unseen at the time of prediction.</p>
+    </div>
+
+    <h3 style="margin-top:16px; margin-bottom:8px">Cross-validation function</h3>
+    <div class="code-block"><pre><span class="kw">def</span> Forecasting_CV(time_series, training_size, optlag):
+    train = time_series[:training_size]
+    test  = time_series[training_size:]
+
+    ar = tsa.AutoReg(train, lags=optlag)
+    ar_result = ar.fit()
+
+    <span class="cm"># Predict from end of train to end of full series, keep test portion</span>
+    prediction = ar_result.predict(end=len(time_series)-<span class="num">1</span>)[-len(test):]
+
+    <span class="kw">return</span> mean_absolute_error(time_series.values[training_size:], prediction)</pre></div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Loop over all training sizes</h3>
+    <div class="code-block"><pre>mae_errors = []
+
+<span class="cm"># Minimum 30 training points; stop 30 from the end to always have a test set</span>
+<span class="kw">for</span> training_size <span class="kw">in</span> range(<span class="num">30</span>, len(time_series) - <span class="num">30</span>):
+    mod = ar_select_order(time_series[:training_size], maxlag=<span class="num">10</span>, ic=<span class="str">"aic"</span>)
+    optlag = max(mod.ar_lags)
+    mae = Forecasting_CV(time_series, training_size, optlag)
+    mae_errors.append(mae)
+
+print(<span class="str">"Average MAE across all folds:"</span>, np.mean(mae_errors))</pre></div>
+    <div class="key-concept">
+      <div class="label">Why average MAE is more meaningful than a single split</div>
+      <p>A single test split evaluates the model on one specific future window. If that window happened to be unusually volatile or calm, the MAE is misleading. Averaging across hundreds of different training sizes gives a stable estimate of how the model performs across the full range of forecast horizons and data regimes. It also reveals whether accuracy degrades as the horizon grows.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Quick single-run example</h3>
+    <div class="code-block"><pre><span class="cm"># Train on 85% of the data, test on the remaining 15%</span>
+Forecasting_crossValidation(time_series, int(len(time_series) * <span class="num">0.85</span>), optlag=<span class="num">3</span>)</pre></div>
+  </div>
+
+  <div class="card">
+    <h2>Full Workflow Summary</h2>
+    <table class="styled-table">
+      <thead><tr><th>Step</th><th>Code</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>Load data</td><td><code>pd.read_csv(skiprows=2)</code></td><td>Handle non-standard CSV headers</td></tr>
+        <tr><td>Set frequency</td><td><code>.index.inferred_freq</code></td><td>Avoid statsmodels warnings</td></tr>
+        <tr><td>Select lag (AIC)</td><td><code>ar_select_order(ic="aic")</code></td><td>Auto-select p from training data</td></tr>
+        <tr><td>Fit AR</td><td><code>AutoReg(train, lags=p).fit()</code></td><td>Estimate φ coefficients</td></tr>
+        <tr><td>Check residuals</td><td>Mean, ACF plot, Shapiro-Wilk</td><td>Confirm model is complete</td></tr>
+        <tr><td>Forecast</td><td><code>.predict(end=...)[-len(test):]</code></td><td>Genuinely unseen future points</td></tr>
+        <tr><td>Select ARMA</td><td><code>arma_order_select_ic(max_ar, max_ma)</code></td><td>Auto-select both p and q</td></tr>
+        <tr><td>Cross-validate</td><td>Forward chaining loop</td><td>Stable MAE across all horizons</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-ts6"></div></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('ts6')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('ts5')">← L5: Autoregressive Models</button>
+  </div>
+</div>
+
 <!-- TS2: PREPROCESSING FOR TIME SERIES -->
 <div class="page" id="page-ts2">
   <div class="page-header">
@@ -7782,7 +8135,8 @@ const TOPICS = {
   ts2: 'TS L2: Preprocessing for Time Series',
   ts3: 'TS L3: Preprocessing Practical',
   ts4: 'TS L4: Preprocessing Practical 2',
-  ts5: 'TS L5: Autoregressive Models'
+  ts5: 'TS L5: Autoregressive Models',
+  ts6: 'TS L6: Time Series Testing'
 };
 
 const ALL_QUESTIONS = [
@@ -8112,7 +8466,15 @@ const ALL_QUESTIONS = [
   {t:'ts5', q:'You try AR(2), AR(4), and AR(6) on a stationary quarterly series. AR(4) has the lowest BIC. What does this tell you?', opts:['AR(4) fits the training data best of all three','AR(4) gives the best balance between fit quality and model complexity — adding lags 5 and 6 does not improve the fit enough to justify the extra parameters','AR(4) is wrong because quarterly data always needs at least 6 lags','BIC only applies to non-stationary series'], ans:1, exp:'BIC scores both goodness of fit and complexity. AR(6) may fit the training data better than AR(4), but BIC penalises the two extra parameters. If AR(4) scores lower, those extra lags did not improve fit enough to earn their keep. This aligns with the domain knowledge: quarterly seasonality has period 4, so lag 4 is a natural direct dependency. BIC is the automated way to confirm what PACF suggests visually.'},
   {t:'ts5', q:'An AR model and a LinearRegression model trained on lagged features of the same series produce identical predictions. Why?', opts:['They use the same library underneath','AR is mathematically linear regression — it predicts the current value as a weighted sum of past values, which is exactly what LinearRegression does when the features are lagged copies of the target','LinearRegression always overfits whereas AR does not','They only agree when the series has no seasonality'], ans:1, exp:'AR(p) is defined as y(t) = c + φ₁y(t-1) + ... + φₚy(t-p) + ε. If you build a feature matrix where each row is [y(t-1), y(t-2), ..., y(t-p)] and the target is y(t), then LinearRegression minimises the same least squares objective and learns the same weights. The two are the same model written in different libraries. The benefit of the sklearn route: you can replace LinearRegression with Ridge, GradientBoosting, or any other estimator to build custom variants.'},
   {t:'ts5', q:'What additional information does ARMA use that AR does not?', opts:['Future values of the series','The past forecast errors — ARMA adds the residuals from previous time steps as extra predictors alongside the past values of y','The seasonally differenced version of the series','External covariates such as temperature or holidays'], ans:1, exp:'AR uses past values of y: y(t-1), y(t-2), ... ARMA adds past errors: e(t-1), e(t-2), ... — the difference between what the model predicted and what actually happened. The intuition: if the model consistently over-predicted last quarter, that mistake is a signal. The MA terms let the model correct for its own recent errors. If your AR residuals show autocorrelation structure in the ACF, adding MA terms (moving to ARMA) is the natural next step.'},
-  {t:'ts5', q:'After fitting an AR model, the ACF of the residuals shows large spikes at lags 1 and 2. What does this tell you and what should you do?', opts:['The model is good — residual spikes are expected','The model has not captured all the structure in the series — there is still autocorrelation in what it got wrong. Increase p or add MA terms to capture the remaining pattern.','The series needs to be differenced again','Spikes at lags 1 and 2 mean the series is non-stationary'], ans:1, exp:'Residuals should look like white noise — random, with no pattern. If the ACF of residuals shows significant spikes, it means consecutive errors are correlated: the model is systematically wrong in the same direction across nearby time steps. This is structure the model failed to explain. A spike at lag 1 suggests a lag-1 dependency was missed → try increasing p. Multiple spikes suggest the MA part of ARMA would help, since MA terms are specifically designed to absorb patterns in past errors.'}
+  {t:'ts5', q:'After fitting an AR model, the ACF of the residuals shows large spikes at lags 1 and 2. What does this tell you and what should you do?', opts:['The model is good — residual spikes are expected','The model has not captured all the structure in the series — there is still autocorrelation in what it got wrong. Increase p or add MA terms to capture the remaining pattern.','The series needs to be differenced again','Spikes at lags 1 and 2 mean the series is non-stationary'], ans:1, exp:'Residuals should look like white noise — random, with no pattern. If the ACF of residuals shows significant spikes, it means consecutive errors are correlated: the model is systematically wrong in the same direction across nearby time steps. This is structure the model failed to explain. A spike at lag 1 suggests a lag-1 dependency was missed → try increasing p. Multiple spikes suggest the MA part of ARMA would help, since MA terms are specifically designed to absorb patterns in past errors.'},
+
+  // TS6
+  {t:'ts6', q:'Why must a time series train/test split always be chronological — never random?', opts:['Random splits work fine if the series is stationary','Time series rows are dependent — future values are influenced by past values. A random split lets the model train on future data and test on the past, which is data leakage and produces artificially optimistic results.','Chronological splits are only needed for seasonal series','Random splits produce the same MAE as chronological splits on average'], ans:1, exp:'In standard ML, rows are independent so random splitting is safe. In time series, row t+1 depends on row t — the chronological order is the information. If you randomly split, some future observations end up in training. The model sees the future during training and predicts the past during testing — a complete reversal of causality. This inflates performance metrics. Always train on past data and test on genuinely future data.'},
+  {t:'ts6', q:'What are the two most essential properties of good model residuals, and why are they the most important?', opts:['Normally distributed and constant variance — needed for all models','Zero mean and uncorrelated — if either fails, the model has left exploitable structure in the errors that could improve forecasts','Positive and monotonically increasing — indicates the model is learning','Smaller than the original series values — indicates the model is accurate'], ans:1, exp:'Zero mean: if the mean is non-zero, every forecast is systematically biased — you could improve all predictions by just adding a constant. Uncorrelated: if residuals are autocorrelated, past errors can predict future errors — meaning the model left structure on the table it could have used. These two properties are essential because they define whether the model has extracted all available information. Normality and constant variance matter for prediction intervals but not for the forecasts themselves.'},
+  {t:'ts6', q:'You fit an AR model on training data. The test MAE is much higher than the in-sample MAE. What is the most likely explanation?', opts:['The model is correct — test MAE is always higher','The model overfitted to the training data — it learned the specific noise of the training period rather than the genuine signal, so it performs poorly on unseen future data','The test set is too large','AIC was used instead of BIC'], ans:1, exp:'In-sample MAE measures how well the model fits data it was trained on — it has already seen those points. A model that memorises training noise will have low in-sample error but high test error because the noise pattern does not repeat. This is overfitting. For time series, a high p (too many lags) is a common cause — each extra lag gives the model another way to fit training noise. Using BIC (which penalises complexity harder) or cross-validation helps select a p that generalises.'},
+  {t:'ts6', q:'You compare AR and ARMA on the same test set. ARMA gives a lower MAE. What does this tell you about the AR residuals?', opts:['The AR model used the wrong lag order','The AR residuals contained autocorrelation — past errors were predictive of future errors. ARMA captured this with its MA terms, improving forecasts.','ARMA always outperforms AR on any dataset','The AR model was not stationary'], ans:1, exp:'ARMA adds MA terms — past forecast errors as additional features. If ARMA outperforms AR, it means the errors the AR model made were not pure noise: they had a pattern the MA terms could exploit. This is exactly what the ACF of residuals test would have revealed — significant spikes in the AR residual ACF indicate leftover structure. ARMA absorbs that structure into the MA part, reducing the remaining error.'},
+  {t:'ts6', q:'Why is averaging MAE across all forward-chaining folds more reliable than a single train/test split?', opts:['It uses more data overall','A single split evaluates the model on one specific future window which may be atypically easy or hard. Forward chaining averages across many different training sizes and forecast horizons, giving a stable estimate of real-world forecast accuracy.','Forward chaining always gives a lower MAE than a single split','It removes the need to select the lag order p'], ans:1, exp:'A single split like "last 40 points as test" gives one MAE. If those 40 points happened to be unusually calm or unusually volatile, the MAE is not representative. Forward chaining creates hundreds of folds, each with a different training window size, testing the model at every possible forecast horizon. The average MAE is much more stable and representative of how the model will actually perform in deployment.'},
+  {t:'ts6', q:'You fit an AR model on training data and the residuals have zero mean, flat ACF, and pass the Shapiro-Wilk test. What can you conclude?', opts:['The model is perfect and will forecast future data with zero error','The model has captured all the structure in the training data — residuals are white noise. It is ready for evaluation on a held-out test set to assess genuine forecast accuracy.','The model has overfit to the training data','The series does not need differencing'], ans:1, exp:'Zero mean means no systematic bias. Flat ACF means no autocorrelation — no exploitable structure left in the errors. Passing Shapiro-Wilk means the errors are approximately normally distributed, which is good for building prediction intervals. Together these checks confirm the model is complete on the training data. However, this only tells you about in-sample fit — you still need a held-out test set to assess how well the model forecasts genuinely unseen future data.'}
 ];
 
 const FLASHCARDS = [
@@ -8438,7 +8800,15 @@ const FLASHCARDS = [
   {t:'ts5', front:'AutoReg fit and predict — key parameters', back:'ar = tsa.AutoReg(endog=time_series, lags=optlag)\nar_result = ar.fit()\nprediction = ar_result.predict(start=optlag)\n\nendog: the series the model predicts from its own past\nlags: the order p\nfit(): estimates φ coefficients using least squares\npredict(start=p): skips first p rows (no lag history yet)\n\nMAE:\nmean_absolute_error(time_series[optlag:], prediction)'},
   {t:'ts5', front:'organize_data — what it does and why', back:'Turns a 1D series into a supervised ML problem.\n\nFor series [a,b,c,d,e,f] with window=3:\nX = [[a,b,c], [b,c,d], [c,d,e]]   ← lag feature rows\ny = [d, e, f]                       ← next-step targets\n\nThen: LinearRegression().fit(X, y)\n→ learns the same φ coefficients as AutoReg\n→ result is mathematically identical\n\nBenefit: swap LinearRegression for any sklearn estimator\nto build custom AR models with different assumptions.'},
   {t:'ts5', front:'ARMA vs AR — difference and statsmodels syntax', back:'AR(p): y(t) = c + φ₁y(t-1)+...+φₚy(t-p) + e(t)\n  → uses past VALUES only\n\nARMA(p,q): y(t) = c + AR(p) + θ₁e(t-1)+...+θ_qe(t-q) + e(t)\n  → adds past ERRORS as features too\n  → MA part captures patterns in what AR got wrong\n\nStatsmodels: ARIMA(series, order=(p, d, q))\nd=0 → no built-in differencing → becomes ARMA\nAlready differenced manually → always use d=0 here\n\nCheck: if ARMA MAE < AR MAE, the errors had structure.'},
-  {t:'ts5', front:'Residual check — how to know if the model is complete', back:'After fitting, plot ACF of residuals:\nfrom statsmodels.graphics.tsaplots import plot_acf\nplot_acf(ar_result.resid, lags=15)\n\nGood: all lags inside confidence band → white noise → done\nBad: significant spikes → model missed structure\n\nFixes for bad residuals:\n• Spike at lag k → increase p to k\n• Spikes at many lags → add MA terms (use ARMA)\n• Series still drifting → re-check stationarity'}
+  {t:'ts5', front:'Residual check — how to know if the model is complete', back:'After fitting, plot ACF of residuals:\nfrom statsmodels.graphics.tsaplots import plot_acf\nplot_acf(ar_result.resid, lags=15)\n\nGood: all lags inside confidence band → white noise → done\nBad: significant spikes → model missed structure\n\nFixes for bad residuals:\n• Spike at lag k → increase p to k\n• Spikes at many lags → add MA terms (use ARMA)\n• Series still drifting → re-check stationarity'},
+
+  // TS6 Flashcards
+  {t:'ts6', front:'Four properties of good residuals — what they are and why', back:'1. Zero mean — no systematic bias in forecasts\n   np.mean(residuals) ≈ 0\n\n2. Uncorrelated — no pattern left in errors\n   ACF of residuals: all lags inside blue band\n   → most important check\n\n3. Constant variance — spread does not grow over time\n   Residual plot: even scatter, no funnel shape\n\n4. Normally distributed — bell curve centred at zero\n   Histogram + Shapiro-Wilk (p > 0.05)\n   → needed for prediction intervals'},
+  {t:'ts6', front:'Train/test split for time series — the rule and why', back:'Rule: always split CHRONOLOGICALLY\ntrain = time_series[:-40]   ← past\ntest  = time_series[-40:]   ← future\n\nWhy: time series rows are dependent.\nFuture values are influenced by past values.\nRandom split → future leaks into training → data leakage\n→ artificially low test error, model looks better than it is\n\nNever shuffle. Never random_state. Always keep time order.'},
+  {t:'ts6', front:'predict(end=...) for forecasting beyond the training set', back:'arfit = AutoReg(train, lags=p).fit()\n\n# Predict from end of train to last date of full series\nprediction = arfit.predict(end=time_series.index[-1])\n\n# Slice the last len(test) values = test period predictions\nprediction = prediction[-len(test):]\n\nWhy: predict() needs an end point in the future.\nSpecify the last date of the full series,\nthen slice off the test-length tail.'},
+  {t:'ts6', front:'arma_order_select_ic — automatic p and q selection', back:'param_choice = tsa.arma_order_select_ic(\n    train, max_ar=2, max_ma=2, ic="bic", trend="c"\n)\np, q = param_choice["bic_min_order"]\n\nTries all (p,q) combinations up to (max_ar, max_ma)\nScores each with BIC\nbic_min_order → (p, q) tuple with lowest BIC\n\nIf result is (1, 0) → best model is just AR(1)\n→ MA terms added nothing\n\nThen: tsa.ARIMA(train, order=(p, 0, q)).fit()'},
+  {t:'ts6', front:'Forward chaining cross-validation — concept and structure', back:'Standard k-fold: random splits → invalid for time series\n\nForward chaining:\nFold 1: train [1..30],    test [31]\nFold 2: train [1..31],    test [32]\nFold 3: train [1..32],    test [33]\n...\n\nfor size in range(30, len(ts)-30):\n    mae = Forecasting_CV(ts, size, optlag)\n    mae_errors.append(mae)\navg_mae = np.mean(mae_errors)\n\nAverage MAE is stable — not sensitive to one lucky/unlucky split'},
+  {t:'ts6', front:'inferred_freq — what it does and when you need it', back:'time_series.index = pd.DatetimeIndex(\n    time_series.index.values,\n    freq=time_series.index.inferred_freq\n)\n\nWhen: you build a DatetimeIndex manually from CSV dates.\nThe index knows the timestamps but not the spacing.\n\ninferred_freq: looks at gaps between dates, guesses pattern\ne.g. "W-SUN" for weekly, "MS" for monthly start\n\nWhy: statsmodels uses frequency for lag alignment.\nWithout it: ValueError or UserWarning about missing freq.'}
 ];
 
 // ===================== STATE =====================
@@ -8466,7 +8836,7 @@ function nav(page) {
   document.getElementById('main').scrollTop = 0;
   const navEl = document.querySelector(`[onclick="nav('${page}')"]`);
   if (navEl) navEl.classList.add('active');
-  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5'].includes(page)) {
+  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6'].includes(page)) {
     markVisited(page);
     renderInlineQuiz(page);
   }
@@ -8486,7 +8856,7 @@ function markVisited(w) {
 function updateGlobalProgress() {
   const pct = Math.round((visited.length / 25) * 100);
   document.getElementById('global-progress-bar').style.width = pct + '%';
-  document.getElementById('global-progress-label').textContent = `${visited.length} of 35 lessons visited`;
+  document.getElementById('global-progress-label').textContent = `${visited.length} of 36 lessons visited`;
 }
 
 // ===================== INLINE QUIZ =====================
