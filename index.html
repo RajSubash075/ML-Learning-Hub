@@ -272,6 +272,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('ts4')" id="nav-ts4"><span class="icon">🧪</span> L4: Preprocessing Practical 2<span class="check" id="check-ts4"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ts5')" id="nav-ts5"><span class="icon">📉</span> L5: Autoregressive Models<span class="check" id="check-ts5"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ts6')" id="nav-ts6"><span class="icon">🔎</span> L6: Time Series Testing<span class="check" id="check-ts6"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('ts7')" id="nav-ts7"><span class="icon">📊</span> L7: Exponential Smoothing<span class="check" id="check-ts7"></span></div>
   </div>
 
   <div class="sidebar-section" style="margin-top:10px">Practice</div>
@@ -1303,6 +1304,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
           <div class="topic-chip" id="chip-ts4" onclick="toggleChip('ts4')">L4: Preprocessing Practical 2</div>
           <div class="topic-chip" id="chip-ts5" onclick="toggleChip('ts5')">L5: Autoregressive Models</div>
           <div class="topic-chip" id="chip-ts6" onclick="toggleChip('ts6')">L6: Time Series Testing</div>
+          <div class="topic-chip" id="chip-ts7" onclick="toggleChip('ts7')">L7: Exponential Smoothing</div>
         </div>
     </div>
     <div class="card" style="max-width:400px">
@@ -1422,6 +1424,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
         <div class="topic-chip" id="fc-chip-ts4" onclick="fcFilter('ts4')">L4: Preprocessing Practical 2</div>
         <div class="topic-chip" id="fc-chip-ts5" onclick="fcFilter('ts5')">L5: Autoregressive Models</div>
         <div class="topic-chip" id="fc-chip-ts6" onclick="fcFilter('ts6')">L6: Time Series Testing</div>
+        <div class="topic-chip" id="fc-chip-ts7" onclick="fcFilter('ts7')">L7: Exponential Smoothing</div>
       </div>
     </div>
   </div>
@@ -7852,6 +7855,288 @@ Forecasting_crossValidation(time_series, int(len(time_series) * <span class="num
   </div>
 </div>
 
+<!-- TS7: EXPONENTIAL SMOOTHING -->
+<div class="page" id="page-ts7">
+  <div class="page-header">
+    <div class="chapter-badge">Time Series Analysis</div>
+    <h1>L7: Exponential Smoothing</h1>
+    <p class="subtitle">A family of forecasting methods that weight recent observations more heavily — from simple smoothing to handling trends and seasonality — without requiring stationarity.</p>
+  </div>
+
+  <div class="card">
+    <h2>Why Exponential Smoothing?</h2>
+    <p>Everything we've built so far — AR, ARMA, ARIMA — requires you to first make the series stationary. That means differencing, testing, possibly differencing again. It's a multi-step pipeline before you even start modelling.</p>
+    <p>Exponential smoothing takes a different approach. It doesn't assume stationarity. It doesn't require you to know the structure of the series upfront. It just asks: <strong>what weights should we give to past observations, and how quickly should those weights decay?</strong></p>
+
+    <div class="key-concept">
+      <div class="label">The key insight</div>
+      <p>Not all past observations are equally useful. What happened last week is more relevant than what happened two years ago. Exponential smoothing formalises this by giving each past observation a weight that decays exponentially the further back you go — recent data counts more, old data fades out automatically.</p>
+    </div>
+
+    <h3 style="margin-top:18px; margin-bottom:8px">Why use it over AR/ARIMA?</h3>
+    <ul style="margin: 0 0 0 20px; line-height:2">
+      <li><strong>No stationarity required.</strong> You can apply it directly to raw data with trend and seasonality.</li>
+      <li><strong>Simpler to interpret.</strong> The smoothing parameter α has a direct, intuitive meaning.</li>
+      <li><strong>Competitive in practice.</strong> Despite their simplicity, ES methods consistently beat more complex models on real benchmark datasets.</li>
+      <li><strong>Three variants cover most situations.</strong> No trend, trend only, or trend plus seasonality — pick the one that matches your data.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Important Things to Know Before You Start</h2>
+
+    <h3 style="margin-bottom:8px">1. The α parameter controls memory</h3>
+    <p>Every exponential smoothing model has a smoothing parameter <strong>α</strong> (between 0 and 1). It controls how quickly old observations are forgotten:</p>
+    <table class="styled-table" style="margin-top:8px">
+      <thead><tr><th>α value</th><th>Effect</th><th>Use when</th></tr></thead>
+      <tbody>
+        <tr><td><strong>α close to 1</strong></td><td>Almost all weight on the most recent point — fast to react, noisy</td><td>Series changes rapidly, recent past is most predictive</td></tr>
+        <tr><td><strong>α close to 0</strong></td><td>Weight spread across many past points — slow to react, smooth</td><td>Series is stable, long memory, or very noisy</td></tr>
+        <tr><td><strong>α ≈ 0.1–0.3</strong></td><td>Moderate smoothing — typical range in practice</td><td>Most real-world series</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:10px">In practice you don't choose α manually — statsmodels optimises it from the data by minimising the sum of squared forecast errors.</p>
+
+    <h3 style="margin-top:18px; margin-bottom:8px">2. Three models — pick based on your data</h3>
+    <table class="styled-table">
+      <thead><tr><th>Model</th><th>Also called</th><th>Handles</th><th>Use when</th></tr></thead>
+      <tbody>
+        <tr><td><strong>SES</strong></td><td>Simple Exp. Smoothing</td><td>Level only</td><td>No trend, no seasonality</td></tr>
+        <tr><td><strong>DES / Holt's</strong></td><td>Double Exp. Smoothing</td><td>Level + trend</td><td>Trend present, no seasonality</td></tr>
+        <tr><td><strong>TES / Holt-Winters</strong></td><td>Triple Exp. Smoothing</td><td>Level + trend + seasonality</td><td>Both trend and seasonality</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:18px; margin-bottom:8px">3. SES produces a flat forecast</h3>
+    <p>This is the most common surprise. SES models the <em>level</em> of the series — a smoothed estimate of where the series currently sits. When you ask it to forecast into the future, it has no information about direction, so it projects that level forward as a flat horizontal line. This is correct behaviour — not a bug. If your data has a trend, SES is simply the wrong model.</p>
+
+    <h3 style="margin-top:18px; margin-bottom:8px">4. Seasonality needs a period</h3>
+    <p>Holt-Winters requires you to specify <code>seasonal_periods</code> — how many time steps make up one full seasonal cycle. You find this from the ACF plot: the lag with the largest significant spike is your season length. For monthly data with annual seasonality it's 12. For weekly data with 6-monthly patterns it's 26.</p>
+  </div>
+
+  <div class="card">
+    <h2>From Naive to Exponential — The Motivation</h2>
+    <p>Before jumping to ES, it helps to see the two naive extremes and why neither is satisfying.</p>
+
+    <h3 style="margin-bottom:8px">Naive Method 1 — Always predict the last value</h3>
+    <div class="code-block"><pre><span class="cm"># Predict the last known value for every future step</span>
+h = <span class="num">50</span>
+forecast_dates = pd.date_range(series.index[-<span class="num">1</span>], periods=h, freq=<span class="str">"B"</span>)
+naive_forecast = [series[-<span class="num">1</span>]] * h  <span class="cm"># repeat the last value h times</span></pre></div>
+    <p>Too much weight on one single point. One noisy day throws off all future predictions. The forecast is a flat line at that one value.</p>
+
+    <h3 style="margin-top:18px; margin-bottom:8px">Naive Method 2 — Always predict the overall mean</h3>
+    <div class="code-block"><pre>naive_forecast = [series.mean()] * h  <span class="cm"># same for all future steps</span></pre></div>
+    <p>Treats a reading from 5 years ago as equally important as last week. Completely ignores recent behaviour. The forecast is a flat line at the long-run average.</p>
+
+    <div class="key-concept">
+      <div class="label">Exponential smoothing is the middle ground</div>
+      <p>Neither "only the last point" nor "equal weight to everything". Instead: give the most weight to the most recent observation, and let weights decay exponentially as you go back in time.</p>
+      <p style="margin-top:8px"><strong>ŷ(T+1) = α·y(T) + α(1−α)·y(T−1) + α(1−α)²·y(T−2) + ...</strong></p>
+      <p style="margin-top:8px">The weight on observation k steps back is α(1−α)ᵏ. Since 0 &lt; (1−α) &lt; 1, this gets smaller and smaller the further back you go. The total of all weights sums to 1.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Dataset and Loading</h2>
+    <p>This practical uses monthly company revenue data. Revenue is in raw units so we divide by 1 million for readability.</p>
+    <div class="code-block"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">from</span> statsmodels.tsa.api <span class="kw">import</span> ExponentialSmoothing, SimpleExpSmoothing
+<span class="kw">from</span> statsmodels.graphics.tsaplots <span class="kw">import</span> plot_acf
+
+full_df = pd.read_csv(<span class="str">"data/MonthlySales.csv"</span>)
+
+<span class="cm"># Convert revenue to millions for readability</span>
+full_df[<span class="str">"Revenue"</span>] = full_df[<span class="str">"Revenue"</span>].apply(<span class="kw">lambda</span> x: x / <span class="num">1e6</span>)
+
+<span class="cm"># Keep only the two relevant columns</span>
+df = full_df.loc[:, [<span class="str">"Period"</span>, <span class="str">"Revenue"</span>]].copy()
+df.dropna(inplace=<span class="kw">True</span>)
+
+<span class="cm"># Parse dates and set as index</span>
+df[<span class="str">"Period"</span>] = pd.to_datetime(df[<span class="str">"Period"</span>], format=<span class="str">"%d.%m.%Y"</span>)
+df.set_index(<span class="str">"Period"</span>, inplace=<span class="kw">True</span>)
+
+<span class="cm"># Attach inferred frequency (avoids statsmodels warnings)</span>
+df.index = pd.DatetimeIndex(df.index.values, freq=df.index.inferred_freq)
+
+<span class="cm"># Train/test split — last 12 months as test (1 year)</span>
+train = df[:-<span class="num">12</span>]
+test  = df[-<span class="num">12</span>:]</pre></div>
+    <div class="key-concept">
+      <div class="label">Why format="%d.%m.%Y"?</div>
+      <p>The dates in this CSV are stored as <code>31.01.2018</code> — day.month.year with dots. Pandas can't auto-detect this format so you must specify it explicitly. <code>%d</code>=day, <code>%m</code>=month, <code>%Y</code>=4-digit year. Without the format string, pandas either fails or mis-parses the dates.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Simple Exponential Smoothing (SES)</h2>
+    <p>SES is the foundation. It models only the <strong>level</strong> of the series — a smoothed estimate of where the series currently is. It works well when there is no trend and no seasonality. On revenue data with a clear upward trend, we expect it to struggle — and seeing that failure is exactly what motivates the next model.</p>
+    <div class="code-block"><pre><span class="cm"># initialization_method="estimated" — let statsmodels optimise α and the</span>
+<span class="cm"># initial level l₀ from the data, rather than setting them manually</span>
+ses_model = SimpleExpSmoothing(train, initialization_method=<span class="str">"estimated"</span>).fit()
+
+<span class="cm"># forecast(n) — generate n steps into the future</span>
+y_pred = ses_model.forecast(len(test))
+
+plt.figure()
+plt.plot(df, label=<span class="str">"true data"</span>)
+plt.plot(test.index, y_pred, label=<span class="str">"prediction"</span>)
+plt.plot(test, label=<span class="str">"test data"</span>)
+plt.legend()</pre></div>
+    <div class="key-concept">
+      <div class="label">Why does SES produce a flat forecast?</div>
+      <p>SES only tracks the <em>level</em> — where the series currently is. It has no concept of direction (trend). When asked to predict the future, it has nothing to go on except the current level, so it projects that level forward as a flat horizontal line. This is not a bug — it's what SES is designed to do. The flat line says: "based on recent history, my best estimate is that the series will stay at this level." On a trending series, this is clearly wrong, which tells us we need the next model.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Holt's Linear Model — Double Exponential Smoothing (DES)</h2>
+    <p>Holt's method extends SES by adding a second component: the <strong>trend</strong>. Now the model tracks two things simultaneously — the current level and the current direction of change. This lets it project a sloped line into the future instead of a flat one.</p>
+
+    <div class="key-concept">
+      <div class="label">How DES works</div>
+      <p>DES uses two smoothing equations — one for the level (like SES) and one for the trend. The trend equation tracks how fast the level is changing, with its own smoothing parameter β. The forecast is: <strong>ŷ(T+h) = level + h × trend</strong> — the current level plus h steps of the current trend.</p>
+    </div>
+
+    <div class="code-block"><pre><span class="cm"># trend="add" — additive trend: the trend is added to the level each step</span>
+<span class="cm"># initialization_method="estimated" — optimise all parameters from data</span>
+des_model = ExponentialSmoothing(
+    train,
+    trend=<span class="str">"add"</span>,
+    initialization_method=<span class="str">"estimated"</span>
+).fit()
+
+y_pred = des_model.forecast(len(test))
+
+plt.figure()
+plt.plot(df, label=<span class="str">"true data"</span>)
+plt.plot(test.index, y_pred, label=<span class="str">"prediction"</span>)
+plt.plot(test, label=<span class="str">"test data"</span>)
+plt.legend()</pre></div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Manual vs automatic parameters</h3>
+    <div class="code-block"><pre><span class="cm"># Option A — let statsmodels optimise everything</span>
+des_auto = ExponentialSmoothing(
+    train, trend=<span class="str">"add"</span>, initialization_method=<span class="str">"estimated"</span>
+).fit()
+
+<span class="cm"># Option B — specify parameters manually (useful for experimenting)</span>
+des_manual = ExponentialSmoothing(train, trend=<span class="str">"add"</span>).fit(
+    smoothing_level=<span class="num">0.1</span>,   <span class="cm"># α — controls level smoothing</span>
+    smoothing_trend=<span class="num">0.5</span>    <span class="cm"># β — controls trend smoothing</span>
+)</pre></div>
+    <div class="key-concept">
+      <div class="label">When manual parameters beat auto</div>
+      <p>Sometimes manually tuned parameters outperform the optimiser, especially on short datasets where the optimiser has little data to work with. The optimiser minimises in-sample error — it doesn't know about your test set. If you know the series is slowly evolving, a small β (e.g. 0.1) will prevent the trend from chasing noise. Always compare both on a validation set.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Damped trend</h3>
+    <div class="code-block"><pre><span class="cm"># damped_trend=True — trend effect gradually weakens over the forecast horizon</span>
+<span class="cm"># Useful for long-range forecasts where you don't trust the trend to continue indefinitely</span>
+des_damped = ExponentialSmoothing(
+    train, trend=<span class="str">"add"</span>, damped_trend=<span class="kw">True</span>, initialization_method=<span class="str">"estimated"</span>
+).fit()</pre></div>
+    <p>A damped trend is a safety net for long-horizon forecasting. It says: "the trend is real now, but I don't trust it to continue at the same rate forever." The forecast starts sloped then gradually flattens out.</p>
+  </div>
+
+  <div class="card">
+    <h2>Holt-Winters — Triple Exponential Smoothing (TES)</h2>
+    <p>Holt-Winters adds a third component — <strong>seasonality</strong>. It tracks the level, the trend, and a seasonal index for each period within the cycle. This makes it the most powerful of the three models and the right choice when the series has a repeating pattern on top of a trend.</p>
+
+    <h3 style="margin-bottom:8px">Step 1 — Find the seasonal period using ACF</h3>
+    <p>Before fitting, you need to know how long one seasonal cycle is. The ACF plot tells you — the largest significant spike at a lag greater than 1 is your season length.</p>
+    <div class="code-block"><pre><span class="cm"># Plot ACF to find the dominant seasonal lag</span>
+plot_acf(df, lags=<span class="num">15</span>)
+plt.show()
+<span class="cm"># Look for the largest spike — e.g. lag 6 means a 6-month cycle</span>
+<span class="cm"># Use that value as seasonal_periods</span></pre></div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Step 2 — Fit Holt-Winters</h3>
+    <div class="code-block"><pre>tes_model = ExponentialSmoothing(
+    train,
+    trend=<span class="str">"add"</span>,           <span class="cm"># include additive trend component</span>
+    seasonal=<span class="str">"add"</span>,        <span class="cm"># include additive seasonal component</span>
+    seasonal_periods=<span class="num">6</span>,    <span class="cm"># one cycle = 6 months (from ACF)</span>
+    initialization_method=<span class="str">"estimated"</span>
+).fit()
+
+y_pred = tes_model.forecast(len(test))
+
+plt.figure()
+plt.plot(df, label=<span class="str">"true data"</span>)
+plt.plot(test.index, y_pred, label=<span class="str">"Holt-Winters prediction"</span>)
+plt.plot(test, label=<span class="str">"test data"</span>)
+plt.legend()</pre></div>
+
+    <div class="key-concept">
+      <div class="label">Additive vs multiplicative seasonality</div>
+      <p><strong>Additive (<code>seasonal="add"</code>):</strong> the seasonal fluctuation is a fixed amount added to the level — e.g. revenue always goes up by £2M in December regardless of the level. Use when seasonal swings are roughly the same size throughout the series.<br><br>
+      <strong>Multiplicative (<code>seasonal="mul"</code>):</strong> the seasonal fluctuation is a percentage of the level — e.g. revenue is always 20% higher in December. Use when seasonal swings grow proportionally as the series level grows. Common in revenue and sales data.</p>
+    </div>
+
+    <table class="styled-table" style="margin-top:16px">
+      <thead><tr><th>Parameter</th><th>Options</th><th>When to use</th></tr></thead>
+      <tbody>
+        <tr><td><code>trend</code></td><td><code>"add"</code>, <code>"mul"</code>, <code>None</code></td><td><code>"add"</code> for linear trend; <code>None</code> for SES</td></tr>
+        <tr><td><code>seasonal</code></td><td><code>"add"</code>, <code>"mul"</code>, <code>None</code></td><td><code>"add"</code> for constant swings; <code>"mul"</code> for growing swings</td></tr>
+        <tr><td><code>seasonal_periods</code></td><td>integer</td><td>From ACF — the dominant lag</td></tr>
+        <tr><td><code>damped_trend</code></td><td><code>True</code>, <code>False</code></td><td><code>True</code> for long-horizon forecasts</td></tr>
+        <tr><td><code>initialization_method</code></td><td><code>"estimated"</code></td><td>Always — lets statsmodels optimise all parameters</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Comparing All Three Models</h2>
+    <div class="code-block"><pre><span class="kw">from</span> sklearn.metrics <span class="kw">import</span> mean_absolute_error
+
+ses = SimpleExpSmoothing(train, initialization_method=<span class="str">"estimated"</span>).fit()
+des = ExponentialSmoothing(train, trend=<span class="str">"add"</span>, initialization_method=<span class="str">"estimated"</span>).fit()
+tes = ExponentialSmoothing(
+    train, trend=<span class="str">"add"</span>, seasonal=<span class="str">"add"</span>,
+    seasonal_periods=<span class="num">6</span>, initialization_method=<span class="str">"estimated"</span>
+).fit()
+
+ses_pred = ses.forecast(len(test))
+des_pred = des.forecast(len(test))
+tes_pred = tes.forecast(len(test))
+
+print(<span class="str">"SES MAE:"</span>, mean_absolute_error(test, ses_pred))
+print(<span class="str">"DES MAE:"</span>, mean_absolute_error(test, des_pred))
+print(<span class="str">"TES MAE:"</span>, mean_absolute_error(test, tes_pred))</pre></div>
+    <div class="key-concept">
+      <div class="label">How to interpret the MAE comparison</div>
+      <p>If SES MAE &gt; DES MAE: the series has a trend that SES couldn't capture — DES was the right upgrade.<br><br>
+      If DES MAE &gt; TES MAE: the series also has seasonality — TES was worth adding.<br><br>
+      If TES MAE ≈ DES MAE: the seasonality component isn't helping — maybe you chose the wrong <code>seasonal_periods</code>, or the series doesn't actually have seasonality. Check the ACF again.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Full Workflow Summary</h2>
+    <table class="styled-table">
+      <thead><tr><th>Step</th><th>What to do</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>1. Plot the series</td><td>Look for trend and seasonality</td><td>Determines which model to use</td></tr>
+        <tr><td>2. Split train/test</td><td><code>train=df[:-12], test=df[-12:]</code></td><td>Chronological split — never random</td></tr>
+        <tr><td>3. Fit SES</td><td><code>SimpleExpSmoothing(train).fit()</code></td><td>Baseline — sees flat forecast if trend exists</td></tr>
+        <tr><td>4. Fit DES</td><td><code>ExponentialSmoothing(train, trend="add").fit()</code></td><td>Handles trend — better if data drifts</td></tr>
+        <tr><td>5. Find seasonal period</td><td><code>plot_acf(df, lags=15)</code> — read largest spike</td><td>Required input for Holt-Winters</td></tr>
+        <tr><td>6. Fit TES</td><td><code>ExponentialSmoothing(train, trend="add", seasonal="add", seasonal_periods=k).fit()</code></td><td>Handles trend + seasonality</td></tr>
+        <tr><td>7. Compare MAE</td><td><code>mean_absolute_error(test, model.forecast(...))</code></td><td>Pick the model that forecasts best</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-ts7"></div></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('ts7')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('ts6')">← L6: Time Series Testing</button>
+  </div>
+</div>
+
 <!-- TS2: PREPROCESSING FOR TIME SERIES -->
 <div class="page" id="page-ts2">
   <div class="page-header">
@@ -8136,7 +8421,8 @@ const TOPICS = {
   ts3: 'TS L3: Preprocessing Practical',
   ts4: 'TS L4: Preprocessing Practical 2',
   ts5: 'TS L5: Autoregressive Models',
-  ts6: 'TS L6: Time Series Testing'
+  ts6: 'TS L6: Time Series Testing',
+  ts7: 'TS L7: Exponential Smoothing'
 };
 
 const ALL_QUESTIONS = [
@@ -8474,7 +8760,15 @@ const ALL_QUESTIONS = [
   {t:'ts6', q:'You fit an AR model on training data. The test MAE is much higher than the in-sample MAE. What is the most likely explanation?', opts:['The model is correct — test MAE is always higher','The model overfitted to the training data — it learned the specific noise of the training period rather than the genuine signal, so it performs poorly on unseen future data','The test set is too large','AIC was used instead of BIC'], ans:1, exp:'In-sample MAE measures how well the model fits data it was trained on — it has already seen those points. A model that memorises training noise will have low in-sample error but high test error because the noise pattern does not repeat. This is overfitting. For time series, a high p (too many lags) is a common cause — each extra lag gives the model another way to fit training noise. Using BIC (which penalises complexity harder) or cross-validation helps select a p that generalises.'},
   {t:'ts6', q:'You compare AR and ARMA on the same test set. ARMA gives a lower MAE. What does this tell you about the AR residuals?', opts:['The AR model used the wrong lag order','The AR residuals contained autocorrelation — past errors were predictive of future errors. ARMA captured this with its MA terms, improving forecasts.','ARMA always outperforms AR on any dataset','The AR model was not stationary'], ans:1, exp:'ARMA adds MA terms — past forecast errors as additional features. If ARMA outperforms AR, it means the errors the AR model made were not pure noise: they had a pattern the MA terms could exploit. This is exactly what the ACF of residuals test would have revealed — significant spikes in the AR residual ACF indicate leftover structure. ARMA absorbs that structure into the MA part, reducing the remaining error.'},
   {t:'ts6', q:'Why is averaging MAE across all forward-chaining folds more reliable than a single train/test split?', opts:['It uses more data overall','A single split evaluates the model on one specific future window which may be atypically easy or hard. Forward chaining averages across many different training sizes and forecast horizons, giving a stable estimate of real-world forecast accuracy.','Forward chaining always gives a lower MAE than a single split','It removes the need to select the lag order p'], ans:1, exp:'A single split like "last 40 points as test" gives one MAE. If those 40 points happened to be unusually calm or unusually volatile, the MAE is not representative. Forward chaining creates hundreds of folds, each with a different training window size, testing the model at every possible forecast horizon. The average MAE is much more stable and representative of how the model will actually perform in deployment.'},
-  {t:'ts6', q:'You fit an AR model on training data and the residuals have zero mean, flat ACF, and pass the Shapiro-Wilk test. What can you conclude?', opts:['The model is perfect and will forecast future data with zero error','The model has captured all the structure in the training data — residuals are white noise. It is ready for evaluation on a held-out test set to assess genuine forecast accuracy.','The model has overfit to the training data','The series does not need differencing'], ans:1, exp:'Zero mean means no systematic bias. Flat ACF means no autocorrelation — no exploitable structure left in the errors. Passing Shapiro-Wilk means the errors are approximately normally distributed, which is good for building prediction intervals. Together these checks confirm the model is complete on the training data. However, this only tells you about in-sample fit — you still need a held-out test set to assess how well the model forecasts genuinely unseen future data.'}
+  {t:'ts6', q:'You fit an AR model on training data and the residuals have zero mean, flat ACF, and pass the Shapiro-Wilk test. What can you conclude?', opts:['The model is perfect and will forecast future data with zero error','The model has captured all the structure in the training data — residuals are white noise. It is ready for evaluation on a held-out test set to assess genuine forecast accuracy.','The model has overfit to the training data','The series does not need differencing'], ans:1, exp:'Zero mean means no systematic bias. Flat ACF means no autocorrelation — no exploitable structure left in the errors. Passing Shapiro-Wilk means the errors are approximately normally distributed, which is good for building prediction intervals. Together these checks confirm the model is complete on the training data. However, this only tells you about in-sample fit — you still need a held-out test set to assess how well the model forecasts genuinely unseen future data.'},
+
+  // TS7
+  {t:'ts7', q:'A Simple Exponential Smoothing model always produces a flat forecast line. Why is this correct behaviour and not a bug?', opts:['SES has a coding error that statsmodels has not fixed','SES models only the level — where the series currently sits. It has no trend component, so it has no information about direction. Projecting the current level forward as a flat line is the only mathematically consistent forecast it can make.','SES averages the entire series and uses that average as the forecast','The flat line appears because α is always set to zero by default'], ans:1, exp:'SES tracks one thing: the current level — a weighted average of past values with more weight on recent ones. It does not track whether the series is going up or down. When asked to forecast, all it knows is the current level, so every future step gets that same level value — a flat horizontal line. This is precisely why SES is only appropriate for series with no trend and no seasonality. If your data is trending upward and SES gives a flat forecast, the model is telling you it cannot see the trend — switch to Holt\'s Linear (DES).'},
+  {t:'ts7', q:'What does the smoothing parameter α control, and what happens at the two extremes?', opts:['α controls the number of forecast steps; α=0 means one step ahead','α controls how quickly old observations are forgotten. α close to 1: almost all weight on the last point — reactive but noisy. α close to 0: weight spread across many past points — smooth but slow to react.','α controls whether the trend is additive or multiplicative','α is the seasonal period — larger α means more seasons'], ans:1, exp:'The exponential smoothing formula weights each past observation by α(1−α)^k where k is how far back it is. When α is near 1, (1−α)^k drops to near zero very quickly — only the most recent observation matters. When α is near 0, (1−α)^k stays close to 1 for many lags — many past observations share the weight. In practice, statsmodels optimises α by minimising the sum of squared in-sample forecast errors. You rarely set it manually.'},
+  {t:'ts7', q:'Your monthly revenue data has a clear upward trend and a repeating 6-month pattern. Which exponential smoothing model should you use and why?', opts:['SES — it handles all types of data','DES (Holt\'s Linear) — it handles trend but not seasonality, so it is sufficient','TES (Holt-Winters) with seasonal_periods=6 — it explicitly models level, trend, and the 6-month seasonal cycle simultaneously','AR(6) — exponential smoothing cannot handle seasonality'], ans:2, exp:'SES models level only — wrong because there is trend and seasonality. DES models level and trend — better, but will miss the 6-month seasonal pattern so forecasts will be wrong at seasonal peaks and troughs. TES (Holt-Winters) adds a seasonal component that tracks each season\'s index within the cycle. With seasonal_periods=6, the model knows the cycle repeats every 6 months and adjusts forecasts accordingly. You confirm seasonal_periods=6 from the ACF plot — the largest significant spike would be at lag 6.'},
+  {t:'ts7', q:'Why is exponential smoothing often preferred over AR/ARIMA when you want a quick, practical forecast?', opts:['Exponential smoothing is always more accurate than ARIMA','Exponential smoothing does not require stationarity — you can apply it directly to raw data without differencing, testing, or preprocessing. It is simpler, interpretable, and competitive in practice.','AR models cannot handle monthly data','Exponential smoothing ignores outliers automatically'], ans:1, exp:'AR and ARIMA require the series to be stationary before fitting — this means differencing, ADF testing, possibly differencing again. Exponential smoothing makes no such assumption. You load the data, split train/test, and fit. The α, β, γ parameters are optimised automatically. Despite this simplicity, ES methods routinely match or beat ARIMA on real benchmark datasets, especially for short to medium forecast horizons. The interpretability is also a practical advantage — business stakeholders can understand "we weight recent data more heavily" more easily than ARIMA(p,d,q).'},
+  {t:'ts7', q:'How do you determine the seasonal_periods value to pass to Holt-Winters, and what happens if you choose the wrong value?', opts:['Always use seasonal_periods=12 for monthly data','Plot the ACF of the series — the largest significant spike beyond lag 1 is your season length. If you choose the wrong value, the model will fit a cycle of the wrong length and the seasonal corrections will be wrong, potentially making forecasts worse than DES alone.','seasonal_periods must be set to the number of years of data','Divide the total number of observations by 4'], ans:1, exp:'seasonal_periods tells Holt-Winters how long one complete seasonal cycle is — so it knows which past observations correspond to the "same season." To find it, plot the ACF of the raw series and look for the largest significant spike. For monthly data with annual seasonality it\'s 12; for monthly data with a 6-month business cycle it\'s 6. If you pass the wrong value, the model aligns the wrong observations as "same season" — the seasonal corrections will reinforce noise rather than the real pattern. When unsure, compare TES MAE with DES MAE: if TES is not clearly better, revisit the seasonal_periods choice.'},
+  {t:'ts7', q:'What is the difference between additive and multiplicative seasonality, and how do you decide which to use?', opts:['Additive means trend is included; multiplicative means seasonality is included','Additive: seasonal swings are a fixed amount regardless of the series level. Multiplicative: seasonal swings are a percentage of the level, so they grow as the series grows. Use multiplicative when seasonal peaks get bigger as the overall level rises.','Multiplicative always gives lower MAE than additive','Additive is for monthly data; multiplicative is for weekly data'], ans:1, exp:'With additive seasonality, every December adds the same fixed amount — say £2M — to the forecast regardless of whether revenue is £10M or £50M. With multiplicative seasonality, every December adds a percentage — say 20% — so the December bump grows with the series. In practice: if the seasonal swings look roughly constant in the plot, use additive. If they look like they are growing proportionally as the series rises (funnel-like seasonal pattern), use multiplicative. For revenue and sales data with rapid growth, multiplicative is usually the better choice.'}
 ];
 
 const FLASHCARDS = [
@@ -8808,7 +9102,15 @@ const FLASHCARDS = [
   {t:'ts6', front:'predict(end=...) for forecasting beyond the training set', back:'arfit = AutoReg(train, lags=p).fit()\n\n# Predict from end of train to last date of full series\nprediction = arfit.predict(end=time_series.index[-1])\n\n# Slice the last len(test) values = test period predictions\nprediction = prediction[-len(test):]\n\nWhy: predict() needs an end point in the future.\nSpecify the last date of the full series,\nthen slice off the test-length tail.'},
   {t:'ts6', front:'arma_order_select_ic — automatic p and q selection', back:'param_choice = tsa.arma_order_select_ic(\n    train, max_ar=2, max_ma=2, ic="bic", trend="c"\n)\np, q = param_choice["bic_min_order"]\n\nTries all (p,q) combinations up to (max_ar, max_ma)\nScores each with BIC\nbic_min_order → (p, q) tuple with lowest BIC\n\nIf result is (1, 0) → best model is just AR(1)\n→ MA terms added nothing\n\nThen: tsa.ARIMA(train, order=(p, 0, q)).fit()'},
   {t:'ts6', front:'Forward chaining cross-validation — concept and structure', back:'Standard k-fold: random splits → invalid for time series\n\nForward chaining:\nFold 1: train [1..30],    test [31]\nFold 2: train [1..31],    test [32]\nFold 3: train [1..32],    test [33]\n...\n\nfor size in range(30, len(ts)-30):\n    mae = Forecasting_CV(ts, size, optlag)\n    mae_errors.append(mae)\navg_mae = np.mean(mae_errors)\n\nAverage MAE is stable — not sensitive to one lucky/unlucky split'},
-  {t:'ts6', front:'inferred_freq — what it does and when you need it', back:'time_series.index = pd.DatetimeIndex(\n    time_series.index.values,\n    freq=time_series.index.inferred_freq\n)\n\nWhen: you build a DatetimeIndex manually from CSV dates.\nThe index knows the timestamps but not the spacing.\n\ninferred_freq: looks at gaps between dates, guesses pattern\ne.g. "W-SUN" for weekly, "MS" for monthly start\n\nWhy: statsmodels uses frequency for lag alignment.\nWithout it: ValueError or UserWarning about missing freq.'}
+  {t:'ts6', front:'inferred_freq — what it does and when you need it', back:'time_series.index = pd.DatetimeIndex(\n    time_series.index.values,\n    freq=time_series.index.inferred_freq\n)\n\nWhen: you build a DatetimeIndex manually from CSV dates.\nThe index knows the timestamps but not the spacing.\n\ninferred_freq: looks at gaps between dates, guesses pattern\ne.g. "W-SUN" for weekly, "MS" for monthly start\n\nWhy: statsmodels uses frequency for lag alignment.\nWithout it: ValueError or UserWarning about missing freq.'},
+
+  // TS7 Flashcards
+  {t:'ts7', front:'Three exponential smoothing models — when to use each', back:'SES (Simple): level only\n→ No trend, no seasonality\n→ Forecast = flat horizontal line\n→ SimpleExpSmoothing(train).fit()\n\nDES / Holt\'s (Double): level + trend\n→ Trend present, no seasonality\n→ Forecast = sloped line\n→ ExponentialSmoothing(train, trend="add").fit()\n\nTES / Holt-Winters (Triple): level + trend + seasonality\n→ Both trend and seasonality\n→ Forecast = sloped + repeating pattern\n→ ExponentialSmoothing(train, trend="add", seasonal="add", seasonal_periods=k).fit()'},
+  {t:'ts7', front:'α parameter — what it controls', back:'α = smoothing parameter (0 < α < 1)\n\nWeight on observation k steps back = α(1-α)^k\n→ decays exponentially with age\n\nα near 1: almost all weight on most recent point\n→ reacts fast, noisy, short memory\n\nα near 0: weight spread across many past points\n→ smooth, slow to react, long memory\n\nIn practice: set initialization_method="estimated"\n→ statsmodels optimises α by minimising sum of\n   squared in-sample forecast errors'},
+  {t:'ts7', front:'Why ES does not require stationarity', back:'AR/ARIMA: must difference the series until stationary\n→ ADF test → diff → retest → pipeline\n\nExponential smoothing: no such requirement\n→ Apply directly to raw data\n→ SES handles level changes automatically\n→ DES handles linear trends\n→ TES handles seasonality on top\n\nThe weighted average structure adapts to\nnon-stationary behaviour without transformation.\n\nPractical advantage: load data → split → fit → forecast.\nNo preprocessing pipeline needed.'},
+  {t:'ts7', front:'Holt-Winters seasonal_periods — how to choose', back:'seasonal_periods = number of time steps in one full cycle\n\nHow to find it:\nplot_acf(df, lags=15)\n→ largest significant spike beyond lag 1 = season length\n\nExamples:\n• Monthly data, annual seasonality → 12\n• Monthly data, 6-month business cycle → 6\n• Weekly data, annual seasonality → 52\n\nIf wrong: model fits cycle of wrong length\n→ seasonal corrections amplify noise\n→ TES MAE ≈ or > DES MAE\n→ re-read ACF and try again'},
+  {t:'ts7', front:'Additive vs multiplicative seasonality', back:'seasonal="add" — additive\n→ seasonal swing is a FIXED AMOUNT\n→ December always adds £2M regardless of level\n→ Use when seasonal peaks stay same size in plot\n\nseasonal="mul" — multiplicative\n→ seasonal swing is a PERCENTAGE of level\n→ December always adds 20%, grows with series\n→ Use when seasonal peaks grow as series rises\n\nVisual check:\n• Constant amplitude → additive\n• Growing amplitude (funnel-shaped seasons) → multiplicative\n\nRevenue/sales with rapid growth → usually multiplicative'},
+  {t:'ts7', front:'forecast() vs predict() in exponential smoothing', back:'model.forecast(n)\n→ generates n steps into the FUTURE beyond training\n→ returns a Series indexed to future dates\n→ this is a genuine forecast\n\nmodel.predict(start, end)\n→ can generate in-sample OR out-of-sample values\n→ useful for visualising the fitted model\n\nTypical usage:\ny_pred = model.forecast(len(test))\nmean_absolute_error(test, y_pred)\n\nRemember: forecast() uses future dates from the\ntraining index — the training set must have a freq.'}
 ];
 
 // ===================== STATE =====================
@@ -8836,7 +9138,7 @@ function nav(page) {
   document.getElementById('main').scrollTop = 0;
   const navEl = document.querySelector(`[onclick="nav('${page}')"]`);
   if (navEl) navEl.classList.add('active');
-  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6'].includes(page)) {
+  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7'].includes(page)) {
     markVisited(page);
     renderInlineQuiz(page);
   }
@@ -8856,7 +9158,7 @@ function markVisited(w) {
 function updateGlobalProgress() {
   const pct = Math.round((visited.length / 25) * 100);
   document.getElementById('global-progress-bar').style.width = pct + '%';
-  document.getElementById('global-progress-label').textContent = `${visited.length} of 36 lessons visited`;
+  document.getElementById('global-progress-label').textContent = `${visited.length} of 37 lessons visited`;
 }
 
 // ===================== INLINE QUIZ =====================
