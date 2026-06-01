@@ -277,6 +277,11 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('ts9')" id="nav-ts9"><span class="icon">📰</span> L9: Practical Example<span class="check" id="check-ts9"></span></div>
   </div>
 
+  <div class="nav-item nav-item-chapter" onclick="toggleChapter('neural')"><span class="icon">📚</span> Neural Networks & Deep Learning<span class="chapter-arrow" id="arrow-neural">▾</span></div>
+  <div class="nav-chapter-items" id="chapter-neural">
+    <div class="nav-item nav-item-sub" onclick="nav('nn1')" id="nav-nn1"><span class="icon">🧠</span> L1: Neural Network Fundamentals<span class="check" id="check-nn1"></span></div>
+  </div>
+
   <div class="sidebar-section" style="margin-top:10px">Practice</div>
   <div class="nav-item" onclick="nav('quiz')"><span class="icon">📝</span> Quiz</div>
   <div class="nav-item" onclick="nav('flashcards')"><span class="icon">🃏</span> Flashcards</div>
@@ -1298,6 +1303,12 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
           <div class="topic-chip" id="chip-ul5" onclick="toggleChip('ul5')">L5: t-SNE</div>
         </div>
       </div>
+      <div class="chip-chapter">
+        <div class="chip-chapter-label">🧠 Neural Networks & Deep Learning</div>
+        <div class="topic-chips">
+          <div class="topic-chip" id="chip-nn1" onclick="toggleChip('nn1')">L1: NN Fundamentals</div>
+        </div>
+      </div>
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
           <div class="topic-chip" id="chip-ts1" onclick="toggleChip('ts1')">L1: Intro to Time Series</div>
@@ -1419,6 +1430,12 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
         <div class="topic-chip" id="fc-chip-ul3" onclick="fcFilter('ul3')">L3: Hierarchical Clustering</div>
         <div class="topic-chip" id="fc-chip-ul4" onclick="fcFilter('ul4')">L4: DBSCAN</div>
         <div class="topic-chip" id="fc-chip-ul5" onclick="fcFilter('ul5')">L5: t-SNE</div>
+      </div>
+      <div class="chip-chapter">
+        <div class="chip-chapter-label">🧠 Neural Networks & Deep Learning</div>
+        <div class="topic-chips">
+          <div class="topic-chip" id="fc-chip-nn1" onclick="fcFilter('nn1')">L1: NN Fundamentals</div>
+        </div>
       </div>
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
@@ -10105,6 +10122,701 @@ df = df.dropna()</pre></div>
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- NEURAL NETWORKS & DEEP LEARNING — L1: Fundamentals       -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="page" id="page-nn1">
+  <div class="lesson-header">
+    <div class="breadcrumb">Neural Networks & Deep Learning · L1</div>
+    <h1>🧠 Neural Network Fundamentals</h1>
+    <p class="subtitle">From a single artificial neuron to deep multi-layer networks — understanding what makes neural networks the most powerful class of machine learning models ever built</p>
+  </div>
+
+  <!-- ── WHY ── -->
+  <h2>The Problem with Traditional ML</h2>
+  <p>Every ML algorithm you've learned so far — linear regression, decision trees, SVMs, random forests — has one thing in common: <strong>you decide what the model looks at</strong>. You engineer features, choose representations, and hand the model a pre-processed table of numbers.</p>
+  <p>This is called <strong>feature engineering</strong>, and it has a hard ceiling:</p>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">For a raw photo (224×224 pixels)</p>
+      <p style="margin:0; font-size:0.85rem; color:var(--text-muted)">There are 150,528 pixel values. Which combinations mean "cat"? You'd need thousands of hand-crafted rules — and they'd break on slightly different lighting, angles, or breeds.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">For a sentence of text</p>
+      <p style="margin:0; font-size:0.85rem; color:var(--text-muted)">"The bank was steep" vs "The bank was closed" — same word, different meaning. Manually encoding language rules for billions of sentences is impossible.</p>
+    </div>
+  </div>
+
+  <div class="alert alert-info">
+    <strong>Neural networks' breakthrough:</strong> they do <em>representation learning</em> — they learn which features matter, directly from raw data. You show a neural network a million cat photos, and it discovers its own definition of "cat" from pixel patterns. No feature engineering required.
+  </div>
+
+  <h2>Why Neural Networks Are So Powerful</h2>
+  <div class="card-grid">
+    <div class="card" style="border-top:3px solid #5b8af5">
+      <div class="badge badge-blue" style="margin-bottom:8px">Computer Vision</div>
+      <p style="margin:0; font-size:0.85rem"><strong>AlexNet (2012)</strong> cut the ImageNet error rate from 26% to 15% in one year. By 2017, ResNets reached 3.5% — <em>better than humans</em>. Tasks: classification, object detection, segmentation, medical imaging.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #a78bfa">
+      <div class="badge badge-purple" style="margin-bottom:8px">Natural Language</div>
+      <p style="margin:0; font-size:0.85rem">GPT-4, Gemini, Claude — all transformer-based neural networks. Translation, summarisation, question answering, code generation. GPT-4 passes medical licensing exams at the 90th percentile.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #34d399">
+      <div class="badge badge-green" style="margin-bottom:8px">Games & Strategy</div>
+      <p style="margin:0; font-size:0.85rem">AlphaGo (2016) beat the world Go champion. AlphaFold (2021) solved protein structure prediction — a 50-year-old biology problem. DeepMind's Atari agents beat humans on 57 games.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #fbbf24">
+      <div class="badge" style="background:rgba(251,191,36,0.15);color:#fbbf24;margin-bottom:8px">Generative AI</div>
+      <p style="margin:0; font-size:0.85rem">Stable Diffusion, DALL-E 3, Midjourney — generate photorealistic images from text. WaveNet generates human-quality speech. Sora generates videos from text descriptions.</p>
+    </div>
+  </div>
+
+  <h3>The Universal Approximation Theorem</h3>
+  <div class="card" style="border-left:3px solid var(--accent)">
+    <p style="margin:0 0 8px; font-size:0.95rem; color:var(--text)"><strong>A neural network with one hidden layer and enough neurons can approximate <em>any</em> continuous mathematical function to arbitrary precision.</strong></p>
+    <p style="margin:0; font-size:0.85rem; color:var(--text-muted)">This is why neural networks are called <em>universal approximators</em>. Whatever mapping exists between your inputs and outputs — no matter how complex or non-linear — a sufficiently large neural network can learn it. The theorem proves the <em>representational capacity</em> exists. The challenge is figuring out how to train it.</p>
+  </div>
+
+  <!-- ── BIOLOGICAL INSPIRATION ── -->
+  <h2>Biological Inspiration: The Real Neuron</h2>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.84rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:10px 14px; color:var(--text-muted); text-align:left">Biological Neuron</th>
+        <th style="padding:10px 14px; color:#5b8af5; text-align:left">Artificial Neuron</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; color:var(--text-muted)"><strong>Dendrites</strong> — receive electrical signals from other neurons</td>
+        <td style="padding:9px 14px; color:var(--text-muted)"><strong>Inputs</strong> x₁, x₂, x₃ — numerical values fed into the neuron</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; color:var(--text-muted)"><strong>Synaptic weights</strong> — some connections are stronger than others</td>
+        <td style="padding:9px 14px; color:var(--text-muted)"><strong>Weights</strong> w₁, w₂, w₃ — learned numbers controlling each input's influence</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; color:var(--text-muted)"><strong>Cell body</strong> — sums all incoming signals</td>
+        <td style="padding:9px 14px; color:var(--text-muted)"><strong>Weighted sum</strong> z = w₁x₁ + w₂x₂ + w₃x₃ + b</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; color:var(--text-muted)"><strong>Threshold</strong> — fires only if signal exceeds threshold</td>
+        <td style="padding:9px 14px; color:var(--text-muted)"><strong>Activation function</strong> f(z) — determines if/how strongly the neuron "fires"</td>
+      </tr>
+      <tr>
+        <td style="padding:9px 14px; color:var(--text-muted)"><strong>Axon</strong> — carries the output signal to the next neuron</td>
+        <td style="padding:9px 14px; color:var(--text-muted)"><strong>Output</strong> a = f(z) — the activation, passed to the next layer</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── THE ARTIFICIAL NEURON ── -->
+  <h2>The Artificial Neuron — How It Works</h2>
+  <p>A single neuron performs two operations:</p>
+  <div class="card-grid">
+    <div class="card" style="border-top:3px solid #5b8af5">
+      <div class="badge badge-blue" style="margin-bottom:8px">Step 1: Weighted Sum</div>
+      <p style="margin:0 0 8px; font-family:monospace; font-size:0.9rem; color:var(--text)">z = w₁x₁ + w₂x₂ + ... + wₙxₙ + b</p>
+      <p style="margin:0; font-size:0.84rem; color:var(--text-muted)">z is called the <strong>pre-activation</strong> or <strong>logit</strong>. Each input xᵢ is multiplied by its weight wᵢ and summed. The bias b shifts the result — it lets the neuron "fire" even when all inputs are zero.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #34d399">
+      <div class="badge badge-green" style="margin-bottom:8px">Step 2: Activation Function</div>
+      <p style="margin:0 0 8px; font-family:monospace; font-size:0.9rem; color:var(--text)">a = f(z)</p>
+      <p style="margin:0; font-size:0.84rem; color:var(--text-muted)">a is the <strong>activation</strong> — what the neuron outputs to the next layer. Without f, stacking neurons is useless (a chain of linear operations is still linear). f introduces the <strong>non-linearity</strong> that makes neural networks powerful.</p>
+    </div>
+  </div>
+
+  <!-- VIZ 1: INTERACTIVE NEURON CALCULATOR -->
+  <h2>Interactive: Build and Fire a Neuron</h2>
+  <p>Adjust the <strong>inputs</strong> and <strong>weights</strong> to see how they combine into the pre-activation z, and how the chosen activation function transforms z into the final output a. Watch how changing the activation function completely changes the output range.</p>
+
+  <div class="card" style="padding:16px">
+    <canvas id="nn1-neuron-canvas" width="500" height="250" style="width:100%; max-width:500px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div style="margin-top:14px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px">
+      <div>
+        <label style="font-size:0.78rem; color:#5b8af5; display:block; margin-bottom:3px">x₁ = <strong id="nn1-x1-val">1.0</strong></label>
+        <input type="range" min="-2" max="2" step="0.1" value="1.0" style="width:100%" oninput="nn1NeuronUpdate('x',0,this.value)">
+        <label style="font-size:0.78rem; color:#34d399; display:block; margin:6px 0 3px">w₁ = <strong id="nn1-w1-val">0.8</strong></label>
+        <input type="range" min="-2" max="2" step="0.1" value="0.8" style="width:100%" oninput="nn1NeuronUpdate('w',0,this.value)">
+      </div>
+      <div>
+        <label style="font-size:0.78rem; color:#5b8af5; display:block; margin-bottom:3px">x₂ = <strong id="nn1-x2-val">0.5</strong></label>
+        <input type="range" min="-2" max="2" step="0.1" value="0.5" style="width:100%" oninput="nn1NeuronUpdate('x',1,this.value)">
+        <label style="font-size:0.78rem; color:#34d399; display:block; margin:6px 0 3px">w₂ = <strong id="nn1-w2-val">0.5</strong></label>
+        <input type="range" min="-2" max="2" step="0.1" value="0.5" style="width:100%" oninput="nn1NeuronUpdate('w',1,this.value)">
+      </div>
+      <div>
+        <label style="font-size:0.78rem; color:#5b8af5; display:block; margin-bottom:3px">x₃ = <strong id="nn1-x3-val">-0.5</strong></label>
+        <input type="range" min="-2" max="2" step="0.1" value="-0.5" style="width:100%" oninput="nn1NeuronUpdate('x',2,this.value)">
+        <label style="font-size:0.78rem; color:#34d399; display:block; margin:6px 0 3px">w₃ = <strong id="nn1-w3-val">-0.3</strong></label>
+        <input type="range" min="-2" max="2" step="0.1" value="-0.3" style="width:100%" oninput="nn1NeuronUpdate('w',2,this.value)">
+      </div>
+    </div>
+    <div style="margin-top:10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+      <label style="font-size:0.78rem; color:#fbbf24">bias b = <strong id="nn1-b-val">0.2</strong></label>
+      <input type="range" min="-2" max="2" step="0.1" value="0.2" style="flex:1; min-width:120px" oninput="nn1NeuronUpdate('b',-1,this.value)">
+    </div>
+    <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
+      <label style="font-size:0.82rem; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:4px"><input type="radio" name="nn1act" value="relu" checked onchange="nn1NeuronUpdate('act',-1,'relu')"> ReLU</label>
+      <label style="font-size:0.82rem; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:4px"><input type="radio" name="nn1act" value="sigmoid" onchange="nn1NeuronUpdate('act',-1,'sigmoid')"> Sigmoid</label>
+      <label style="font-size:0.82rem; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:4px"><input type="radio" name="nn1act" value="tanh" onchange="nn1NeuronUpdate('act',-1,'tanh')"> Tanh</label>
+      <label style="font-size:0.82rem; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:4px"><input type="radio" name="nn1act" value="leakyrelu" onchange="nn1NeuronUpdate('act',-1,'leakyrelu')"> Leaky ReLU</label>
+    </div>
+    <div style="margin-top:12px; padding:10px 14px; background:rgba(91,138,245,0.08); border-radius:8px; border-left:3px solid var(--accent); font-family:monospace; font-size:0.85rem">
+      <div id="nn1-formula" style="color:var(--text-muted)"></div>
+      <div id="nn1-activation-out" style="color:#34d399; margin-top:4px"></div>
+      <div id="nn1-firing" style="margin-top:4px; font-size:0.82rem"></div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    var nn1_inputs=[1.0,0.5,-0.5],nn1_weights=[0.8,0.5,-0.3],nn1_bias=0.2,nn1_act='relu';
+    function sig(z){return 1/(1+Math.exp(-z));}
+    function elu(z){return z>=0?z:0.1*z;}
+    function applyAct(z,a){return a==='sigmoid'?sig(z):a==='tanh'?Math.tanh(z):a==='relu'?Math.max(0,z):elu(z);}
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgba('+r+','+g+','+b+','+a+')';}
+
+    function nn1DrawNeuron(){
+      var canvas=document.getElementById('nn1-neuron-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var z=nn1_inputs.reduce(function(s,x,i){return s+nn1_weights[i]*x;},0)+nn1_bias;
+      var a=applyAct(z,nn1_act);
+      ctx.clearRect(0,0,500,250);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,500,250);
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<500;gx+=32)for(var gy=20;gy<250;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+      var IXS=[60,60,60],IYS=[60,125,190],NX=250,NY=125,OX=430;
+      var wCols=['#34d399','#a78bfa','#fbbf24'];
+      // connections
+      IYS.forEach(function(iy,i){
+        var w=nn1_weights[i],wCol=w>=0?'#34d399':'#f87171';
+        ctx.beginPath();ctx.moveTo(IXS[i]+20,iy);ctx.lineTo(NX-38,NY);
+        ctx.strokeStyle=wCol;ctx.lineWidth=Math.abs(w)*2.5+0.5;ctx.globalAlpha=0.6;ctx.stroke();ctx.globalAlpha=1;
+        var mx=(IXS[i]+20+NX-38)/2,my=(iy+NY)/2;
+        ctx.beginPath();ctx.arc(mx,my,12,0,6.28);ctx.fillStyle='#0d1117';ctx.fill();
+        ctx.fillStyle=wCol;ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(w.toFixed(1),mx,my);
+      });
+      // input nodes
+      IYS.forEach(function(iy,i){
+        var v=nn1_inputs[i],col=v>=0?'#5b8af5':'#f87171';
+        ctx.beginPath();ctx.arc(IXS[i],iy,18,0,6.28);ctx.fillStyle=hexRgba(col,0.15);ctx.fill();
+        ctx.strokeStyle=col;ctx.lineWidth=2;ctx.stroke();
+        ctx.fillStyle=col;ctx.font='bold 11px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('x'+(i+1),IXS[i],iy);
+        ctx.fillStyle='rgba(255,255,255,0.55)';ctx.font='9px monospace';ctx.fillText(v.toFixed(1),IXS[i],iy+26);
+      });
+      // neuron
+      var nCol=a>0.5?'#5b8af5':a>0?'#a78bfa':'#64748b';
+      ctx.beginPath();ctx.arc(NX,NY,38,0,6.28);ctx.fillStyle=hexRgba(nCol,0.15);ctx.fill();
+      ctx.strokeStyle=nCol;ctx.lineWidth=2.5;ctx.stroke();
+      ctx.fillStyle='#e2e8f0';ctx.font='bold 10px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText('z='+z.toFixed(2),NX,NY-11);
+      ctx.fillStyle=nCol;ctx.font='bold 11px monospace';ctx.fillText('f(z)=a',NX,NY+6);
+      // bias
+      ctx.fillStyle='#fbbf24';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+      ctx.fillText('b='+nn1_bias.toFixed(1),NX,NY+58);
+      ctx.beginPath();ctx.moveTo(NX,NY+38);ctx.lineTo(NX,NY+49);
+      ctx.strokeStyle='#fbbf24';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+      // output
+      ctx.beginPath();ctx.moveTo(NX+38,NY);ctx.lineTo(OX-22,NY);
+      ctx.strokeStyle=nCol;ctx.lineWidth=2.5;ctx.stroke();
+      // arrow
+      ctx.beginPath();ctx.moveTo(OX-22,NY);ctx.lineTo(OX-32,NY-6);ctx.lineTo(OX-32,NY+6);ctx.closePath();
+      ctx.fillStyle=nCol;ctx.fill();
+      ctx.beginPath();ctx.arc(OX,NY,22,0,6.28);ctx.fillStyle=hexRgba(nCol,0.2);ctx.fill();
+      ctx.strokeStyle=nCol;ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle=nCol;ctx.font='bold 11px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText('a',OX,NY-8);ctx.fillStyle='#e2e8f0';ctx.font='10px monospace';
+      ctx.fillText(a.toFixed(3),OX,NY+8);
+      // labels
+      ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+      ctx.fillText('Inputs',60,18);ctx.fillText('Neuron',NX,18);ctx.fillText('Output',OX,18);
+      // formula
+      var fStr=nn1_weights.map(function(w,i){return w.toFixed(1)+'×'+nn1_inputs[i].toFixed(1);}).join(' + ');
+      document.getElementById('nn1-formula').textContent='z = ('+fStr+') + '+nn1_bias.toFixed(1)+' = '+z.toFixed(3);
+      document.getElementById('nn1-activation-out').textContent='a = '+nn1_act+'('+z.toFixed(3)+') = '+a.toFixed(4);
+      var fe=document.getElementById('nn1-firing');
+      fe.textContent=a>0.01?'⚡ Neuron ACTIVE — firing with strength '+a.toFixed(3):'◦ Neuron SILENT (a ≈ 0)';
+      fe.style.color=a>0.01?'#34d399':'#64748b';
+    }
+    window.nn1NeuronUpdate=function(type,idx,val){
+      var v=parseFloat(val);
+      if(type==='x'){nn1_inputs[idx]=v;document.getElementById('nn1-x'+(idx+1)+'-val').textContent=v.toFixed(1);}
+      else if(type==='w'){nn1_weights[idx]=v;document.getElementById('nn1-w'+(idx+1)+'-val').textContent=v.toFixed(1);}
+      else if(type==='b'){nn1_bias=v;document.getElementById('nn1-b-val').textContent=v.toFixed(1);}
+      else if(type==='act'){nn1_act=val;}
+      nn1DrawNeuron();
+    };
+    nn1DrawNeuron();
+  })();
+  </script>
+
+  <!-- ── ACTIVATION FUNCTIONS ── -->
+  <h2>Activation Functions — The Heart of Non-Linearity</h2>
+  <p>Without an activation function, stacking 100 linear layers is mathematically equivalent to a <em>single linear layer</em>. The activation function f(z) breaks this equivalence by introducing a non-linearity after every neuron — this is what gives neural networks their expressive power.</p>
+
+  <h3>Interactive: Activation Function Explorer</h3>
+  <p>Toggle between activation functions. The <strong>solid line</strong> is f(z), the <strong>dashed line</strong> is the derivative f'(z) — the gradient available for learning. Notice how sigmoid and tanh saturate (gradient → 0) at the extremes, causing the vanishing gradient problem.</p>
+
+  <div class="card" style="padding:16px">
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px">
+      <button class="btn btn-primary" id="nn1-btn-relu" onclick="nn1ActFnDraw('relu')">ReLU ✅</button>
+      <button class="btn btn-outline" id="nn1-btn-sigmoid" onclick="nn1ActFnDraw('sigmoid')">Sigmoid</button>
+      <button class="btn btn-outline" id="nn1-btn-tanh" onclick="nn1ActFnDraw('tanh')">Tanh</button>
+      <button class="btn btn-outline" id="nn1-btn-leakyrelu" onclick="nn1ActFnDraw('leakyrelu')">Leaky ReLU</button>
+    </div>
+    <canvas id="nn1-act-canvas" width="520" height="230" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div style="margin-top:10px; padding:10px 14px; background:rgba(255,255,255,0.03); border-radius:8px; display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:0.83rem">
+      <span style="color:var(--accent); font-weight:700" id="nn1-act-name">ReLU</span>
+      <span id="nn1-act-desc" style="color:var(--text-muted)"></span>
+      <span style="color:var(--text-muted)">Formula:</span>
+      <span id="nn1-act-formula" style="font-family:monospace; color:var(--text)"></span>
+      <span style="color:var(--text-muted)">Output range:</span>
+      <span id="nn1-act-range" style="color:#34d399"></span>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    var nn1_fn='relu';
+    var ACTS={
+      relu:{f:function(z){return Math.max(0,z);},df:function(z){return z>0?1:0;},
+        name:'ReLU (Rectified Linear Unit)',formula:'f(z) = max(0, z)',range:'[0, ∞)',
+        desc:'Default for hidden layers. Gradient = 1 for z > 0 — no vanishing. Fast. "Dying ReLU": if inputs are always negative, a neuron outputs 0 forever.',
+        col:'#34d399',lim:[-5,5]},
+      sigmoid:{f:function(z){return 1/(1+Math.exp(-z));},df:function(z){var s=1/(1+Math.exp(-z));return s*(1-s);},
+        name:'Sigmoid',formula:'f(z) = 1 / (1 + e⁻ᶻ)',range:'(0, 1)',
+        desc:'Squashes to (0,1). Use for binary classification output. ⚠ Saturates at extremes — gradient → 0, causing vanishing gradients in deep networks.',
+        col:'#5b8af5',lim:[-8,8]},
+      tanh:{f:function(z){return Math.tanh(z);},df:function(z){return 1-Math.pow(Math.tanh(z),2);},
+        name:'Tanh (Hyperbolic Tangent)',formula:'f(z) = tanh(z)',range:'(-1, 1)',
+        desc:'Zero-centred (better than sigmoid). Stronger gradient in the middle. ⚠ Still saturates at extremes — vanishing gradient in deep nets.',
+        col:'#a78bfa',lim:[-5,5]},
+      leakyrelu:{f:function(z){return z>=0?z:0.1*z;},df:function(z){return z>=0?1:0.1;},
+        name:'Leaky ReLU',formula:'f(z) = z if z ≥ 0, else 0.1z',range:'(-∞, ∞)',
+        desc:'Fixes dying ReLU — small gradient (0.1) for z < 0 so neurons never fully die. Often outperforms plain ReLU. ELU and SELU are variants.',
+        col:'#f59e0b',lim:[-5,5]}
+    };
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgba('+r+','+g+','+b+','+a+')';}
+
+    window.nn1ActFnDraw=function(f){
+      if(f)nn1_fn=f;
+      ['relu','sigmoid','tanh','leakyrelu'].forEach(function(k){
+        var btn=document.getElementById('nn1-btn-'+k);
+        if(btn){btn.className=k===nn1_fn?'btn btn-primary':'btn btn-outline';}
+      });
+      var canvas=document.getElementById('nn1-act-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var info=ACTS[nn1_fn],W=520,H=230;
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<W;gx+=30)for(var gy=20;gy<H;gy+=30){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+      var oX=W/2,oY=H/2,zMin=info.lim[0],zMax=info.lim[1];
+      var sX=(W-80)/(zMax-zMin),sY=55;
+      function zPx(z){return 40+(z-zMin)*sX;}
+      function fPy(v){return oY-v*sY;}
+      // saturation zones
+      if(nn1_fn==='sigmoid'||nn1_fn==='tanh'){
+        ctx.fillStyle='rgba(248,113,113,0.06)';
+        ctx.fillRect(40,10,80,H-20);ctx.fillRect(W-120,10,80,H-20);
+        ctx.fillStyle='rgba(248,113,113,0.5)';ctx.font='9px sans-serif';ctx.textAlign='center';
+        ctx.fillText('saturates',80,22);ctx.fillText('saturates',W-80,22);
+      }
+      // axes
+      ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(oX,12);ctx.lineTo(oX,H-12);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(12,oY);ctx.lineTo(W-12,oY);ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='9px monospace';ctx.textAlign='center';
+      ctx.fillText('z',W-18,oY-6);ctx.fillText('f(z)',oX+20,18);
+      // zero markers
+      for(var z=-4;z<=4;z+=2){
+        var px=zPx(z);
+        ctx.fillStyle='rgba(255,255,255,0.15)';ctx.font='9px monospace';ctx.textAlign='center';
+        ctx.fillText(z,px,oY+14);
+      }
+      // derivative
+      ctx.beginPath();ctx.strokeStyle=hexRgba(info.col,0.4);ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+      for(var px=40;px<W-40;px++){
+        var z=zMin+(px-40)/sX,dv=info.df(z),py=fPy(dv);
+        if(px===40)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+      }ctx.stroke();ctx.setLineDash([]);
+      // main curve
+      ctx.beginPath();ctx.strokeStyle=info.col;ctx.lineWidth=2.5;
+      for(var px=40;px<W-40;px++){
+        var z=zMin+(px-40)/sX,fv=info.f(z),py=fPy(fv);
+        if(px===40)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+      }ctx.stroke();
+      // legend
+      ctx.fillStyle=info.col;ctx.font='10px sans-serif';ctx.textAlign='left';
+      ctx.fillText('— f(z)',W-105,H-30);
+      ctx.globalAlpha=0.5;ctx.fillText('- - f\'(z)',W-105,H-16);ctx.globalAlpha=1;
+      // info
+      document.getElementById('nn1-act-name').textContent=info.name;
+      document.getElementById('nn1-act-formula').textContent=info.formula;
+      document.getElementById('nn1-act-range').textContent=info.range;
+      document.getElementById('nn1-act-desc').textContent=info.desc;
+    };
+    nn1ActFnDraw('relu');
+  })();
+  </script>
+
+  <h3>Which activation function should I use?</h3>
+  <table>
+    <tr><th>Layer</th><th>Recommended</th><th>Why</th></tr>
+    <tr><td>Hidden layers (default)</td><td><strong>ReLU</strong></td><td>Fast, no vanishing gradient, simple</td></tr>
+    <tr><td>Hidden layers (if dying ReLU)</td><td><strong>Leaky ReLU / ELU</strong></td><td>Never fully dead neurons</td></tr>
+    <tr><td>Output — binary classification</td><td><strong>Sigmoid</strong></td><td>Output = probability ∈ (0,1)</td></tr>
+    <tr><td>Output — multi-class</td><td><strong>Softmax</strong></td><td>Output = probability distribution summing to 1</td></tr>
+    <tr><td>Output — regression</td><td><strong>Linear (none)</strong></td><td>Output can be any real number</td></tr>
+  </table>
+
+  <!-- ── MULTI-LAYER ARCHITECTURE ── -->
+  <h2>Multi-Layer Networks: How Depth Creates Power</h2>
+  <p>A single neuron is just a glorified linear equation. The real power comes from stacking neurons into <strong>layers</strong> and layers into a <strong>network</strong>:</p>
+
+  <div class="card" style="background:var(--card-bg); padding:18px">
+    <pre style="font-family:monospace; font-size:0.83rem; color:var(--text-muted); line-height:2; margin:0">
+    Input        Hidden Layer 1     Hidden Layer 2      Output
+    x₁ ─────┐    [●][●][●][●]       [●][●][●]           [ŷ₁]
+    x₂ ─────┤──→ [●][●][●][●]  ──→ [●][●][●]  ──────→  [ŷ₂]
+    x₃ ─────┤    [●][●][●][●]       [●][●][●]           [ŷ₃]
+    x₄ ─────┘    [●][●][●][●]
+                   ↑                   ↑                   ↑
+              4 neurons each       3 neurons          3 output classes
+              + ReLU activation    + ReLU             + Softmax</pre>
+  </div>
+
+  <div class="card-grid" style="margin-top:12px">
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600">Input Layer</p>
+      <p style="margin:0; font-size:0.84rem; color:var(--text-muted)">One node per feature. No computation — just passes raw data. 28×28 pixel image = 784 input nodes.</p>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600">Hidden Layers</p>
+      <p style="margin:0; font-size:0.84rem; color:var(--text-muted)">Where all learning happens. Each neuron connects to every neuron in the previous layer (fully-connected / Dense). The network learns hierarchical features: edges → shapes → objects.</p>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600">Output Layer</p>
+      <p style="margin:0; font-size:0.84rem; color:var(--text-muted)">Activation matches the task. Regression → linear. Binary → sigmoid. Multi-class → softmax (outputs sum to 1, interpretable as probabilities).</p>
+    </div>
+  </div>
+
+  <div class="card" style="border-left:3px solid #fbbf24; margin-top:8px">
+    <p style="margin:0 0 4px; font-weight:600; color:#fbbf24">How many weights are there?</p>
+    <p style="margin:0; font-size:0.85rem; color:var(--text-muted)">A fully-connected layer from 4 inputs to 8 neurons has <strong>4×8 = 32 weights</strong> + 8 biases = 40 parameters. GPT-4 has ~1.76 <em>trillion</em> parameters. Every single one is updated via backpropagation during training.</p>
+  </div>
+
+  <!-- ── FORWARD PROPAGATION ── -->
+  <h2>Forward Propagation — Making a Prediction</h2>
+  <p>Forward propagation is how the network turns inputs into a prediction. It passes data through the network layer by layer. For each layer l:</p>
+  <div class="code-block"><pre><code>Z[l] = W[l] · A[l-1] + b[l]    # Linear: weighted sum + bias (matrix multiplication)
+A[l] = f(Z[l])                  # Non-linear: apply activation function
+
+# Where:
+# W[l] = weight matrix, shape [neurons_in_l, neurons_in_l-1]
+# A[l-1] = activations from previous layer (= X for layer 1)
+# b[l] = bias vector
+# f = activation function (ReLU for hidden, softmax for output)</code></pre></div>
+
+  <h3>Interactive: Watch Data Flow Through a Network</h3>
+  <p>Adjust the two inputs and watch activations propagate through the 3-layer network in real time. <strong>Brighter/bigger neurons</strong> = stronger activation. Follow a signal from input to prediction.</p>
+
+  <div class="card" style="padding:16px">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px">
+      <div>
+        <label style="font-size:0.8rem; color:#5b8af5; display:block; margin-bottom:4px">Input x₁ = <strong id="nn1-inp1-val">1.0</strong></label>
+        <input type="range" id="nn1-inp1" min="-2" max="2" step="0.1" value="1.0" style="width:100%" oninput="nn1FwdUpdate()">
+      </div>
+      <div>
+        <label style="font-size:0.8rem; color:#a78bfa; display:block; margin-bottom:4px">Input x₂ = <strong id="nn1-inp2-val">0.5</strong></label>
+        <input type="range" id="nn1-inp2" min="-2" max="2" step="0.1" value="0.5" style="width:100%" oninput="nn1FwdUpdate()">
+      </div>
+    </div>
+    <canvas id="nn1-fwd-canvas" width="520" height="280" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="nn1-fwd-pred" style="margin-top:10px; text-align:center; font-size:0.88rem; color:var(--accent); font-weight:600"></div>
+    <div style="margin-top:6px; font-size:0.78rem; color:var(--text-muted); text-align:center">Architecture: 2 → 3 → 2 → 1 | Hidden: ReLU | Output: Sigmoid | Values shown inside neurons</div>
+  </div>
+
+  <script>
+  (function(){
+    var W1=[[0.5,-0.3],[0.2,0.8],[-0.6,0.4]];
+    var b1=[0.1,-0.2,0.3];
+    var W2=[[0.7,-0.4,0.2],[-0.3,0.6,-0.5]];
+    var b2=[0.1,-0.1];
+    var W3=[[0.8,-0.6]];
+    var b3=[0.2];
+    function relu(z){return Math.max(0,z);}
+    function sig(z){return 1/(1+Math.exp(-z));}
+    function matvec(W,v,b){return W.map(function(row,i){return row.reduce(function(s,w,j){return s+w*v[j];},0)+b[i];});}
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgba('+r+','+g+','+b+','+a+')';}
+
+    window.nn1FwdUpdate=function(){
+      var x=[parseFloat(document.getElementById('nn1-inp1').value),parseFloat(document.getElementById('nn1-inp2').value)];
+      document.getElementById('nn1-inp1-val').textContent=x[0].toFixed(1);
+      document.getElementById('nn1-inp2-val').textContent=x[1].toFixed(1);
+      var z1=matvec(W1,x,b1),a1=z1.map(relu);
+      var z2=matvec(W2,a1,b2),a2=z2.map(relu);
+      var z3=matvec(W3,a2,b3),a3=z3.map(sig);
+      var layers=[
+        {x:65, ys:[75,205], vals:x, label:'Input'},
+        {x:200, ys:[55,140,225], vals:a1, label:'Hidden 1\n(ReLU)'},
+        {x:340, ys:[100,180], vals:a2, label:'Hidden 2\n(ReLU)'},
+        {x:460, ys:[140], vals:a3, label:'Output\n(Sigmoid)'}
+      ];
+      var canvas=document.getElementById('nn1-fwd-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      ctx.clearRect(0,0,520,280);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,520,280);
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<520;gx+=32)for(var gy=20;gy<280;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+      var R=22;
+      // connections
+      for(var li=0;li<layers.length-1;li++){
+        var la=layers[li],lb=layers[li+1];
+        la.ys.forEach(function(y1,ni){
+          lb.ys.forEach(function(y2,nj){
+            var str=Math.min(1,Math.abs((la.vals[ni]||0)+(lb.vals[nj]||0))/2);
+            ctx.beginPath();ctx.moveTo(la.x+R,y1);ctx.lineTo(lb.x-R,y2);
+            ctx.strokeStyle=str>0.05?hexRgba('#5b8af5',0.12+str*0.35):'rgba(30,35,64,0.6)';
+            ctx.lineWidth=0.5+str*1.5;ctx.stroke();
+          });
+        });
+      }
+      // neurons
+      layers.forEach(function(layer){
+        ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+        ctx.fillText(layer.label,layer.x,16);
+        layer.ys.forEach(function(y,ni){
+          var a=layer.vals[ni]||0,intensity=Math.min(1,Math.abs(a));
+          var col=a>0.01?'#5b8af5':'#2d3561';
+          if(intensity>0.08){ctx.beginPath();ctx.arc(layer.x,y,R+5,0,6.28);ctx.fillStyle=hexRgba('#5b8af5',intensity*0.15);ctx.fill();}
+          ctx.beginPath();ctx.arc(layer.x,y,R,0,6.28);
+          ctx.fillStyle=hexRgba('#5b8af5',0.08+intensity*0.55);ctx.fill();
+          ctx.strokeStyle=intensity>0.05?'#5b8af5':'#2d3561';ctx.lineWidth=1.8;ctx.stroke();
+          ctx.fillStyle='#e2e8f0';ctx.font='bold 9px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillText(a.toFixed(2),layer.x,y);
+        });
+      });
+      var pred=a3[0];
+      document.getElementById('nn1-fwd-pred').textContent='Prediction: '+pred.toFixed(4)+
+        (pred>0.5?' → Class 1 (confidence '+(pred*100).toFixed(1)+'%)':' → Class 0 (confidence '+((1-pred)*100).toFixed(1)+'%)');
+    };
+    nn1FwdUpdate();
+  })();
+  </script>
+
+  <!-- ── LOSS FUNCTIONS ── -->
+  <h2>Loss Functions — Measuring How Wrong We Are</h2>
+  <p>After forward propagation gives a prediction ŷ, the <strong>loss function</strong> measures how wrong it is. Training = minimising this number.</p>
+  <table>
+    <tr><th>Task</th><th>Loss Function</th><th>Formula</th><th>Why</th></tr>
+    <tr><td>Regression</td><td><strong>MSE</strong></td><td style="font-family:monospace; font-size:0.8rem">(1/n)Σ(y − ŷ)²</td><td>Penalises large errors heavily</td></tr>
+    <tr><td>Binary classification</td><td><strong>Binary Cross-Entropy</strong></td><td style="font-family:monospace; font-size:0.8rem">−[y·log(ŷ)+(1−y)·log(1−ŷ)]</td><td>Perfect for probability outputs</td></tr>
+    <tr><td>Multi-class</td><td><strong>Categorical Cross-Entropy</strong></td><td style="font-family:monospace; font-size:0.8rem">−Σ yᵢ·log(ŷᵢ)</td><td>Works with softmax output</td></tr>
+  </table>
+
+  <div class="alert alert-info">
+    <strong>Cross-entropy intuition:</strong> if the true class is 1 and you predict probability 0.99 → loss = −log(0.99) ≈ 0.01 (tiny). Predict 0.01 → loss = −log(0.01) ≈ 4.6 (huge penalty). The log punishes confident wrong predictions most severely.
+  </div>
+
+  <!-- ── BACKPROP & GRADIENT DESCENT ── -->
+  <h2>Backpropagation — How Networks Learn</h2>
+  <p>Forward propagation gives you a prediction and a loss. But which of the millions of weights caused the error? <strong>Backpropagation</strong> answers this using the <strong>chain rule of calculus</strong> — it computes how much each weight contributed to the loss.</p>
+
+  <div class="card" style="border-left:3px solid var(--accent)">
+    <p style="margin:0 0 8px; font-weight:600">The Chain Rule — propagating blame backwards</p>
+    <p style="margin:0 0 6px; font-family:monospace; font-size:0.87rem; color:var(--text)">∂L/∂w = ∂L/∂a · ∂a/∂z · ∂z/∂w</p>
+    <ul style="margin:0; font-size:0.84rem; color:var(--text-muted); padding-left:18px">
+      <li><strong>∂L/∂a</strong> — how much the loss changes when the activation changes (from the layer above)</li>
+      <li><strong>∂a/∂z</strong> — the derivative of the activation function (ReLU's = 1 or 0; sigmoid's = s(1−s))</li>
+      <li><strong>∂z/∂w</strong> — the derivative of the weighted sum with respect to the weight = the input xᵢ</li>
+    </ul>
+    <p style="margin:10px 0 0; font-size:0.84rem; color:var(--text-muted)">Each layer only needs the gradient flowing from the layer above — this is why it's called <em>backpropagation</em>: gradients flow backward through the network, layer by layer.</p>
+  </div>
+
+  <h3>Gradient Descent — Updating the Weights</h3>
+  <p>Once you have ∂L/∂w for every weight, you update each weight to reduce the loss:</p>
+  <div class="code-block"><pre><code>w_new = w_old - η × ∂L/∂w
+
+# η (eta) = learning rate — how big a step to take
+# ∂L/∂w = gradient — which direction increases loss (we go opposite)
+
+# Too large η: overshoot the minimum → training diverges
+# Too small η: very slow convergence, may get stuck</code></pre></div>
+
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Optimiser</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">How it works</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Use when</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px"><strong>SGD</strong></td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Fixed learning rate; update after each mini-batch</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Computer vision with momentum; when you want full control</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px"><strong>Adam ✅</strong></td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Adapts learning rate per weight; momentum + RMS scaling</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Default for most tasks — almost always works well</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px"><strong>AdamW</strong></td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Adam + proper weight decay (L2 regularisation)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Transformers, LLMs — best for large modern architectures</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── TRAINING LOOP ── -->
+  <h2>The Complete Training Loop</h2>
+  <div class="code-block"><pre><code>import torch
+import torch.nn as nn
+
+# ── Define the network ─────────────────────────────────────────
+class MLP(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(4, 16),   # 4 inputs → 16 hidden neurons
+            nn.ReLU(),          # activation
+            nn.Linear(16, 8),   # 16 → 8 hidden neurons
+            nn.ReLU(),
+            nn.Dropout(0.3),    # 30% dropout for regularisation
+            nn.Linear(8, 3),    # 8 → 3 output classes
+        )
+
+    def forward(self, x):
+        return self.net(x)     # Softmax applied by the loss function
+
+model = MLP()
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+loss_fn = nn.CrossEntropyLoss()  # includes softmax
+
+# ── Training loop ──────────────────────────────────────────────
+for epoch in range(100):
+    model.train()
+    for X_batch, y_batch in dataloader:    # mini-batches of 32
+        optimizer.zero_grad()              # clear previous gradients
+        predictions = model(X_batch)       # forward pass → ŷ
+        loss = loss_fn(predictions, y_batch)  # measure error
+        loss.backward()                    # backprop → ∂L/∂w for all w
+        optimizer.step()                   # w ← w − η·∂L/∂w
+
+    # ── Validation ────────────────────────────────────────────
+    model.eval()
+    with torch.no_grad():                  # no gradients needed for eval
+        val_preds = model(X_val)
+        val_loss = loss_fn(val_preds, y_val)
+    print(f"Epoch {epoch}: train={loss:.4f}  val={val_loss:.4f}")</code></pre></div>
+
+  <!-- ── OVERFITTING ── -->
+  <h2>Overfitting and Regularisation</h2>
+  <p>A deep network with millions of weights can <strong>memorise</strong> the training data — achieving 99% training accuracy but 60% on new data. This is overfitting.</p>
+
+  <div class="card" style="border-left:3px solid #fbbf24">
+    <p style="margin:0 0 8px; font-weight:600; color:#fbbf24">How to detect overfitting</p>
+    <p style="margin:0; font-size:0.85rem; color:var(--text-muted)">Plot training loss vs validation loss over epochs. If training loss keeps falling but validation loss starts <em>rising</em> → overfitting. The gap between them is the generalisation error.</p>
+  </div>
+
+  <div class="card-grid" style="margin-top:12px">
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">Dropout</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Randomly zero out 20–50% of neurons during each training forward pass. Forces the network to learn redundant representations — no single neuron can be relied upon. At test time, all neurons are active but scaled.</p>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600; color:#5b8af5">L2 Regularisation (Weight Decay)</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Adds a penalty λ·||w||² to the loss. Keeps all weights small — prevents any single weight from dominating. Equivalent to placing a Gaussian prior on weights. Use AdamW for this in practice.</p>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600; color:#a78bfa">Batch Normalisation</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Normalises activations within each mini-batch so they have mean≈0, std≈1. Stabilises training, allows higher learning rates, and has a mild regularising effect. Inserted between linear and activation layers.</p>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600; color:#f59e0b">Early Stopping</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Monitor validation loss. Stop training when it stops improving for N consecutive epochs. Save the weights from the best validation epoch. Simple and highly effective — the most common regularisation in practice.</p>
+    </div>
+  </div>
+
+  <!-- ── THE VANISHING GRADIENT PROBLEM ── -->
+  <h2>The Vanishing Gradient Problem</h2>
+  <p>Deep networks trained with sigmoid/tanh activations hit a critical failure: <strong>gradients shrink exponentially as they travel backwards through many layers</strong>.</p>
+  <div class="card" style="background:var(--card-bg); padding:16px">
+    <p style="margin:0 0 8px; font-size:0.85rem; color:var(--text-muted)">The sigmoid derivative is at most 0.25. Backpropagating through 10 layers:</p>
+    <p style="margin:0; font-family:monospace; font-size:0.9rem; color:#f87171">0.25¹⁰ = 0.0000001 ≈ 0   →   early layers receive almost zero gradient signal → stop learning</p>
+  </div>
+
+  <div class="card" style="margin-top:10px; border-left:3px solid #34d399">
+    <p style="margin:0 0 6px; font-weight:600; color:#34d399">What solved it (and made deep learning possible):</p>
+    <ul style="margin:0; font-size:0.84rem; color:var(--text-muted); padding-left:18px">
+      <li><strong>ReLU activation</strong> — gradient = 1 for z &gt; 0. No shrinkage.</li>
+      <li><strong>Batch Normalisation</strong> — keeps activations in a healthy range throughout training</li>
+      <li><strong>Residual connections (ResNets)</strong> — direct "skip" paths allow gradients to flow back without passing through every layer</li>
+      <li><strong>Better weight initialisation</strong> — He init for ReLU, Glorot/Xavier for tanh/sigmoid</li>
+    </ul>
+  </div>
+
+  <!-- ── SUMMARY ── -->
+  <h2>Key Concepts Summary</h2>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:8px 14px; color:var(--accent); text-align:left">Concept</th>
+        <th style="padding:8px 14px; color:var(--text-muted); text-align:left">What it means</th>
+        <th style="padding:8px 14px; color:var(--text-muted); text-align:left">Key number / detail</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Weight</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">How strongly an input influences a neuron's output</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Learned via gradient descent</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Bias</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Constant offset; shifts the activation threshold</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">One per neuron; learned like weights</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Forward pass</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Input → Z[l] = Wa + b → A[l] = f(Z) → prediction</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Layer by layer, left to right</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Loss</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">How wrong the prediction is; what we minimise</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">MSE / Cross-Entropy</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Backpropagation</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Chain rule applied backwards → ∂L/∂w for every weight</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Right to left through all layers</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Gradient descent</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">w ← w − η·∂L/∂w — step weights downhill on loss surface</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">η = learning rate (e.g. 0.001)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Epoch</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">One full pass through the entire training dataset</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Typically 10–1000 epochs</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 14px; font-weight:600">Dropout</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Randomly zero neurons during training; prevents overfitting</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Typically 20–50% drop rate</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="alert alert-info" style="margin-top:16px">
+    <strong>What's next?</strong> L2 will cover training in depth — weight initialisation, batch normalisation, learning rate schedules, and how to diagnose training failures from the loss curves. L3 covers Convolutional Neural Networks (CNNs) for image data.
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-nn1"></div></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('nn1')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('ts9')">← Time Series</button>
+  </div>
+</div>
+
 </div><!-- end main -->
 
 <script>
@@ -10151,7 +10863,8 @@ const TOPICS = {
   ts6: 'TS L6: Time Series Testing',
   ts7: 'TS L7: Exponential Smoothing',
   ts8: 'TS L8: Prophet',
-  ts9: 'TS L9: Practical Example'
+  ts9: 'TS L9: Practical Example',
+  nn1: 'NN L1: Neural Network Fundamentals'
 };
 
 const ALL_QUESTIONS = [
@@ -10513,7 +11226,15 @@ const ALL_QUESTIONS = [
   {t:'ts9', q:'The AR model selected lag 7 as the optimal order. What does this mean for how it makes predictions?', opts:['The model uses the last 7 days average to predict the next day','Lag 7 means the model uses last week\'s same-day value as the primary predictor — Monday this week is predicted from last Monday. This is the most direct signal because the weekly pattern is the dominant autocorrelation structure in daily news traffic.','Lag 7 means the model differences the series 7 times','The model uses only the 7th lag, ignoring lags 1–6'], ans:1, exp:'ar_select_order with maxlag=14 tried all lags from 1 to 14 and found lag 7 minimised BIC. This means last week\'s same-day observation is the single most useful predictor for tomorrow. It captures the weekly seasonality directly — Monday traffic predicts next Monday, weekend predicts next weekend. The PACF spike at lag 1 was large but lag 7 as a predictor gives a better BIC because it captures the dominant weekly cycle. The result: AR got the direction right (declining after the Iran spike) but was too smooth to capture the sharp weekly swings.'},
   {t:'ts9', q:'Why did Prophet start its forecast at ~21M while AR started at ~29M, even though both trained on the same data?', opts:['Prophet uses a different scaling method','Prophet\'s events DataFrame absorbed the Iran attack spike — it learned that Feb 28 / Mar 1 were special days worth +14.5M above baseline, and removed that effect from the trend estimate. AR had no such mechanism so the spike inflated its starting point.','AR uses more lags so it weighted recent data more heavily','Prophet always starts forecasts at the series mean'], ans:1, exp:'The Iran attack added ~14.5M pageviews above the underlying baseline. AR treated those spike days as normal data points and learned "the series is currently at ~30M" — so it forecast from there. Prophet\'s events DataFrame told the model those days were a named event (us_israel_iran_attack), learned their effect size separately, and correctly estimated the underlying baseline at ~21M. The difference in starting point (29M vs 21M) accounts for most of the MAE gap between the two models.'},
   {t:'ts9', q:'The Prophet components plot showed that breaking news events contributed more to traffic than any seasonal factor. What business decision does this inform?', opts:['Reduce the seasonal_periods parameter to account for this','Breaking news is the primary traffic driver — larger than weekly or yearly patterns. Infrastructure capacity planning, resource allocation, and performance targets should be sized around major news events, not just seasonal cycles.','The yearly seasonality model needs more Fourier terms','Switch from additive to multiplicative seasonality'], ans:1, exp:'The holidays panel showed individual event boosts of 8–14M pageviews per event — the largest single event (Iran attack) added 14.5M in one day. The weekly seasonality amplitude was ~1.5M and the yearly swing was ~3M. So a single major news event can deliver 5–10× the traffic of the entire annual seasonal effect. This means infrastructure capacity (servers, CDN), editorial capacity (journalists on call), and traffic targets cannot be set based on seasonal patterns alone — the events calendar is the dominant driver.'},
-  {t:'ts9', q:'What does the day-of-week analysis (flat pattern across the week) tell you about the audience, and why does this matter for modelling?', opts:['The weekly seasonality is wrong and should use period=30 instead','The flat weekday/weekend gap (~11%) confirms predominantly US traffic — Americans read news on weekends almost as much as weekdays. For modelling this means the weekly seasonal component will be subtle, and the events and yearly components will dominate the forecast.','The series should be differenced by 7 before fitting','The data needs to be aggregated to weekly frequency first'], ans:1, exp:'A UK-focused news site typically shows a sharp 30–35% drop on weekends as commuter reading falls away. This series shows only ~11% drop — a pattern consistent with US audiences who read news on weekends for leisure. For modelling: the weekly seasonal component will be small (Fourier order 3 is sufficient, no need for order 10+). The dominant signals are the long-term trend, the yearly cycle (which reflects US political and cultural patterns, not weather), and the breaking news events. This is exactly what the Prophet components confirmed.'}
+  {t:'ts9', q:'What does the day-of-week analysis (flat pattern across the week) tell you about the audience, and why does this matter for modelling?', opts:['The weekly seasonality is wrong and should use period=30 instead','The flat weekday/weekend gap (~11%) confirms predominantly US traffic — Americans read news on weekends almost as much as weekdays. For modelling this means the weekly seasonal component will be subtle, and the events and yearly components will dominate the forecast.','The series should be differenced by 7 before fitting','The data needs to be aggregated to weekly frequency first'], ans:1, exp:'A UK-focused news site typically shows a sharp 30–35% drop on weekends as commuter reading falls away. This series shows only ~11% drop — a pattern consistent with US audiences who read news on weekends for leisure. For modelling: the weekly seasonal component will be small (Fourier order 3 is sufficient, no need for order 10+). The dominant signals are the long-term trend, the yearly cycle (which reflects US political and cultural patterns, not weather), and the breaking news events. This is exactly what the Prophet components confirmed.'},
+
+  // NN1: Neural Network Fundamentals
+  {t:'nn1', q:'What is the purpose of an activation function in a neural network?', opts:['To speed up matrix multiplications','To introduce non-linearity — without it, stacking any number of layers is mathematically equivalent to a single linear transformation','To reduce the number of parameters','To normalise the weights before training'], ans:1, exp:'Without an activation function, a 10-layer network and a 1-layer network have identical expressive power — both can only fit a linear function. Activation functions like ReLU introduce non-linearity after every neuron, allowing the network to approximate any shape of function (universal approximation theorem). This is the single most important concept in neural networks.'},
+  {t:'nn1', q:'Why is ReLU preferred over sigmoid for hidden layers in deep networks?', opts:['ReLU outputs values between 0 and 1 like probabilities','ReLU\'s gradient is 1 for all positive inputs — it does not saturate or shrink, so gradients can flow back through many layers without vanishing','ReLU is more biologically accurate','ReLU always gives higher accuracy than sigmoid'], ans:1, exp:'Sigmoid\'s maximum derivative is 0.25. Backpropagating through 10 sigmoid layers multiplies the gradient by 0.25 ten times = 0.000001 ≈ 0. Early layers receive almost no signal and stop learning. ReLU\'s derivative for z > 0 is exactly 1, so gradients pass through without shrinking. This is what made training very deep networks possible from 2012 onwards.'},
+  {t:'nn1', q:'What does backpropagation compute?', opts:['The optimal network architecture','The gradient ∂L/∂w for every weight in the network, using the chain rule of calculus applied backwards from output to input','The number of training epochs required','The predicted output of the network'], ans:1, exp:'Backpropagation applies the chain rule: ∂L/∂w = ∂L/∂a · ∂a/∂z · ∂z/∂w. Starting from the output layer, each layer computes how much the loss changes if its weights change slightly, then passes this gradient signal backwards to the layer before it. This gives every weight its own gradient, which gradient descent then uses to update that weight. In PyTorch this is called with loss.backward().'},
+  {t:'nn1', q:'A fully-connected layer connects 6 input neurons to 10 hidden neurons. How many weights (not counting biases) are in this layer?', opts:['6 + 10 = 16','6 × 10 = 60','10 only','6 only'], ans:1, exp:'In a fully-connected (Dense) layer, every input neuron connects to every output neuron with its own weight. 6 inputs × 10 outputs = 60 weights. Adding 10 biases (one per hidden neuron) gives 70 total parameters. This multiplicative growth is why large networks have millions or billions of parameters — GPT-4 has ~1.76 trillion.'},
+  {t:'nn1', q:'What is the vanishing gradient problem and what primarily solved it?', opts:['Gradients grow too large, destabilising training. Solved by gradient clipping.','Gradients shrink to near-zero as they propagate backwards through many layers (especially with sigmoid/tanh), causing early layers to stop learning. Primarily solved by the ReLU activation function whose gradient is 1 for positive inputs.','The loss function becomes zero too quickly. Solved by using cross-entropy instead of MSE.','The model overfits the training data. Solved by dropout.'], ans:1, exp:'Sigmoid and tanh have maximum gradients of 0.25 and 1 respectively. Multiplied across 20+ layers, these shrink to negligible values — early layers receive no useful learning signal. ReLU (max(0,z)) has a derivative of exactly 1 for z > 0, so it passes the gradient through unchanged. This, combined with better initialisation (He init) and later batch normalisation and residual connections, unlocked training networks with hundreds of layers.'},
+  {t:'nn1', q:'What does the Universal Approximation Theorem guarantee about neural networks?', opts:['Neural networks always converge to the global minimum during training','A network with one hidden layer and sufficient neurons can approximate any continuous function to arbitrary precision','Deep networks always outperform shallow networks','Neural networks can be trained with any activation function including linear ones'], ans:1, exp:'The Universal Approximation Theorem proves that the representational capacity exists — given enough hidden neurons, a single hidden layer can fit any smooth function. This is why neural networks are called universal approximators. Crucially, the theorem says nothing about HOW to train the network, how much data is needed, or how long training takes. It guarantees potential, not practical success — that\'s the hard part.'}
 ];
 
 const FLASHCARDS = [
@@ -10871,7 +11592,16 @@ const FLASHCARDS = [
   {t:'ts9', front:'Holt-Winters failure mode — events at end of training', back:'Problem: breaking news spike at end of training period\n\nHolt-Winters has no events mechanism\n→ sees spike as new trend direction\n→ extrapolates upward\n→ actual traffic returns to baseline\n→ forecast goes completely wrong direction\n\nResult: 86% error rate (15.5M MAE on 17.9M average)\n\nFix options:\n1. Remove spike days from training before fitting\n2. Use damped_trend=True to limit extrapolation\n3. Switch to Prophet with events DataFrame\n\nLesson: never use Holt-Winters on event-driven series\nwhen spikes land near the end of training'},
   {t:'ts9', front:'Why AR lag 7 and what it means for daily news traffic', back:'ar_select_order(train, maxlag=14, ic="bic")\n→ selected lag 7\n\nMeans: last week same-day value is the best predictor\n→ Monday predicted from last Monday\n→ captures the weekly cycle directly\n\nWhy not lag 1 (PACF spike was bigger)?\n→ lag 7 gives better BIC overall\n→ weekly same-day is more useful for forecasting\n→ lag 1 alone misses the weekly pattern\n\nAR result: 15% error rate — correct direction,\ntoo smooth, misses sharp weekly zigzag,\nno way to handle Iran attack spike'},
   {t:'ts9', front:'Prophet event names — why unique names matter', back:'Each unique holiday name gets its own coefficient\n\nCorrect: separate names\nevents = {"holiday": ["us_election", "air_india_crash", ...]}\n→ Prophet learns: election = +20M, crash = +11M\n\nWrong: same name for all events\nevents = {"holiday": ["event", "event", "event", ...]}\n→ Prophet learns one average across all events\n→ overestimates some, underestimates others\n\nFor two days of the same event (Iran attack days):\nuse the SAME name → one effect learned across both\n\nProphet result: 9% error rate — events DataFrame\nabsorbed Iran spike, clean trend from day 1'},
-  {t:'ts9', front:'Key business insights from Prophet components', back:'Holidays panel (event effect sizes above baseline):\n• Iran attack: +14.5M — biggest single event\n• Air India crash: +11M\n• Trump assassination attempt: +8.5M\n• US Election: +20M+ on results day\n\nWeekly: Wednesday peak (+900K), Sat/Sun lowest (-1.5M)\n→ publish important content Tue–Thu\n\nYearly: May strongest (+3M), Nov–Dec weakest (-3M)\n→ plan capacity around US political calendar\n\nKey insight: single breaking news event delivers\n5–10× the traffic of the entire yearly seasonal swing\n→ infrastructure must be sized for events, not seasons'}
+  {t:'ts9', front:'Key business insights from Prophet components', back:'Holidays panel (event effect sizes above baseline):\n• Iran attack: +14.5M — biggest single event\n• Air India crash: +11M\n• Trump assassination attempt: +8.5M\n• US Election: +20M+ on results day\n\nWeekly: Wednesday peak (+900K), Sat/Sun lowest (-1.5M)\n→ publish important content Tue–Thu\n\nYearly: May strongest (+3M), Nov–Dec weakest (-3M)\n→ plan capacity around US political calendar\n\nKey insight: single breaking news event delivers\n5–10× the traffic of the entire yearly seasonal swing\n→ infrastructure must be sized for events, not seasons'},
+  // NN1 flashcards
+  {t:'nn1', front:'What is the pre-activation (z) in a neuron?', back:'z = w₁x₁ + w₂x₂ + ... + wₙxₙ + b\n\nThe weighted sum of inputs plus bias. Also called the "logit". This is a linear combination — no non-linearity yet. The activation function f(z) is applied next to produce the output a.'},
+  {t:'nn1', front:'Why must a neural network use activation functions?', back:'Without an activation function, stacking multiple layers is mathematically equivalent to a single linear transformation.\n\nActivation functions introduce non-linearity — this is what allows neural networks to approximate any function (universal approximation theorem). Without it, even a 100-layer network could only fit a straight line.'},
+  {t:'nn1', front:'What is the vanishing gradient problem?', back:'Sigmoid/tanh gradients are at most 0.25. Backpropagating through 10 layers:\n0.25¹⁰ ≈ 0.000001\n\nEarly layers receive nearly zero gradient → they stop learning entirely.\n\nFixes:\n• ReLU (gradient = 1 for z > 0)\n• Batch Normalisation\n• Residual connections (skip connections)\n• He/Glorot weight initialisation'},
+  {t:'nn1', front:'Why is ReLU the default activation for hidden layers?', back:'f(z) = max(0, z)\n\n✅ Gradient = 1 for z > 0 — no vanishing gradient\n✅ Computationally trivial\n✅ Creates sparse activations (many zeros)\n\n⚠ Dying ReLU: if inputs are always negative, gradient = 0 → weight never updates\n\nFix: Leaky ReLU f(z) = max(0.01z, z) — small gradient for z < 0'},
+  {t:'nn1', front:'What does backpropagation compute and how?', back:'Backpropagation computes ∂L/∂w for every weight in the network.\n\nUsing the chain rule:\n∂L/∂w = ∂L/∂a · ∂a/∂z · ∂z/∂w\n\nGradients flow backwards layer by layer from output to input. Each layer multiplies the incoming gradient by its local derivative. You implement this with loss.backward() in PyTorch.'},
+  {t:'nn1', front:'What is the Universal Approximation Theorem?', back:'A neural network with a single hidden layer and sufficiently many neurons can approximate any continuous function to arbitrary precision.\n\nThis is why neural networks are called universal approximators — they have the representational capacity to model anything.\n\nCaveat: the theorem proves they CAN represent the function, not how to train them or how much data is needed.'},
+  {t:'nn1', front:'What is dropout and why does it prevent overfitting?', back:'Dropout: during each training step, randomly zero out p% of neurons (typically 20–50%).\n\nWhy it works: no single neuron can be relied upon → the network must learn redundant, distributed representations → more robust to new data.\n\nAt test time: all neurons active, but outputs scaled by (1-p) to maintain expected magnitude.\n\nnn.Dropout(0.3) in PyTorch = 30% drop rate.'},
+  {t:'nn1', front:'What is the gradient descent update rule?', back:'w_new = w_old − η × ∂L/∂w\n\nη = learning rate (step size)\n∂L/∂w = gradient (direction that increases loss)\n\nWe subtract because we want to move DOWNHILL on the loss surface.\n\nToo large η → overshoot minimum, loss diverges\nToo small η → very slow convergence\n\nAdam adapts η per weight automatically — the default choice.'}
 ];
 
 // ===================== STATE =====================
@@ -10899,7 +11629,7 @@ function nav(page) {
   document.getElementById('main').scrollTop = 0;
   const navEl = document.querySelector(`[onclick="nav('${page}')"]`);
   if (navEl) navEl.classList.add('active');
-  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9'].includes(page)) {
+  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9','nn1'].includes(page)) {
     markVisited(page);
     renderInlineQuiz(page);
   }
@@ -10919,7 +11649,7 @@ function markVisited(w) {
 function updateGlobalProgress() {
   const pct = Math.round((visited.length / 25) * 100);
   document.getElementById('global-progress-bar').style.width = pct + '%';
-  document.getElementById('global-progress-label').textContent = `${visited.length} of 39 lessons visited`;
+  document.getElementById('global-progress-label').textContent = `${visited.length} of 40 lessons visited`;
 }
 
 // ===================== INLINE QUIZ =====================
