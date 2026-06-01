@@ -5547,126 +5547,183 @@ for epoch in range(1500):
 </div>
 
 <div class="page" id="page-ul1">
-  <div class="lesson-header">
-    <div class="breadcrumb">Unsupervised Learning · L1</div>
-    <h1>🌐 Fundamentals of Unsupervised Learning</h1>
-    <p class="subtitle">Learning patterns from unlabelled data — clustering, dimensionality reduction, anomaly detection, and generative modelling</p>
+  <div class="page-header">
+    <div class="chapter-badge">Unsupervised Learning</div>
+    <h1>L1: Fundamentals of Unsupervised Learning</h1>
+    <p class="subtitle">Learning patterns from unlabelled data — clustering, dimensionality reduction, anomaly detection, and generative modelling.</p>
   </div>
 
-  <h2>What is Unsupervised Learning?</h2>
-  <p>In supervised learning, every training example has a <strong>label</strong> — a correct answer the model learns to predict. In unsupervised learning there are <strong>no labels</strong>. There is only the input data X.</p>
-  <p>The model's job is to find hidden structure: patterns, groupings, compact representations — without being told what to look for.</p>
+  <div class="card">
+    <h2>What is Unsupervised Learning?</h2>
+    <p>In <strong>supervised learning</strong>, every training example has a label — a correct answer the model learns to predict. You give it (X, y) pairs and it learns the mapping X → y.</p>
+    <p style="margin-top:10px">In <strong>unsupervised learning</strong> there are no labels. You only have X. The model's job is to find hidden structure — patterns, groupings, compact representations — without being told what to look for.</p>
 
-  <div class="card" style="border-left:3px solid var(--accent)">
-    <p style="margin:0 0 6px"><strong>Key consequence:</strong> all variables are treated symmetrically. There is no special "target" column. The model tries to understand how all variables relate to each other.</p>
+    <div class="key-concept" style="margin-top:14px">
+      <div class="label">The fundamental difference</div>
+      <p><strong>Supervised:</strong> you tell the model what the answer looks like. It learns to predict it.<br><br>
+      <strong>Unsupervised:</strong> all variables are treated symmetrically. There is no special "target" column. The model explores how all variables relate to each other and surfaces the structure it finds.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:10px">Key definitions</h3>
+    <table class="styled-table">
+      <thead><tr><th>Term</th><th>Definition</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Cluster</strong></td><td>A group of data points that are more similar to each other than to points outside the group</td></tr>
+        <tr><td><strong>Dimensionality</strong></td><td>The number of features (columns) in your dataset. High-dimensional data is hard to visualise or reason about directly</td></tr>
+        <tr><td><strong>Latent structure</strong></td><td>Hidden patterns in the data that are not directly observable but can be discovered by the model</td></tr>
+        <tr><td><strong>Distribution P(X)</strong></td><td>The probability distribution that describes how likely each combination of feature values is in the data</td></tr>
+        <tr><td><strong>Representation</strong></td><td>A transformed version of the data that is more compact, more informative, or easier to work with</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Why do we need it?</h3>
+    <ul style="margin: 0 0 0 20px; line-height:2">
+      <li><strong>Labels are expensive or unavailable</strong> — labelling millions of transactions requires expert time. Raw data is cheap; labels are not. Unsupervised learning extracts value from data you already have.</li>
+      <li><strong>You don't know what you're looking for</strong> — you want to discover structure, not test a pre-formed hypothesis. The model reveals groupings you didn't know existed.</li>
+      <li><strong>Data is too high-dimensional to understand directly</strong> — a 4D dataset can't be plotted. A 100-feature dataset has billions of possible variable relationships. You need tools to compress the problem.</li>
+    </ul>
   </div>
 
-  <h3>Why do we need it?</h3>
-  <ul>
-    <li><strong>Labels are expensive or unavailable</strong> — labelling millions of transactions requires expert time. Raw data is cheap; labels are not.</li>
-    <li><strong>You don't know what you're looking for</strong> — you want to discover structure, not test a pre-formed hypothesis.</li>
-    <li><strong>Data is too high-dimensional to understand directly</strong> — a 4D dataset can't be plotted. A 1000-feature dataset is incomprehensible without tools to compress it.</li>
-  </ul>
-
-  <h2>Unsupervised Learning Tasks</h2>
-
-  <h3>As a standalone tool</h3>
-  <div class="card" style="padding:0; overflow:hidden">
-    <table style="width:100%; font-size:0.84rem; border-collapse:collapse">
-      <tr style="background:var(--surface); border-bottom:1px solid var(--border)">
-        <th style="text-align:left; padding:8px 12px; color:var(--text-muted)">Task</th>
-        <th style="text-align:left; padding:8px 12px; color:var(--text-muted)">What it does</th>
-        <th style="text-align:left; padding:8px 12px; color:var(--text-muted)">Example algorithms</th>
-      </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:8px 12px"><strong>Clustering</strong></td>
-        <td style="padding:8px 12px">Find natural groupings in data</td>
-        <td style="padding:8px 12px">K-Means, DBSCAN, Hierarchical</td>
-      </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:8px 12px"><strong>Dimensionality reduction</strong></td>
-        <td style="padding:8px 12px">Compress high-dimensional data while preserving structure</td>
-        <td style="padding:8px 12px">PCA, t-SNE, UMAP, Autoencoders</td>
-      </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:8px 12px"><strong>Outlier / anomaly detection</strong></td>
-        <td style="padding:8px 12px">Identify points that don't fit the learned structure</td>
-        <td style="padding:8px 12px">Isolation Forest, One-Class SVM</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 12px"><strong>Generative modelling</strong></td>
-        <td style="padding:8px 12px">Learn distribution P(X) to synthesise new realistic examples</td>
-        <td style="padding:8px 12px">VAE, GANs, Diffusion models</td>
-      </tr>
+  <div class="card">
+    <h2>The Four Core Tasks</h2>
+    <table class="styled-table">
+      <thead><tr><th>Task</th><th>What it does</th><th>Example algorithms</th><th>Example use</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Clustering</strong></td>
+          <td>Find natural groupings — points in the same cluster are more similar to each other than to any other cluster</td>
+          <td>K-Means, DBSCAN, Hierarchical</td>
+          <td>Customer segments, document topics, user personas</td>
+        </tr>
+        <tr>
+          <td><strong>Dimensionality reduction</strong></td>
+          <td>Compress high-dimensional data into fewer dimensions while preserving the most important structure</td>
+          <td>PCA, t-SNE, UMAP, Autoencoders</td>
+          <td>Visualising 100-feature datasets in 2D, removing redundant features before supervised modelling</td>
+        </tr>
+        <tr>
+          <td><strong>Anomaly detection</strong></td>
+          <td>Identify points that don't fit the structure the model learned — unusual, rare, or unexpected observations</td>
+          <td>Isolation Forest, One-Class SVM, DBSCAN noise points</td>
+          <td>Fraud detection, equipment failure, data quality checks</td>
+        </tr>
+        <tr>
+          <td><strong>Generative modelling</strong></td>
+          <td>Learn the full data distribution P(X) and use it to synthesise new realistic examples</td>
+          <td>VAEs, GANs, Diffusion models</td>
+          <td>Image generation, data augmentation, synthetic data</td>
+        </tr>
+      </tbody>
     </table>
   </div>
 
-  <h3>As part of a supervised pipeline</h3>
-  <p>Unsupervised learning doesn't have to stand alone — it's frequently used as a preprocessing or analysis step before supervised modelling:</p>
-  <ul>
-    <li><strong>Exploratory Data Analysis (EDA)</strong> — understand what's in your data before modelling. Reveals unexpected clusters, unusual relationships, or natural groupings that inform which supervised algorithms to try.</li>
-    <li><strong>Feature engineering</strong> — transform raw features into better representations. PCA is the classic example: it's technically an unsupervised algorithm used as a preprocessing step.</li>
-    <li><strong>Data processing</strong> — outlier detection as a cleaning step. Remove anomalous points before supervised training to prevent them distorting the model.</li>
-  </ul>
+  <div class="card">
+    <h2>Unsupervised Learning as a Preprocessing Step</h2>
+    <p>Unsupervised learning doesn't have to stand alone. It is frequently used as a preprocessing or analysis step <em>before</em> supervised modelling — and this is often where it delivers the most practical value.</p>
 
-  <div class="callout callout-info">
-    <strong>Why unsupervised EDA matters:</strong> A dataset with 4 or 5 features already exceeds our ability to visualise directly. At 100+ features, manually exploring all possible relationships is a combinatorial explosion. Unsupervised learning gives you tools to quickly surface the most important structure — which clusters exist, which features co-vary, what the outliers look like — before you commit to a supervised approach.
-  </div>
+    <h3 style="margin-top:16px; margin-bottom:8px">1. Exploratory Data Analysis (EDA)</h3>
+    <p>Before committing to a supervised approach, use unsupervised methods to understand what's in your data. Clustering can reveal unexpected natural groupings. Dimensionality reduction can expose which features carry the most variance. Anomaly detection surfaces outliers that would distort any model you subsequently train.</p>
+    <div class="key-concept">
+      <div class="label">Why EDA matters — the dimensionality problem</div>
+      <p>A dataset with 4 or 5 features already exceeds our ability to visualise directly. At 100+ features, manually exploring all possible relationships is a combinatorial explosion — there are 4,950 possible pairs of features in a 100-feature dataset. Unsupervised learning tools quickly surface the most important structure — which clusters exist, which features co-vary, what the outliers look like — before you commit to a supervised approach.</p>
+    </div>
 
-  <h2>Generative Models</h2>
-  <p>A generative model learns the full data distribution P(X), then uses that knowledge to <strong>synthesise new examples</strong>. This has exploded with deep learning — image generators, large language models, and music generators are all generative models.</p>
+    <h3 style="margin-top:20px; margin-bottom:8px">2. Feature Engineering</h3>
+    <p>Transform raw features into better representations before feeding them to a supervised model. <strong>PCA</strong> is the classic example — it is technically an unsupervised algorithm (it never sees the labels) but is widely used as a preprocessing step to reduce 500 features down to 20 uncorrelated principal components before training a classifier.</p>
+    <p style="margin-top:8px">Other examples: learn cluster membership from K-Means and add it as a categorical feature for a downstream regressor. Use an autoencoder's bottleneck representation as input to a neural network classifier.</p>
 
-  <div class="callout callout-warning">
-    <strong>Not all generative models are unsupervised.</strong> Naive Bayes learns the joint distribution P(X, Y) — including labels — so it is supervised. The defining question is whether labels are used during training, not whether the model can generate data.
-  </div>
+    <h3 style="margin-top:20px; margin-bottom:8px">3. Data Cleaning — Outlier Removal</h3>
+    <p>Anomaly detection as a data quality step: identify and remove or flag unusual points <em>before</em> supervised training. A single outlier can heavily distort a linear regression's coefficients. Running Isolation Forest or DBSCAN as a cleaning step prevents those anomalous points from corrupting the model.</p>
 
-  <h2>The Supervised / Unsupervised Line is Blurry</h2>
-  <p>The same task can often be approached either way. Take <strong>image denoising</strong> as an example:</p>
-
-  <div class="card" style="padding:0; overflow:hidden">
-    <table style="width:100%; font-size:0.84rem; border-collapse:collapse">
-      <tr style="background:var(--surface); border-bottom:1px solid var(--border)">
-        <th style="text-align:left; padding:8px 12px; color:var(--text-muted)">Approach</th>
-        <th style="text-align:left; padding:8px 12px; color:var(--text-muted)">Training data</th>
-        <th style="text-align:left; padding:8px 12px; color:var(--text-muted)">How it learns</th>
-      </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:8px 12px"><strong>Supervised</strong></td>
-        <td style="padding:8px 12px">Pairs: (noisy image, clean image)</td>
-        <td style="padding:8px 12px">Learns the mapping noisy → clean using the label</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 12px"><strong>Unsupervised (autoencoder)</strong></td>
-        <td style="padding:8px 12px">Only clean images</td>
-        <td style="padding:8px 12px">Learns a compressed representation; noise is discarded as irrelevant</td>
-      </tr>
+    <table class="styled-table" style="margin-top:16px">
+      <thead><tr><th>Use case</th><th>Unsupervised technique</th><th>Role in pipeline</th></tr></thead>
+      <tbody>
+        <tr><td>Understand data before modelling</td><td>Clustering, t-SNE</td><td>EDA — informs model and feature choices</td></tr>
+        <tr><td>Reduce feature count</td><td>PCA</td><td>Preprocessing — feeds compressed features to supervised model</td></tr>
+        <tr><td>Add cluster membership as feature</td><td>K-Means</td><td>Feature engineering — enriches the supervised model's inputs</td></tr>
+        <tr><td>Remove outliers before training</td><td>Isolation Forest, DBSCAN</td><td>Data cleaning — prevents distortion of supervised model</td></tr>
+      </tbody>
     </table>
   </div>
 
-  <p style="margin-top:12px">Complex models can also <strong>combine both</strong>. GANs (Generative Adversarial Networks) are the classic example:</p>
-  <ul>
-    <li>The <strong>generator</strong> is unsupervised — takes random noise and creates synthetic data</li>
-    <li>The <strong>discriminator</strong> is supervised — classifies inputs as real or fake (a binary label)</li>
-    <li>They train together, competing against each other — the generator gets better at fooling the discriminator, and the discriminator gets better at detecting fakes</li>
-  </ul>
+  <div class="card">
+    <h2>Generative Models</h2>
+    <p>A generative model learns the full data distribution <strong>P(X)</strong> — the probability of observing any given combination of feature values. Once it has learned P(X) it can synthesise new examples by sampling from that distribution. This has exploded with deep learning — image generators, large language models, and music generators are all generative models.</p>
 
-  <h2>Real Example: Wikipedia Article Embedding</h2>
-  <p>Take thousands of Wikipedia articles — each described by a high-dimensional vector (word frequencies, topic weights). An unsupervised model compresses each article into a 2D coordinate, placing similar articles near each other.</p>
-  <p>When you plot the result, distinct clusters emerge naturally. When you overlay the actual Wikipedia categories — which were <strong>never given to the model</strong> — they match the clusters closely. This validates that the unsupervised model captured real structure in the data.</p>
-  <p>This pattern is common: use unsupervised learning to discover structure, then check against available labels to validate. If they align, the model has found something meaningful.</p>
+    <div class="key-concept">
+      <div class="label">Discriminative vs generative — the key distinction</div>
+      <p><strong>Discriminative models</strong> learn P(Y | X) — given the input, what is the output? They draw a decision boundary. Examples: logistic regression, random forests, SVMs.<br><br>
+      <strong>Generative models</strong> learn P(X) or P(X, Y) — what does the data look like? They model the full distribution. Examples: GANs, VAEs, diffusion models, Naive Bayes.<br><br>
+      The difference matters when you want to generate new data, handle missing values, or reason about uncertainty over the inputs — not just classify.</p>
+    </div>
 
-  <h2>Evaluating Unsupervised Models</h2>
-  <p>For supervised learning, evaluation is straightforward: compare predictions to correct answers. Unsupervised learning has no correct answers, so evaluation is harder.</p>
-
-  <div class="card" style="border-left:3px solid var(--accent)">
-    <p style="margin:0 0 8px"><strong>Two main approaches:</strong></p>
-    <ol style="margin:0; font-size:0.88rem; line-height:1.9; color:var(--text-muted); padding-left:20px">
-      <li><strong>Extrinsic evaluation</strong> — if you happen to have labels (like Wikipedia categories), check whether the discovered structure aligns with them. Validates the model but isn't always available.</li>
-      <li><strong>Utility evaluation</strong> — ask: does the output make the downstream task better or more useful? Do the customer clusters differ in purchasing behaviour? Does PCA improve the downstream classifier? Does the anomaly detector flag things experts agree are unusual?</li>
-    </ol>
+    <div class="alert alert-warn" style="margin-top:14px">⚠️ <strong>Not all generative models are unsupervised.</strong> Naive Bayes learns the joint distribution P(X, Y) — including labels — so it is supervised. The defining question is whether labels are used during training, not whether the model can generate data.</div>
   </div>
 
-  <p>There is no single universal metric like accuracy for unsupervised models. Evaluation is inherently more qualitative and task-dependent than supervised learning.</p>
+  <div class="card">
+    <h2>The Supervised / Unsupervised Line is Blurry</h2>
+    <p>The same task can often be approached either way depending on what data you have available. Take <strong>image denoising</strong> as an example:</p>
+
+    <table class="styled-table" style="margin-top:10px">
+      <thead><tr><th>Approach</th><th>Training data needed</th><th>How it learns</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Supervised</strong></td><td>Pairs: (noisy image, clean image)</td><td>Learns the direct mapping noisy → clean using the label</td></tr>
+        <tr><td><strong>Unsupervised (autoencoder)</strong></td><td>Only clean images</td><td>Learns a compressed representation; noise is discarded as irrelevant to the structure</td></tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:16px">Complex models can also <strong>combine both</strong>. GANs (Generative Adversarial Networks) are the classic example:</p>
+    <ul style="margin: 10px 0 0 20px; line-height:2">
+      <li>The <strong>generator</strong> is unsupervised — takes random noise and creates synthetic data</li>
+      <li>The <strong>discriminator</strong> is supervised — classifies inputs as real or fake (a binary label)</li>
+      <li>They train together in competition — the generator gets better at fooling the discriminator, the discriminator gets better at detecting fakes</li>
+    </ul>
+
+    <div class="key-concept" style="margin-top:16px">
+      <div class="label">Self-supervised learning — the middle ground</div>
+      <p>A growing category that uses the data itself to generate labels automatically. For example, masking a word in a sentence and training the model to predict what word was removed — no human labels, but the training signal comes from the structure of the data. Large language models (GPT, BERT) are trained this way. It behaves like supervised learning mechanically but doesn't require human annotation, making it practically unsupervised.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Real Example: Wikipedia Article Embedding</h2>
+    <p>Take thousands of Wikipedia articles — each described by a high-dimensional vector (word frequencies, topic weights). An unsupervised model compresses each article into a 2D coordinate, placing similar articles near each other in the projected space.</p>
+    <p style="margin-top:10px">When you plot the result, distinct clusters emerge naturally — science articles cluster together, history articles cluster separately, and so on. When you overlay the actual Wikipedia categories — which were <strong>never given to the model</strong> — they match the clusters closely.</p>
+    <p style="margin-top:10px">This validates that the unsupervised model captured real structure. The pattern is common in practice: use unsupervised learning to discover structure, then check against available labels to validate. If they align, the model has found something meaningful.</p>
+  </div>
+
+  <div class="card">
+    <h2>Evaluating Unsupervised Models</h2>
+    <p>For supervised learning, evaluation is straightforward — compare predictions to correct answers. Unsupervised learning has no correct answers, so evaluation is harder and inherently more task-dependent.</p>
+
+    <table class="styled-table">
+      <thead><tr><th>Method</th><th>How it works</th><th>When to use</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Extrinsic evaluation</strong></td>
+          <td>If you happen to have labels, check whether the discovered structure aligns with them. Adjusted Rand Index, Normalised Mutual Information.</td>
+          <td>When labels exist but weren't used in training — validates the model found real categories</td>
+        </tr>
+        <tr>
+          <td><strong>Intrinsic metrics</strong></td>
+          <td>Measure structure quality without labels. Silhouette score (how tight are clusters vs how separated), inertia (within-cluster variance).</td>
+          <td>Comparing different K values or algorithm choices on the same dataset</td>
+        </tr>
+        <tr>
+          <td><strong>Utility evaluation</strong></td>
+          <td>Does the output make a downstream task better? Does PCA improve the classifier? Do the clusters differ in purchasing behaviour?</td>
+          <td>When unsupervised learning is a preprocessing step — evaluate the end-to-end pipeline</td>
+        </tr>
+        <tr>
+          <td><strong>Domain expert review</strong></td>
+          <td>Show the clusters or anomalies to a subject matter expert. Do the groups make sense? Are the flagged outliers genuinely unusual?</td>
+          <td>When the output drives business decisions — human validation is essential</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="alert alert-warn" style="margin-top:14px">⚠️ There is no single universal metric like accuracy for unsupervised models. A high silhouette score does not mean the clusters are meaningful — it only means they are compact and separated. Always combine quantitative metrics with domain knowledge.</div>
+  </div>
 
   <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-ul1"></div></div>
   <div class="btn-row">
@@ -5677,269 +5734,429 @@ for epoch in range(1500):
 </div>
 
 <div class="page" id="page-ul2">
-  <div class="lesson-header">
-    <div class="breadcrumb">Unsupervised Learning · L2</div>
-    <h1>🔵 K-Means Clustering</h1>
-    <p class="subtitle">Partitioning data into k groups by iteratively assigning points to the nearest centroid</p>
+  <div class="page-header">
+    <div class="chapter-badge">Unsupervised Learning</div>
+    <h1>L2: K-Means Clustering</h1>
+    <p class="subtitle">Partitioning data into k groups by iteratively assigning points to the nearest centroid — the most widely used clustering algorithm.</p>
   </div>
 
-  <h2>What is K-Means?</h2>
-  <p>K-Means partitions <strong>n</strong> data points into exactly <strong>k</strong> clusters. You decide k upfront. Each cluster is defined by its <strong>centroid</strong> — the mean of all points assigned to it. Every point belongs to whichever cluster has the nearest centroid.</p>
+  <div class="card">
+    <h2>What is K-Means?</h2>
+    <p>K-Means partitions <strong>n</strong> data points into exactly <strong>k</strong> clusters. You decide k upfront. Each cluster is defined by its <strong>centroid</strong> — the mean position of all points assigned to it. Every point belongs to whichever cluster's centroid is nearest to it.</p>
 
-  <div class="card" style="border-left:3px solid var(--accent)">
-    <p style="margin:0 0 6px"><strong>Key properties:</strong></p>
-    <ul style="margin:0; font-size:0.88rem; line-height:1.9; color:var(--text-muted); padding-left:18px">
-      <li><strong>Hard clustering</strong> — each point belongs to exactly one cluster, no partial membership</li>
-      <li><strong>Flat structure</strong> — no hierarchy between clusters</li>
-      <li><strong>Sensitive to k</strong> and the random initialisation of centroids</li>
-      <li>Produces exactly k clusters of greatest possible distinction</li>
-    </ul>
-  </div>
+    <div class="key-concept" style="margin-top:14px">
+      <div class="label">Important: clustering is subjective</div>
+      <p>There is no single "correct" clustering of a dataset. Different groups of people might group the same objects in perfectly valid but different ways — by colour, by size, by function. K-Means finds the best partition according to its mathematical criterion (inertia), but whether that partition is meaningful is a human judgement. Always interpret clusters in the context of your domain.</p>
+    </div>
 
-  <h2>The Algorithm</h2>
-  <p>Two steps repeated until convergence (assignments stop changing):</p>
-
-  <div class="card" style="padding:0; overflow:hidden">
-    <table style="width:100%; font-size:0.85rem; border-collapse:collapse">
-      <tr style="background:var(--surface); border-bottom:1px solid var(--border)">
-        <th style="text-align:left; padding:10px 14px; color:var(--text-muted); width:30%">Step</th>
-        <th style="text-align:left; padding:10px 14px; color:var(--text-muted)">What happens</th>
-      </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:10px 14px"><strong>0. Initialise</strong></td>
-        <td style="padding:10px 14px">Randomly place k centroids in the feature space</td>
-      </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:10px 14px"><strong>1. Assign</strong></td>
-        <td style="padding:10px 14px">Each point is assigned to the nearest centroid (Euclidean distance)</td>
-      </tr>
-      <tr>
-        <td style="padding:10px 14px"><strong>2. Update</strong></td>
-        <td style="padding:10px 14px">Recalculate each centroid as the mean of all assigned points. Go to step 1.</td>
-      </tr>
+    <h3 style="margin-top:20px; margin-bottom:10px">Key definitions</h3>
+    <table class="styled-table">
+      <thead><tr><th>Term</th><th>Definition</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Centroid</strong></td><td>The centre of a cluster — the mean of all points assigned to it. It is recalculated after every assignment step</td></tr>
+        <tr><td><strong>Hard clustering</strong></td><td>Each point belongs to exactly one cluster, with no partial membership. K-Means is hard clustering. (Soft/fuzzy clustering allows probabilities)</td></tr>
+        <tr><td><strong>Inertia</strong></td><td>The within-cluster sum of squared distances from each point to its centroid. K-Means minimises this</td></tr>
+        <tr><td><strong>Silhouette score</strong></td><td>A measure of how well each point fits its cluster vs how close it is to the nearest other cluster. Ranges −1 to +1</td></tr>
+        <tr><td><strong>Euclidean distance</strong></td><td>The straight-line distance between two points: √((a₁−b₁)² + (a₂−b₂)² + ...). K-Means uses this to assign points to clusters</td></tr>
+        <tr><td><strong>Convergence</strong></td><td>The point where no points change their cluster assignment between iterations — the algorithm has found a stable solution</td></tr>
+        <tr><td><strong>Local optimum</strong></td><td>A solution that is optimal for a particular random starting position but may not be the globally best solution</td></tr>
+      </tbody>
     </table>
-  </div>
 
-  <div class="callout callout-info">
-    <strong>Convergence:</strong> The loop stops when no point changes its cluster assignment between iterations. The centroids have stabilised.
-  </div>
-
-  <h2>K-Means in sklearn</h2>
-
-  <div class="code-block"><pre><code>from sklearn.cluster import KMeans
-
-# 1. Create the model
-kmeans = KMeans(n_clusters=2, n_init=10, random_state=0)
-
-# 2. Fit to data
-kmeans.fit(data)
-
-# 3. Get cluster labels for each point
-cluster_assignment = kmeans.predict(data)
-# → array([0, 1, 0, 0, 1, 1, ...])
-
-# 4. Inspect centroids
-print(kmeans.cluster_centers_)  # shape: (n_clusters, n_features)</code></pre></div>
-
-  <h3>Practical example — customer spending data</h3>
-
-  <div class="code-block"><pre><code>import pandas as pd
-from sklearn.cluster import KMeans
-import seaborn as sns
-
-customers_data = pd.read_csv('data/retail_dataset.csv', index_col='CustomerID')
-
-non_binary_cols = ['balance', 'max_spent', 'mean_spent',
-                   'min_spent', 'n_orders', 'total_items',
-                   'total_refunded', 'total_spent']
-customers = customers_data[non_binary_cols]
-
-# Cluster on 2 features first
-cust2 = customers[['mean_spent', 'max_spent']]
-kmeans = KMeans(n_clusters=2, random_state=0)
-kmeans.fit(cust2)
-cluster_assignment = kmeans.predict(cust2)</code></pre></div>
-
-  <h3>Visualising clusters with pairplot</h3>
-  <div class="code-block"><pre><code>def pairplot_cluster(df, cols, cluster_assignment):
-    df_tmp = df.copy()                       # never modify the original
-    df_tmp['cluster'] = cluster_assignment   # add labels as a column
-    sns.pairplot(df_tmp, vars=cols, hue='cluster')
-
-pairplot_cluster(customers, ['mean_spent', 'max_spent'], cluster_assignment)</code></pre></div>
-
-  <div class="card" style="border-left:3px solid #10b981">
-    <p style="margin:0 0 6px"><strong>📊 How to read a pairplot:</strong></p>
-    <ul style="margin:0; font-size:0.88rem; line-height:1.9; color:var(--text-muted); padding-left:18px">
-      <li><strong>Diagonal</strong> — KDE density curves showing the distribution of each feature per cluster</li>
-      <li><strong>Off-diagonal</strong> — scatter plots showing the relationship between two features, coloured by cluster</li>
-      <li>Clean separation between colours = well-defined clusters</li>
-      <li>Mixed/overlapping colours = clusters found in other dimensions, not visible in this 2D projection</li>
+    <h3 style="margin-top:20px; margin-bottom:8px">Key properties of K-Means</h3>
+    <ul style="margin: 0 0 0 20px; line-height:2">
+      <li><strong>Hard clustering</strong> — each point belongs to exactly one cluster, no partial membership</li>
+      <li><strong>Flat structure</strong> — no hierarchy between clusters (unlike hierarchical clustering)</li>
+      <li><strong>You choose k</strong> — the number of clusters must be specified before fitting</li>
+      <li><strong>Sensitive to initialisation</strong> — different random starting centroids can give different results</li>
+      <li><strong>Assumes globular shapes</strong> — works best when clusters are roughly circular and similar in size</li>
     </ul>
   </div>
 
-  <div class="callout callout-warning">
-    <strong>2 features vs all features:</strong> When clustering on 2 features, the boundary is visible in the pairplot — you can draw a line between the colours. When clustering on all 8 features, K-Means finds the boundary in 8D space. Plotting in 2D collapses 6 dimensions of information, so points that are separated in 8D appear to overlap in 2D. The clustering is still valid — the 2D plot just can't show the full separation.
+  <div class="card">
+    <h2>The Algorithm — Step by Step</h2>
+    <p>K-Means alternates between two simple steps until no point changes its cluster assignment (convergence):</p>
+
+    <table class="styled-table" style="margin-top:12px">
+      <thead><tr><th>Step</th><th>What happens</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><strong>0. Initialise</strong></td><td>Randomly place k centroids in the feature space</td><td>Starting positions — the algorithm needs somewhere to begin</td></tr>
+        <tr><td><strong>1. Assign</strong></td><td>Each point is assigned to the nearest centroid using Euclidean distance</td><td>Every point must belong to exactly one cluster at all times</td></tr>
+        <tr><td><strong>2. Update</strong></td><td>Recalculate each centroid as the mean of all assigned points</td><td>The centroid must represent the centre of its current members</td></tr>
+        <tr><td><strong>Repeat 1→2</strong></td><td>Keep reassigning and recalculating until assignments stop changing</td><td>Each iteration reduces inertia — the algorithm converges to a stable solution</td></tr>
+      </tbody>
+    </table>
+
+    <div class="key-concept" style="margin-top:14px">
+      <div class="label">Why it converges</div>
+      <p>Each assignment step can only reduce or maintain inertia (every point moves to a nearer centroid). Each update step can only reduce or maintain inertia (the mean is the point that minimises sum of squared distances). Since inertia is always decreasing and has a lower bound of zero, the algorithm must stop. In practice it converges quickly — typically in under 20 iterations.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Euclidean distance — the core calculation</h3>
+    <p>Every assignment decision is based on Euclidean distance. For two points a and b with n dimensions:</p>
+    <div class="code-block"><pre>D(a, b) = √((a₁−b₁)² + (a₂−b₂)² + ... + (aₙ−bₙ)²)
+
+<span class="cm"># Implementation</span>
+<span class="kw">def</span> euclidean_distance(a, b):
+    <span class="kw">return</span> sum((a_i - b_i)**<span class="num">2</span> <span class="kw">for</span> a_i, b_i <span class="kw">in</span> zip(a, b)) ** <span class="num">0.5</span></pre></div>
+    <p>Each point is assigned to the cluster with the smallest Euclidean distance to the centroid. This is why feature scaling is critical — a feature with values in the thousands will dominate the distance calculation over a feature ranging 0–1, regardless of which feature is actually more informative.</p>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Local optima — why n_init matters</h3>
+    <p>K-Means converges to the <em>nearest</em> local optimum from the random starting point — not necessarily the global best. Different random starts can give very different results, some much worse than others.</p>
+    <div class="code-block"><pre><span class="cm"># n_init=10: runs K-Means 10 times with different random starting centroids</span>
+<span class="cm"># Keeps whichever run achieved the lowest inertia</span>
+<span class="cm"># Always use n_init >= 10 for reliable results</span>
+kmeans = KMeans(n_clusters=<span class="num">3</span>, n_init=<span class="num">10</span>, random_state=<span class="num">0</span>)
+kmeans.fit(data)</pre></div>
   </div>
 
-  <h3>Inspecting centroids and comparing clusters</h3>
+  <div class="card">
+    <h2>Data Preprocessing for K-Means</h2>
+    <p>K-Means is one of the algorithms that is most sensitive to how you prepare your data. Skipping preprocessing is one of the most common causes of poor or misleading clustering results.</p>
 
-  <div class="code-block"><pre><code># Get centroids as a readable DataFrame
-centers_df = pd.DataFrame(data=kmeans.cluster_centers_, columns=customers.columns)
-print(centers_df[['mean_spent', 'max_spent']])
-#    mean_spent  max_spent
-# 0   -0.246314  -0.307733   ← cluster 0: below average spenders
-# 1    1.296726   1.620072   ← cluster 1: well above average spenders
+    <h3 style="margin-bottom:8px">1. Feature Scaling — Why it is Essential</h3>
+    <p>K-Means uses Euclidean distance to assign points to clusters. If one feature has values in the thousands and another ranges 0–1, the large-scale feature will dominate every distance calculation — not because it is more important, but purely because of its scale. The algorithm effectively ignores the small-scale features.</p>
 
-# Compare clusters using describe()
-cluster0 = customers[cluster_assignment == 0]   # boolean mask filter
-cluster1 = customers[cluster_assignment == 1]
+    <div class="key-concept">
+      <div class="label">The scaling problem — a concrete example</div>
+      <p>Imagine clustering customers on <code>age</code> (range 18–80) and <code>annual_salary</code> (range £20,000–£200,000). Without scaling, a salary difference of £1,000 has the same effect on distance as an age difference of 1 year. But numerically, salary contributes 1000× more to the distance. Every cluster will be dominated by salary differences — age will be invisible. With scaling, both features contribute equally.</p>
+    </div>
 
-desc0 = cluster0[['mean_spent', 'max_spent']].describe()
-desc1 = cluster1[['mean_spent', 'max_spent']].describe()
+    <h3 style="margin-top:18px; margin-bottom:8px">StandardScaler vs MinMaxScaler — which to choose</h3>
+    <table class="styled-table">
+      <thead><tr><th>Scaler</th><th>Formula</th><th>Output range</th><th>Use when</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>StandardScaler</strong></td>
+          <td>z = (x − mean) / std</td>
+          <td>Mean=0, Std=1 (unbounded)</td>
+          <td>Features roughly normally distributed. Most common choice for K-Means. Outliers get large z-scores but don't compress other data.</td>
+        </tr>
+        <tr>
+          <td><strong>MinMaxScaler</strong></td>
+          <td>x' = (x − min) / (max − min)</td>
+          <td>[0, 1]</td>
+          <td>When you need all features in a fixed range. Sensitive to outliers — one extreme value compresses all other values toward 0.</td>
+        </tr>
+        <tr>
+          <td><strong>RobustScaler</strong></td>
+          <td>x' = (x − median) / IQR</td>
+          <td>Centred but unbounded</td>
+          <td>When your data has significant outliers that would distort StandardScaler. Uses median and IQR instead of mean and std.</td>
+        </tr>
+      </tbody>
+    </table>
 
-compare = desc0.join(desc1, lsuffix='_cluster0', rsuffix='_cluster1')
-print(compare)</code></pre></div>
+    <div class="code-block" style="margin-top:14px"><pre><span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
 
-  <div class="card" style="border-left:3px solid #10b981">
-    <p style="margin:0 0 6px"><strong>Reading standardised centroid values:</strong></p>
-    <p style="margin:0; font-size:0.88rem; line-height:1.7; color:var(--text-muted)">Values are in standard deviations from the population mean. <strong>0 = average, +1 = one std above, −1 = one std below.</strong> A centroid at +1.3 means that cluster's typical member spends 1.3 standard deviations more than the average customer — a meaningfully high spender.</p>
+scaler = StandardScaler()
+<span class="cm"># fit_transform: learns mean/std from training data AND transforms it</span>
+<span class="cm"># Always fit on training data only — apply the same transform to new data</span>
+customers_scaled = scaler.fit_transform(customers)
+
+<span class="cm"># Now fit K-Means on the scaled data</span>
+kmeans = KMeans(n_clusters=<span class="num">2</span>, n_init=<span class="num">10</span>, random_state=<span class="num">0</span>)
+kmeans.fit(customers_scaled)</pre></div>
+
+    <h3 style="margin-top:18px; margin-bottom:8px">2. Handle Missing Values</h3>
+    <p>K-Means cannot compute distances when values are missing. You must impute or remove missing data before clustering.</p>
+    <div class="code-block"><pre><span class="cm"># Option 1: drop rows with any missing values</span>
+customers.dropna(inplace=<span class="kw">True</span>)
+
+<span class="cm"># Option 2: impute with column mean (quick, reasonable for continuous features)</span>
+<span class="kw">from</span> sklearn.impute <span class="kw">import</span> SimpleImputer
+imputer = SimpleImputer(strategy=<span class="str">'mean'</span>)
+customers_imputed = imputer.fit_transform(customers)</pre></div>
+
+    <h3 style="margin-top:18px; margin-bottom:8px">3. Feature Selection</h3>
+    <p>More features is not always better. Adding irrelevant features adds noise — the algorithm is trying to find clusters in a higher-dimensional space where the extra dimensions add no signal. In practice, use domain knowledge to select features that are relevant to the question you are asking. If you are segmenting customers by spending behaviour, include spending features — not their postcode.</p>
+    <p>Correlated features also cause problems: if <code>total_spent</code> and <code>mean_spent</code> move together perfectly, including both double-counts that dimension in the distance calculation.</p>
   </div>
 
-  <h3>Visualising distributions with a box plot</h3>
-  <div class="code-block"><pre><code>sns.boxplot(data=[cluster0.mean_spent, cluster1.mean_spent])
-plt.xlabel('Cluster')
-plt.ylabel('mean_spent (standardised)')</code></pre></div>
+  <div class="card">
+    <h2>K-Means in sklearn — Standard Workflow</h2>
+    <div class="code-block"><pre><span class="kw">from</span> sklearn.cluster <span class="kw">import</span> KMeans
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
 
-  <p>How to read a box plot:</p>
-  <ul>
-    <li><strong>Middle line</strong> — median (50th percentile)</li>
-    <li><strong>Box edges</strong> — 25th and 75th percentile (the IQR — middle 50% of data)</li>
-    <li><strong>Whiskers</strong> — extend to the furthest non-outlier point (typically 1.5 × IQR)</li>
-    <li><strong>Circles beyond whiskers</strong> — outliers: individual points unusually far from the rest</li>
-    <li><strong>Wide box</strong> — high spread within the cluster; <strong>narrow box</strong> — tight, homogeneous cluster</li>
-  </ul>
+<span class="cm"># Step 1: Load and select features</span>
+customers_data = pd.read_csv(<span class="str">'data/retail_dataset.csv'</span>, index_col=<span class="str">'CustomerID'</span>)
+features = [<span class="str">'balance'</span>, <span class="str">'max_spent'</span>, <span class="str">'mean_spent'</span>, <span class="str">'min_spent'</span>,
+            <span class="str">'n_orders'</span>, <span class="str">'total_items'</span>, <span class="str">'total_refunded'</span>, <span class="str">'total_spent'</span>]
+customers = customers_data[features]
 
-  <h2>Inertia — What K-Means Optimises</h2>
-  <p>K-Means minimises a quantity called <strong>inertia</strong> — the within-cluster sum of squared distances from each point to its centroid:</p>
-
-  <div class="card" style="background:var(--surface); text-align:center; padding:14px 20px; font-size:0.95rem">
-    I = Σ Σ D(x, μᵢ)²
-    <p style="margin:8px 0 0; font-size:0.8rem; color:var(--text-muted)">Sum over all clusters i, then all points x in cluster i. D = Euclidean distance to centroid μᵢ</p>
-  </div>
-
-  <div class="code-block"><pre><code>print(f'Inertia: {kmeans.inertia_:.2f}')  # available after fitting</code></pre></div>
-
-  <ul>
-    <li>Lower inertia = tighter, more compact clusters</li>
-    <li>Zero = one point per cluster (useless — too many clusters)</li>
-    <li>The raw value is meaningless alone — only useful for <em>comparison</em> across different k values</li>
-    <li>Assumes <strong>globular (circular) clusters</strong> — works poorly for elongated or irregular shapes</li>
-  </ul>
-
-  <h2>Local Optima — Why n_init Matters</h2>
-  <p>K-Means starts with random centroids and converges to the nearest local optimum. Different random starts can give very different results.</p>
-
-  <div class="code-block"><pre><code># n_init=10 (default): runs K-Means 10 times with different random seeds
-# keeps the run with the lowest inertia
-kmeans = KMeans(n_clusters=3, n_init=10, random_state=0)
-kmeans.fit(data)</code></pre></div>
-
-  <div class="callout callout-warning">
-    <strong>Always scale your features before K-Means.</strong> K-Means uses Euclidean distance. A feature with values in the thousands dominates over a feature ranging 0–1 — not because it's more informative, but purely because of scale. Use StandardScaler or MinMaxScaler first.
-  </div>
-
-  <div class="code-block"><pre><code>from sklearn.preprocessing import StandardScaler
-
+<span class="cm"># Step 2: Scale features (critical for K-Means)</span>
 scaler = StandardScaler()
 customers_scaled = scaler.fit_transform(customers)
 
-kmeans = KMeans(n_clusters=2, n_init=10, random_state=0)
-kmeans.fit(customers_scaled)</code></pre></div>
+<span class="cm"># Step 3: Create and fit the model</span>
+kmeans = KMeans(n_clusters=<span class="num">2</span>, n_init=<span class="num">10</span>, random_state=<span class="num">0</span>)
+kmeans.fit(customers_scaled)
 
-  <h2>Choosing k: Elbow Method</h2>
-  <p>Plot inertia against k and look for the <strong>elbow</strong> — where the rate of decline levels off. Before the elbow, adding clusters meaningfully tightens them. After it, you're over-splitting noise.</p>
+<span class="cm"># Step 4: Get cluster labels</span>
+cluster_assignment = kmeans.predict(customers_scaled)
+<span class="cm"># → array([0, 1, 0, 0, 1, 1, ...])</span>
 
-  <div class="code-block"><pre><code>inertias = []
-k_vals = range(1, 21)
+<span class="cm"># Step 5: Inspect centroids (in scaled space)</span>
+centers_df = pd.DataFrame(data=kmeans.cluster_centers_, columns=features)
+print(centers_df[[<span class="str">'mean_spent'</span>, <span class="str">'max_spent'</span>]])</pre></div>
 
-for k in k_vals:
-    km = KMeans(n_clusters=k, n_init=10, random_state=0)
+    <div class="key-concept">
+      <div class="label">Reading standardised centroid values</div>
+      <p>After StandardScaler, centroid values are in standard deviations from the population mean. <strong>0 = average, +1 = one std above, −1 = one std below.</strong><br><br>
+      A centroid at <code>mean_spent = +1.30</code> means that cluster's typical member spends 1.3 standard deviations more than the average customer — a meaningfully high spender. A centroid at <code>mean_spent = −0.25</code> is a slightly below-average spender.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Visualising and Interpreting Clusters</h2>
+
+    <h3 style="margin-bottom:8px">Pairplot — seeing all feature combinations</h3>
+    <div class="code-block"><pre><span class="kw">import</span> seaborn <span class="kw">as</span> sns
+
+<span class="kw">def</span> pairplot_cluster(df, cols, cluster_assignment):
+    df_tmp = df.copy()                      <span class="cm"># never modify the original</span>
+    df_tmp[<span class="str">'cluster'</span>] = cluster_assignment  <span class="cm"># add labels as a column</span>
+    sns.pairplot(df_tmp, vars=cols, hue=<span class="str">'cluster'</span>)
+
+<span class="cm"># 2-feature clustering — boundary visible in 2D</span>
+cust2 = customers[[<span class="str">'mean_spent'</span>, <span class="str">'max_spent'</span>]]
+kmeans2 = KMeans(n_clusters=<span class="num">2</span>, n_init=<span class="num">10</span>).fit(cust2)
+pairplot_cluster(customers, [<span class="str">'mean_spent'</span>, <span class="str">'max_spent'</span>], kmeans2.predict(cust2))
+
+<span class="cm"># All-feature clustering — boundary found in 8D space</span>
+kmeans_all = KMeans(n_clusters=<span class="num">2</span>, n_init=<span class="num">10</span>).fit(customers_scaled)
+pairplot_cluster(customers, [<span class="str">'mean_spent'</span>, <span class="str">'max_spent'</span>], kmeans_all.predict(customers_scaled))</pre></div>
+
+    <div class="key-concept">
+      <div class="label">How to read a pairplot</div>
+      <p><strong>Diagonal:</strong> KDE density curves — the distribution of each feature for each cluster. If the curves for cluster 0 and cluster 1 are well-separated, that feature is a strong differentiator.<br><br>
+      <strong>Off-diagonal:</strong> scatter plots of two features coloured by cluster. Clean separation between colours = well-defined clusters in those two dimensions.<br><br>
+      <strong>Mixed/overlapping colours in all-feature clustering:</strong> this does NOT mean the clustering is wrong. When you cluster on 8 features, the separation exists in 8D space. Plotting any two features collapses 6 dimensions of information — points that are far apart in 8D can appear close in 2D. The clustering is still valid; the 2D plot just can't show the full picture.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Box plot — comparing cluster distributions</h3>
+    <div class="code-block"><pre>cluster0 = customers[cluster_assignment == <span class="num">0</span>]
+cluster1 = customers[cluster_assignment == <span class="num">1</span>]
+
+sns.boxplot(data=[cluster0.mean_spent, cluster1.mean_spent])
+plt.xlabel(<span class="str">'Cluster'</span>)
+plt.ylabel(<span class="str">'mean_spent (standardised)'</span>)
+plt.show()</pre></div>
+
+    <table class="styled-table" style="margin-top:12px">
+      <thead><tr><th>Box plot element</th><th>What it shows</th><th>How to interpret</th></tr></thead>
+      <tbody>
+        <tr><td>Middle line</td><td>Median (50th percentile)</td><td>The typical value for that cluster on this feature</td></tr>
+        <tr><td>Box edges</td><td>25th and 75th percentile (IQR)</td><td>Where the middle 50% of the cluster sits</td></tr>
+        <tr><td>Whiskers</td><td>Extend to furthest non-outlier (1.5 × IQR)</td><td>The normal range of the cluster</td></tr>
+        <tr><td>Dots beyond whiskers</td><td>Outliers</td><td>Unusual members of the cluster — investigate these</td></tr>
+        <tr><td>Wide box</td><td>High spread within cluster</td><td>The cluster is heterogeneous on this feature</td></tr>
+        <tr><td>Narrow box</td><td>Tight cluster</td><td>Members are very similar on this feature</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Statistical comparison with describe()</h3>
+    <div class="code-block"><pre><span class="cm"># Compare summary statistics side by side</span>
+desc0 = cluster0[[<span class="str">'mean_spent'</span>, <span class="str">'max_spent'</span>]].describe()
+desc1 = cluster1[[<span class="str">'mean_spent'</span>, <span class="str">'max_spent'</span>]].describe()
+compare = desc0.join(desc1, lsuffix=<span class="str">'_cluster0'</span>, rsuffix=<span class="str">'_cluster1'</span>)
+print(compare)</pre></div>
+  </div>
+
+  <div class="card">
+    <h2>Inertia — What K-Means Actually Optimises</h2>
+    <p>K-Means minimises <strong>inertia</strong> — the within-cluster sum of squared distances from each point to its centroid. This is the mathematical objective the algorithm is solving.</p>
+
+    <div class="key-concept">
+      <div class="label">The inertia formula</div>
+      <p style="text-align:center; font-size:1rem; margin-bottom:8px"><strong>I = Σᵢ Σ_{x∈Cᵢ} D(x, μᵢ)²</strong></p>
+      <p>For each cluster i: sum the squared Euclidean distance between every point x in that cluster and the cluster's centroid μᵢ. Then sum across all clusters. Lower inertia = tighter, more compact clusters.</p>
+    </div>
+
+    <div class="code-block"><pre>print(<span class="str">f'Inertia: {kmeans.inertia_:.2f}'</span>)  <span class="cm"># available after fitting</span></pre></div>
+
+    <div class="alert alert-warn" style="margin-top:12px">⚠️ <strong>Inertia has three important limitations:</strong><br>
+    (1) <strong>Not normalised</strong> — a raw inertia value of 5,000 tells you nothing on its own. It is only useful for comparing different values of k on the same dataset.<br>
+    (2) <strong>Always decreases with k</strong> — adding more clusters always reduces inertia, even if those clusters are meaningless. At k=n, inertia=0 (one point per cluster) — useless.<br>
+    (3) <strong>Assumes globular clusters</strong> — inertia works poorly for elongated, irregular, or non-convex cluster shapes because it measures distance to a single mean point.</div>
+  </div>
+
+  <div class="card">
+    <h2>Choosing k — Elbow Method</h2>
+    <p><strong>Why:</strong> You must choose k before fitting. Too few clusters merge genuinely different groups. Too many over-split natural groupings into arbitrary sub-groups. The elbow method helps find the point where adding more clusters stops providing meaningful improvement.</p>
+
+    <div class="code-block"><pre>inertias = []
+k_vals = range(<span class="num">1</span>, <span class="num">21</span>)
+
+<span class="kw">for</span> k <span class="kw">in</span> k_vals:
+    km = KMeans(n_clusters=k, n_init=<span class="num">10</span>, random_state=<span class="num">0</span>)
     km.fit(customers_scaled)
     inertias.append(km.inertia_)
 
-plt.plot(k_vals, inertias, marker='s')
-plt.xlabel('Number of Clusters (k)')
-plt.ylabel('Inertia')
-plt.title('Elbow Method')</code></pre></div>
+plt.plot(k_vals, inertias, marker=<span class="str">'s'</span>)
+plt.xlabel(<span class="str">'Number of Clusters (k)'</span>)
+plt.ylabel(<span class="str">'Inertia'</span>)
+plt.title(<span class="str">'Elbow Method'</span>)
+plt.show()</pre></div>
 
-  <h2>Choosing k: Silhouette Score</h2>
-  <p>The silhouette score measures how well each point fits its assigned cluster vs how close it is to the nearest rival cluster. For each point:</p>
-
-  <div class="card" style="background:var(--surface); padding:14px 20px">
-    <p style="margin:0 0 8px; font-size:0.9rem; text-align:center"><strong>s(i) = (b − a) / max(a, b)</strong></p>
-    <ul style="margin:0; font-size:0.85rem; line-height:1.9; color:var(--text-muted); padding-left:18px">
-      <li><strong>a</strong> = mean distance to all other points in the <em>same</em> cluster (cohesion — want small)</li>
-      <li><strong>b</strong> = mean distance to all points in the <em>nearest other</em> cluster (separation — want large)</li>
-      <li>Score +1 = perfectly placed · Score 0 = on the boundary · Score −1 = in the wrong cluster</li>
-    </ul>
+    <div class="key-concept">
+      <div class="label">How to read the elbow plot</div>
+      <p>Inertia always decreases as k increases — that's expected. Look for the <strong>elbow</strong>: the point where the rate of decrease changes most sharply. Before the elbow, each additional cluster meaningfully tightens existing clusters. After the elbow, each additional cluster only marginally splits noise.<br><br>
+      If the curve is smooth with no clear elbow, the data has no strong natural grouping structure at any specific k — or the elbow is being masked by scale. In that case, use the silhouette score instead.</p>
+    </div>
   </div>
 
-  <div class="code-block"><pre><code>from sklearn.metrics import silhouette_score
+  <div class="card">
+    <h2>Choosing k — Silhouette Score</h2>
+    <p><strong>Why:</strong> The elbow method is visual and subjective — two people may disagree on where the elbow is. The silhouette score gives a quantitative measure of cluster quality that can be compared directly across different k values.</p>
 
-k_vals = range(1, 21)
+    <div class="key-concept">
+      <div class="label">The silhouette formula: s(i) = (b − a) / max(a, b)</div>
+      <p><strong>a</strong> = mean distance from point i to all other points in its own cluster (cohesion — measures how tightly packed the cluster is around point i)<br><br>
+      <strong>b</strong> = mean distance from point i to all points in the nearest different cluster (separation — measures how far point i is from the wrong cluster)<br><br>
+      <strong>+1:</strong> perfectly placed — tight in its cluster, far from others<br>
+      <strong>0:</strong> on the boundary between two clusters<br>
+      <strong>−1:</strong> in the wrong cluster — it would fit better somewhere else</p>
+    </div>
+
+    <div class="code-block"><pre><span class="kw">from</span> sklearn.metrics <span class="kw">import</span> silhouette_score
+
+k_vals = range(<span class="num">1</span>, <span class="num">21</span>)
 silhouette_scores = []
 inertias = []
 
-for k in k_vals:
-    km = KMeans(n_clusters=k, n_init=10, random_state=0)
+<span class="kw">for</span> k <span class="kw">in</span> k_vals:
+    km = KMeans(n_clusters=k, n_init=<span class="num">10</span>, random_state=<span class="num">0</span>)
     km.fit(customers_scaled)
     inertias.append(km.inertia_)
 
-    if k > 1:   # silhouette undefined for k=1 (no "other cluster" to compare)
+    <span class="kw">if</span> k > <span class="num">1</span>:  <span class="cm"># silhouette undefined for k=1 (no other cluster to compare)</span>
         labels = km.predict(customers_scaled)
         silhouette_scores.append(silhouette_score(customers_scaled, labels))
-    else:
-        silhouette_scores.append(None)  # placeholder — keeps list lengths equal
+    <span class="kw">else</span>:
+        silhouette_scores.append(<span class="kw">None</span>)
 
-# Choose k with highest silhouette score
-print(f'Best k by silhouette: {k_vals[silhouette_scores.index(max(s for s in silhouette_scores if s))]}')</code></pre></div>
+best_k = k_vals[silhouette_scores.index(max(s <span class="kw">for</span> s <span class="kw">in</span> silhouette_scores <span class="kw">if</span> s))]
+print(<span class="str">f'Best k by silhouette: {best_k}'</span>)</pre></div>
 
-  <h3>Reading the dual plot (inertia + silhouette)</h3>
-  <div class="card" style="border-left:3px solid var(--accent)">
-    <p style="margin:0 0 8px"><strong>How to interpret the combined chart:</strong></p>
-    <ul style="margin:0; font-size:0.88rem; line-height:1.9; color:var(--text-muted); padding-left:18px">
-      <li><strong>Inertia (orange)</strong> — always decreases. Look for where the curve bends (elbow)</li>
-      <li><strong>Silhouette (blue)</strong> — higher is better. Pick the peak</li>
-      <li>When both agree on the same k → high confidence that k is the right choice</li>
-      <li>When they disagree → investigate both candidates; silhouette is generally more reliable</li>
-      <li>Secondary peaks in silhouette suggest meaningful sub-clusters worth exploring</li>
-    </ul>
+    <h3 style="margin-top:20px; margin-bottom:8px">Dual plot — inertia and silhouette together</h3>
+    <div class="code-block"><pre>fig, ax1 = plt.subplots()
+
+ax1.set_xlabel(<span class="str">'k'</span>)
+ax1.set_ylabel(<span class="str">'Inertia'</span>, color=<span class="str">'tab:orange'</span>)
+ax1.plot(k_vals, inertias, color=<span class="str">'tab:orange'</span>)
+ax1.tick_params(axis=<span class="str">'y'</span>, labelcolor=<span class="str">'tab:orange'</span>)
+
+ax2 = ax1.twinx()
+ax2.set_ylabel(<span class="str">'Silhouette Score'</span>, color=<span class="str">'tab:blue'</span>)
+ax2.plot(k_vals, silhouette_scores, color=<span class="str">'tab:blue'</span>)
+ax2.tick_params(axis=<span class="str">'y'</span>, labelcolor=<span class="str">'tab:blue'</span>)
+plt.tight_layout()
+plt.show()</pre></div>
+
+    <div class="key-concept">
+      <div class="label">How to read the dual plot</div>
+      <p><strong>Inertia (orange):</strong> always decreases. Look for where the rate of decline slows sharply — the elbow.<br><br>
+      <strong>Silhouette (blue):</strong> higher is better. The peak is the best k by this metric.<br><br>
+      <strong>When both agree:</strong> high confidence — that k is almost certainly the right choice.<br><br>
+      <strong>When they disagree:</strong> investigate both candidates. Silhouette is generally more reliable because it directly measures cluster quality rather than just fit tightness. If silhouette has a secondary peak, that suggests there may be meaningful sub-clusters within one of the main clusters worth exploring.</p>
+    </div>
   </div>
 
-  <h2>Pros and Cons</h2>
-  <div class="card" style="padding:0; overflow:hidden">
-    <table style="width:100%; font-size:0.84rem; border-collapse:collapse">
-      <tr style="background:var(--surface); border-bottom:1px solid var(--border)">
-        <th style="text-align:left; padding:8px 14px; color:#10b981">✅ Pros</th>
-        <th style="text-align:left; padding:8px 14px; color:#ef4444">❌ Cons</th>
-      </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:8px 14px">Fast — scales to large datasets</td>
-        <td style="padding:8px 14px">Must choose k upfront</td>
-      </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:8px 14px">Easy to interpret — centroids are meaningful</td>
-        <td style="padding:8px 14px">Converges to local optimum (use n_init)</td>
-      </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:8px 14px">Simple two-step algorithm</td>
-        <td style="padding:8px 14px">Assumes globular (circular) cluster shapes</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 14px">Assigning new points is trivial</td>
-        <td style="padding:8px 14px">Sensitive to outliers and feature scale</td>
-      </tr>
+  <div class="card">
+    <h2>Model Evaluation</h2>
+    <p>Choosing k and computing silhouette is not enough — you also need to validate that the clusters are meaningful, stable, and useful.</p>
+
+    <table class="styled-table">
+      <thead><tr><th>Method</th><th>What it measures</th><th>How to use it</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Inertia (elbow)</strong></td>
+          <td>Within-cluster tightness. Always decreases with k.</td>
+          <td>Plot vs k. Use elbow as a candidate k — not a definitive answer.</td>
+        </tr>
+        <tr>
+          <td><strong>Silhouette score</strong></td>
+          <td>How well each point fits its cluster vs the nearest rival. Range −1 to +1.</td>
+          <td>Plot vs k. Pick the peak. Above 0.5 = reasonable. Above 0.7 = good. Above 0.85 = excellent separation.</td>
+        </tr>
+        <tr>
+          <td><strong>Centroid inspection</strong></td>
+          <td>Whether clusters have different, interpretable characteristics.</td>
+          <td>Print cluster_centers_. If centroids are very similar, the clusters may not be meaningfully different.</td>
+        </tr>
+        <tr>
+          <td><strong>Cluster size balance</strong></td>
+          <td>Whether clusters are extremely unequal in size.</td>
+          <td>Check cluster sizes with np.unique(labels, return_counts=True). One giant cluster + many tiny clusters is a red flag.</td>
+        </tr>
+        <tr>
+          <td><strong>Stability check</strong></td>
+          <td>Whether the same solution appears across different random seeds.</td>
+          <td>Run K-Means with 5 different random_state values. If results differ dramatically, the clusters are not stable.</td>
+        </tr>
+        <tr>
+          <td><strong>Domain validation</strong></td>
+          <td>Whether the clusters make sense given what you know about the data.</td>
+          <td>Show clusters to a domain expert. Do the groupings align with known customer types, behaviour patterns, or categories?</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="code-block" style="margin-top:14px"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Check cluster sizes</span>
+unique, counts = np.unique(cluster_assignment, return_counts=<span class="kw">True</span>)
+<span class="kw">for</span> c, n <span class="kw">in</span> zip(unique, counts):
+    print(<span class="str">f'Cluster {c}: {n} points ({100*n/len(cluster_assignment):.1f}%)'</span>)
+
+<span class="cm"># Check silhouette</span>
+score = silhouette_score(customers_scaled, cluster_assignment)
+print(<span class="str">f'Silhouette: {score:.3f}'</span>)
+
+<span class="cm"># Interpret</span>
+<span class="kw">if</span> score > <span class="num">0.7</span>:   print(<span class="str">"Good separation"</span>)
+<span class="kw">elif</span> score > <span class="num">0.5</span>: print(<span class="str">"Reasonable separation"</span>)
+<span class="kw">elif</span> score > <span class="num">0.25</span>: print(<span class="str">"Weak structure — clusters may overlap"</span>)
+<span class="kw">else</span>:             print(<span class="str">"Poor structure — consider different k or algorithm"</span>)</pre></div>
+  </div>
+
+  <div class="card">
+    <h2>Pros, Cons, and When to Use K-Means</h2>
+
+    <table class="styled-table">
+      <thead><tr><th>Pros</th><th>Cons</th></tr></thead>
+      <tbody>
+        <tr><td>Fast — scales to millions of points</td><td>Must choose k upfront — no automatic discovery of the number of clusters</td></tr>
+        <tr><td>Easy to interpret — centroids directly describe each cluster</td><td>Converges to local optimum — use n_init ≥ 10</td></tr>
+        <tr><td>Assigning new points is trivial (just find nearest centroid)</td><td>Assumes globular (circular) cluster shapes — fails on elongated or irregular clusters</td></tr>
+        <tr><td>Simple to implement and explain to stakeholders</td><td>Sensitive to outliers — a single extreme point pulls the centroid away from the true cluster centre</td></tr>
+        <tr><td>Works well when clusters are compact and roughly equal in size</td><td>Sensitive to feature scale — must standardise before clustering</td></tr>
+        <tr><td>Memory-efficient — only stores k centroids after fitting</td><td>Hard clustering — every point gets exactly one label, even ambiguous boundary points</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">When to use K-Means</h3>
+    <ul style="margin: 0 0 0 20px; line-height:2">
+      <li>You have a large dataset and need a fast result</li>
+      <li>You have a rough idea of how many clusters to expect</li>
+      <li>Your clusters are expected to be roughly spherical and similar in size</li>
+      <li>You need interpretable cluster centres (e.g. customer personas, audience segments)</li>
+      <li>You're doing exploratory work and want a quick first pass at the structure of the data</li>
+    </ul>
+
+    <h3 style="margin-top:18px; margin-bottom:8px">When NOT to use K-Means — and what to use instead</h3>
+    <table class="styled-table">
+      <thead><tr><th>Situation</th><th>Problem</th><th>Use instead</th></tr></thead>
+      <tbody>
+        <tr><td>Clusters have very different sizes</td><td>Large clusters pull centroids; small ones get absorbed</td><td>DBSCAN, Gaussian Mixture Models</td></tr>
+        <tr><td>Clusters are elongated or irregular shapes</td><td>Euclidean distance to centroid doesn't capture non-spherical structure</td><td>DBSCAN, Spectral Clustering</td></tr>
+        <tr><td>You don't know k at all</td><td>Must specify k upfront</td><td>DBSCAN (k-free), Hierarchical clustering (cut at any level)</td></tr>
+        <tr><td>Data has many outliers</td><td>Outliers distort centroids and inflate inertia</td><td>DBSCAN (marks outliers as noise), Median-based clustering</td></tr>
+        <tr><td>You need soft assignments (probabilities)</td><td>K-Means gives hard labels only</td><td>Gaussian Mixture Models (probabilistic cluster membership)</td></tr>
+        <tr><td>High-dimensional sparse data (text)</td><td>Euclidean distance loses meaning in high dimensions</td><td>Topic models (LDA), cosine-similarity-based clustering</td></tr>
+      </tbody>
     </table>
   </div>
 
