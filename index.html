@@ -274,6 +274,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('ts6')" id="nav-ts6"><span class="icon">🔎</span> L6: Time Series Testing<span class="check" id="check-ts6"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ts7')" id="nav-ts7"><span class="icon">📊</span> L7: Exponential Smoothing<span class="check" id="check-ts7"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ts8')" id="nav-ts8"><span class="icon">🔮</span> L8: Prophet<span class="check" id="check-ts8"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('ts9')" id="nav-ts9"><span class="icon">📰</span> L9: Practical Example<span class="check" id="check-ts9"></span></div>
   </div>
 
   <div class="sidebar-section" style="margin-top:10px">Practice</div>
@@ -1307,6 +1308,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
           <div class="topic-chip" id="chip-ts6" onclick="toggleChip('ts6')">L6: Time Series Testing</div>
           <div class="topic-chip" id="chip-ts7" onclick="toggleChip('ts7')">L7: Exponential Smoothing</div>
           <div class="topic-chip" id="chip-ts8" onclick="toggleChip('ts8')">L8: Prophet</div>
+          <div class="topic-chip" id="chip-ts9" onclick="toggleChip('ts9')">L9: Practical Example</div>
         </div>
     </div>
     <div class="card" style="max-width:400px">
@@ -1428,6 +1430,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
         <div class="topic-chip" id="fc-chip-ts6" onclick="fcFilter('ts6')">L6: Time Series Testing</div>
         <div class="topic-chip" id="fc-chip-ts7" onclick="fcFilter('ts7')">L7: Exponential Smoothing</div>
         <div class="topic-chip" id="fc-chip-ts8" onclick="fcFilter('ts8')">L8: Prophet</div>
+        <div class="topic-chip" id="fc-chip-ts9" onclick="fcFilter('ts9')">L9: Practical Example</div>
       </div>
     </div>
   </div>
@@ -8415,6 +8418,327 @@ plt.show()</pre></div>
   </div>
 </div>
 
+<!-- TS9: PRACTICAL EXAMPLE -->
+<div class="page" id="page-ts9">
+  <div class="page-header">
+    <div class="chapter-badge">Time Series Analysis</div>
+    <h1>L9: Practical Example</h1>
+    <p class="subtitle">End-to-end time series analysis on real daily pageviews data — full preprocessing pipeline, three models compared, and business insights extracted from Prophet components.</p>
+  </div>
+
+  <div class="card">
+    <h2>Overview</h2>
+    <p>This lesson walks through a complete real-world time series project from raw data to business insight. The dataset is daily pageviews from a news site covering January 2024 to June 2026.</p>
+    <table class="styled-table">
+      <thead><tr><th>Item</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Dataset</strong></td><td>Daily pageviews on the site</td></tr>
+        <tr><td><strong>Period</strong></td><td>January 2024 – June 2026 (~850 daily observations)</td></tr>
+        <tr><td><strong>Target</strong></td><td>Forecast the next 90 days of daily pageviews</td></tr>
+        <tr><td><strong>Models tested</strong></td><td>Holt-Winters, Autoregressive (AR), Prophet</td></tr>
+      </tbody>
+    </table>
+    <div class="key-concept" style="margin-top:14px">
+      <div class="label">Why this dataset is interesting</div>
+      <p>News site traffic is driven by two competing forces: predictable weekly and yearly patterns (people read more on weekdays, less in December) and completely unpredictable breaking news events that can 2–4× traffic in a single day. This makes it an ideal test for comparing models that can and cannot handle one-off events.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Step 1 — Data Loading and Setup</h2>
+    <div class="code-block"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+pageviews = pd.read_excel(
+    <span class="str">"pageviews.xlsx"</span>,
+    parse_dates=[<span class="str">"Day"</span>],
+    index_col=<span class="str">"Day"</span>
+)
+
+<span class="cm"># Prophet requires columns named exactly ds and y — rename upfront</span>
+df = pageviews.copy()
+df = df.reset_index().rename(columns={<span class="str">"Day"</span>: <span class="str">"ds"</span>, <span class="str">"Page views"</span>: <span class="str">"y"</span>})</pre></div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Events DataFrame — breaking news</h3>
+    <p>Breaking news spikes cannot be explained by trend or seasonality. Prophet has a dedicated events mechanism — pass a DataFrame of known special dates so the model learns their effect separately and keeps them out of the trend estimate.</p>
+    <div class="code-block"><pre>events = pd.DataFrame({
+    <span class="str">"ds"</span>: pd.to_datetime([
+        <span class="str">"2024-07-13"</span>,  <span class="cm"># Trump assassination attempt</span>
+        <span class="str">"2024-11-05"</span>,  <span class="cm"># US Election day</span>
+        <span class="str">"2025-06-13"</span>,  <span class="cm"># Air India plane crash - 260+ dead</span>
+        <span class="str">"2025-06-22"</span>,  <span class="cm"># US strikes Iran nuclear sites</span>
+        <span class="str">"2026-02-28"</span>,  <span class="cm"># US &amp; Israel attack Iran - Day 1</span>
+        <span class="str">"2026-03-01"</span>,  <span class="cm"># US &amp; Israel attack Iran - Day 2</span>
+    ]),
+    <span class="str">"holiday"</span>: [
+        <span class="str">"trump_assassination_attempt"</span>,
+        <span class="str">"us_election_2024"</span>,
+        <span class="str">"air_india_crash"</span>,
+        <span class="str">"us_iran_nuclear_strike"</span>,
+        <span class="str">"us_israel_iran_attack"</span>,
+        <span class="str">"us_israel_iran_attack"</span>,  <span class="cm"># same name = one effect learned across both days</span>
+    ]
+})</pre></div>
+    <div class="key-concept">
+      <div class="label">Why unique event names matter</div>
+      <p>Each unique name gets its own effect coefficient. If you gave all events the same name, Prophet would average their effects — which is wrong when some events boost traffic and others might suppress it. Separate names give the model freedom to learn that an election adds 20M while a bank holiday subtracts 2M.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Step 2 — Exploratory Data Analysis</h2>
+
+    <h3 style="margin-bottom:8px">Raw time series and weekly average</h3>
+    <p><strong>Why:</strong> The first plot tells you what kind of series you're dealing with before choosing any model. You cannot make an informed decision about preprocessing or model selection without seeing the data.</p>
+    <div class="code-block"><pre><span class="cm"># Raw daily plot</span>
+pageviews.plot(figsize=(<span class="num">12</span>, <span class="num">3</span>))
+plt.title(<span class="str">"Site pageviews"</span>)
+plt.show()
+
+<span class="cm"># Weekly average — removes daily noise, makes trend and spikes clearer</span>
+pageviews.resample(<span class="str">"W"</span>).mean().plot(figsize=(<span class="num">12</span>, <span class="num">3</span>))
+plt.title(<span class="str">"Site pageviews (weekly average)"</span>)
+plt.show()</pre></div>
+    <img src="Time%20series%20analysis/images/01_raw_series.png" style="width:100%;margin:12px 0;border-radius:6px">
+    <img src="Time%20series%20analysis/images/02_weekly_average.png" style="width:100%;margin:12px 0;border-radius:6px">
+    <p><strong>What you see:</strong> Sharp growth from ~5M to ~20M between January and April 2024. Stable plateau around 18–22M from mid-2024. Clear weekly zigzag throughout. Six visible spikes above 30M.</p>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Day of week pattern</h3>
+    <p><strong>Why:</strong> Knowing which days are busiest tells you the shape of weekly seasonality — directly determining <code>seasonal_periods</code> and whether lag-7 AR makes sense.</p>
+    <div class="code-block"><pre>pageviews[<span class="str">"day_of_week"</span>] = pageviews.index.dayofweek
+pageviews.groupby(<span class="str">"day_of_week"</span>)[<span class="str">"Page views"</span>].mean().plot(kind=<span class="str">"bar"</span>)
+plt.title(<span class="str">"Average pageviews by day of week"</span>)
+plt.xlabel(<span class="str">"Day of week (0=Monday, 6=Sunday)"</span>)
+plt.show()
+pageviews = pageviews.drop(columns=[<span class="str">"day_of_week"</span>])</pre></div>
+    <img src="Time%20series%20analysis/images/03_day_of_week.png" style="width:100%;margin:12px 0;border-radius:6px">
+    <p><strong>Finding:</strong> Only ~11% difference between weekdays and weekends — much flatter than a UK news site. Confirms the traffic is predominantly <strong>US-based</strong>. Americans read news on weekends almost as much as weekdays, unlike UK audiences with a sharp commuter-driven weekday peak.</p>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Breaking news spike detection</h3>
+    <p><strong>Why:</strong> Spikes 2× above normal cannot be explained by trend or seasonality. Left unidentified, they corrupt model estimates — especially Holt-Winters trend. Identifying them upfront lets Prophet absorb them via the events DataFrame.</p>
+    <div class="code-block"><pre>pageviews[pageviews[<span class="str">"Page views"</span>] &gt; <span class="num">30_000_000</span>]</pre></div>
+    <table class="styled-table" style="margin-top:12px">
+      <thead><tr><th>Date</th><th>Pageviews</th><th>Event</th></tr></thead>
+      <tbody>
+        <tr><td>2024-07-14</td><td>32,122,116</td><td>Trump assassination attempt — next day surge</td></tr>
+        <tr><td>2024-11-06</td><td>41,701,591</td><td>US Presidential Election results</td></tr>
+        <tr><td>2025-06-13</td><td>31,329,220</td><td>Air India plane crash — 260+ dead</td></tr>
+        <tr><td>2025-06-22</td><td>30,195,035</td><td>US strikes Iran nuclear sites</td></tr>
+        <tr><td>2026-02-28</td><td>31,943,786</td><td>US &amp; Israel attack Iran — Day 1</td></tr>
+        <tr><td>2026-03-01</td><td>35,252,983</td><td>US &amp; Israel attack Iran — Day 2</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Step 3 — Preprocessing</h2>
+
+    <h3 style="margin-bottom:8px">Missing dates and values</h3>
+    <p><strong>Why:</strong> Time series models assume a regular gapless index. A missing day makes the model treat the surrounding days as consecutive — breaking all lag calculations. NaN values crash most fitting functions.</p>
+    <div class="code-block"><pre><span class="cm"># Check for date gaps</span>
+all_dates = pd.date_range(start=df[<span class="str">"ds"</span>].min(), end=df[<span class="str">"ds"</span>].max(), freq=<span class="str">"D"</span>)
+print(<span class="str">"Missing dates:"</span>, len(all_dates.difference(df[<span class="str">"ds"</span>])))  <span class="cm"># 0</span>
+
+<span class="cm"># Check for NaN values</span>
+print(df.isna().sum())  <span class="cm"># ds: 0, y: 0</span></pre></div>
+    <p><strong>Result:</strong> No missing dates, no missing values. Data is complete.</p>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Seasonal decomposition</h3>
+    <p><strong>Why:</strong> Decomposition separates the series into trend, seasonality, and residuals. This tells you exactly what structure the model needs. If the trend drifts — you need trend handling. If the seasonal panel is consistent — <code>seasonal_periods=7</code> is reliable. If the residuals have clear spikes — those are your outlier events.</p>
+    <div class="code-block"><pre><span class="kw">from</span> statsmodels.tsa.seasonal <span class="kw">import</span> seasonal_decompose
+
+ts = df.set_index(<span class="str">"ds"</span>)[<span class="str">"y"</span>]
+result = seasonal_decompose(ts, model=<span class="str">"additive"</span>, period=<span class="num">7</span>)
+result.plot()
+plt.show()</pre></div>
+    <img src="Time%20series%20analysis/images/04_decomposition.png" style="width:100%;margin:12px 0;border-radius:6px">
+    <div class="key-concept">
+      <div class="label">What each panel showed</div>
+      <p><strong>Trend:</strong> Sharp growth Jan–Apr 2024, plateau ~20M from mid-2024, slight decline from late 2025. Breaking news bumps visible.<br><br>
+      <strong>Seasonal:</strong> Clean weekly cycle, amplitude ~1.5M, completely consistent throughout — confirms <code>seasonal_periods=7</code>.<br><br>
+      <strong>Residuals:</strong> Mostly flat near zero with clear spikes matching the identified breaking news events — these are real signals, not noise.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">ACF and PACF</h3>
+    <p><strong>Why:</strong> ACF tells you whether autocorrelation exists and at which lags — reveals the seasonality structure. PACF strips out indirect chain effects to show only direct dependencies — tells you the AR order. Without these you're guessing model order blindly.</p>
+    <div class="code-block"><pre><span class="kw">from</span> statsmodels.graphics.tsaplots <span class="kw">import</span> plot_acf, plot_pacf
+
+fig, axes = plt.subplots(<span class="num">1</span>, <span class="num">2</span>, figsize=(<span class="num">16</span>, <span class="num">4</span>))
+plot_acf(ts, lags=<span class="num">30</span>, ax=axes[<span class="num">0</span>])
+plot_pacf(ts, lags=<span class="num">30</span>, ax=axes[<span class="num">1</span>])
+plt.show()</pre></div>
+    <img src="Time%20series%20analysis/images/05_acf_pacf.png" style="width:100%;margin:12px 0;border-radius:6px">
+    <div class="key-concept">
+      <div class="label">What the plots showed</div>
+      <p><strong>ACF:</strong> All 30 lags significantly positive, slowly declining from ~0.85 to ~0.45 — classic signature of a strongly autocorrelated series. Expected spike at lag 7 for weekly seasonality was masked by the overall autocorrelation strength.<br><br>
+      <strong>PACF:</strong> Massive spike at lag 1 (~0.9), smaller at lags 2–3, everything else inside the confidence band. Direct dependency is mostly at lag 1 — AR(1) or AR(2) will capture most structure. <code>ar_select_order</code> ultimately confirmed lag 7 as optimal because the same-day-last-week is the most useful predictor for daily news traffic.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Stationarity test (ADF)</h3>
+    <p><strong>Why:</strong> AR models require a stationary series — constant mean and variance over time. If non-stationary, differencing is needed before fitting. If already stationary, differencing would hurt by introducing artificial structure.</p>
+    <div class="code-block"><pre><span class="kw">from</span> statsmodels.tsa.stattools <span class="kw">import</span> adfuller
+
+result = adfuller(ts.dropna())
+print(<span class="str">f"ADF Statistic: {result[0]:.4f}"</span>)  <span class="cm"># -4.1013</span>
+print(<span class="str">f"p-value: {result[1]:.4f}"</span>)        <span class="cm"># 0.0009 → STATIONARY</span></pre></div>
+    <div class="key-concept">
+      <div class="label">The surprise result</div>
+      <p>The ACF slow decay looked like a non-stationary trend — but the ADF test said the series IS stationary (p=0.0009). The Jan–Apr 2024 ramp-up was a temporary growth phase, not a permanent trend. Once it stabilised at ~20M it stayed there. ADF detected this correctly.<br><br>
+      <strong>Important:</strong> do NOT apply <code>diff(7)</code> — over-differencing an already-stationary series destroys real signal and makes all three models worse.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Distribution check</h3>
+    <p><strong>Why:</strong> Heavily right-skewed distributions benefit from a log transform to stabilise variance. Checking kurtosis tells you how extreme the outliers are.</p>
+    <div class="code-block"><pre>print(<span class="str">f"Mean:     {ts.mean():,.0f}"</span>)   <span class="cm"># 17,896,758</span>
+print(<span class="str">f"Skewness: {ts.skew():.2f}"</span>)   <span class="cm"># -0.91</span>
+print(<span class="str">f"Kurtosis: {ts.kurtosis():.2f}"</span>) <span class="cm"># 4.46</span></pre></div>
+    <table class="styled-table" style="margin-top:12px">
+      <thead><tr><th>Stat</th><th>Value</th><th>Interpretation</th></tr></thead>
+      <tbody>
+        <tr><td>Mean</td><td>17,896,758</td><td>Average daily traffic across the full period</td></tr>
+        <tr><td>Std</td><td>4,294,710</td><td>24% of mean — high variation from weekly cycle and breaking news</td></tr>
+        <tr><td>Skewness</td><td>-0.91</td><td>Left skew — early low-traffic ramp-up creates the left tail. No log transform needed (log fixes positive/right skew, not negative)</td></tr>
+        <tr><td>Kurtosis</td><td>4.46</td><td>Heavy tails — election and assassination attempt days are extreme outliers</td></tr>
+      </tbody>
+    </table>
+    <img src="Time%20series%20analysis/images/06_distribution.png" style="width:100%;margin:12px 0;border-radius:6px">
+    <p style="margin-top:10px"><strong>Conclusion:</strong> No transformation needed. Distribution is acceptable for all three models.</p>
+  </div>
+
+  <div class="card">
+    <h2>Step 4 — Train/Test Split</h2>
+    <p><strong>Why:</strong> In-sample predictions always look better than real forecasts — the model has already seen that data. To honestly evaluate forecast accuracy you must test on genuinely unseen future data. Always split chronologically — never randomly.</p>
+    <div class="code-block"><pre><span class="cm"># Hold out last 90 days — always the END of the series</span>
+train = df[df[<span class="str">"ds"</span>] &lt; df[<span class="str">"ds"</span>].max() - pd.Timedelta(days=<span class="num">90</span>)]
+test  = df[df[<span class="str">"ds"</span>] &gt;= df[<span class="str">"ds"</span>].max() - pd.Timedelta(days=<span class="num">90</span>)]
+
+<span class="cm"># Train: 761 rows | Test: 91 rows (Mar–Jun 2026)</span></pre></div>
+    <div class="alert alert-warn">⚠️ The test set covers the aftermath of the Feb 2026 Iran attack spike — the hardest forecasting period in the dataset. A model that handles this well genuinely understands the data.</div>
+  </div>
+
+  <div class="card">
+    <h2>Step 5 — Model 1: Holt-Winters</h2>
+    <p><strong>Why use it:</strong> Handles trend and seasonality without requiring stationarity. Fast and interpretable. Works well when the series has a stable seasonal pattern — which this series does (clean weekly cycle).</p>
+    <div class="code-block"><pre><span class="kw">from</span> statsmodels.tsa.api <span class="kw">import</span> ExponentialSmoothing
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> mean_absolute_error
+
+train_ts = train.set_index(<span class="str">"ds"</span>)[<span class="str">"y"</span>]
+test_ts  = test.set_index(<span class="str">"ds"</span>)[<span class="str">"y"</span>]
+
+tes = ExponentialSmoothing(
+    train_ts,
+    trend=<span class="str">"add"</span>,
+    seasonal=<span class="str">"add"</span>,
+    seasonal_periods=<span class="num">7</span>
+).fit()
+
+tes_forecast = tes.forecast(len(test_ts))
+print(<span class="str">f"Holt-Winters MAE: {mean_absolute_error(test_ts, tes_forecast):,.2f}"</span>)
+<span class="cm"># MAE: 15,464,162 — 86% error rate</span></pre></div>
+    <img src="Time%20series%20analysis/images/07_holtwinters.png" style="width:100%;margin:12px 0;border-radius:6px">
+    <div class="key-concept">
+      <div class="label">What went wrong — 86% error rate</div>
+      <p>The Iran attack days (Feb 28 – Mar 1 2026) caused a massive spike right at the end of training. Holt-Winters saw those final days at 30–35M and concluded the trend is now strongly upward. It has no events mechanism — it cannot distinguish a one-off spike from a genuine trend change. It extrapolated the spike as a new trend and forecast ~36M by June 2026. The actual traffic declined back to ~17M.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Step 6 — Model 2: AR</h2>
+    <p><strong>Why use it:</strong> AR models predict the next value from past values. Strong PACF spike at lag 1 confirms this series has exactly the autocorrelation structure AR exploits. <code>ar_select_order</code> automates lag selection via BIC.</p>
+    <div class="code-block"><pre><span class="kw">from</span> statsmodels.tsa.ar_model <span class="kw">import</span> ar_select_order
+<span class="kw">from</span> statsmodels.api <span class="kw">import</span> tsa
+
+train_ts = train.set_index(<span class="str">"ds"</span>)[<span class="str">"y"</span>].asfreq(<span class="str">"D"</span>)
+test_ts  = test.set_index(<span class="str">"ds"</span>)[<span class="str">"y"</span>]
+
+mod = ar_select_order(train_ts, maxlag=<span class="num">14</span>, ic=<span class="str">"bic"</span>)
+optlag = max(mod.ar_lags)  <span class="cm"># 7 — same day last week</span>
+
+ar_fit = tsa.AutoReg(train_ts, lags=optlag).fit()
+ar_pred = ar_fit.predict(start=len(train_ts), end=len(train_ts)+len(test_ts)-<span class="num">1</span>)
+
+print(<span class="str">f"AR MAE: {mean_absolute_error(test_ts.values, ar_pred.values):,.2f}"</span>)
+<span class="cm"># MAE: 2,642,868 — 15% error rate</span></pre></div>
+    <img src="Time%20series%20analysis/images/08_ar_forecast.png" style="width:100%;margin:12px 0;border-radius:6px">
+    <div class="key-concept">
+      <div class="label">Why lag 7 was selected and what it means</div>
+      <p>BIC selected lag 7 — last week's same-day value — as the optimal predictor. Monday this week is best predicted by last Monday. The weekly pattern is the dominant direct signal in the series. AR(7) correctly identified the direction of the forecast (declining after the Iran attack) but its forecast was too smooth — it couldn't capture the sharp weekly zigzag and decayed the event effect too slowly.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Step 7 — Model 3: Prophet</h2>
+    <p><strong>Why use it:</strong> Prophet is designed for exactly this type of data — business time series with multiple seasonalities, trend changepoints, and known one-off events. The events DataFrame tells the model which days are special so breaking news spikes never corrupt the trend estimate.</p>
+    <div class="code-block"><pre><span class="kw">from</span> prophet <span class="kw">import</span> Prophet
+
+model = Prophet(
+    holidays=events,
+    weekly_seasonality=<span class="num">3</span>,
+    yearly_seasonality=<span class="num">10</span>,
+    daily_seasonality=<span class="kw">False</span>
+)
+model.fit(df)
+
+future = model.make_future_dataframe(periods=<span class="num">91</span>, include_history=<span class="kw">True</span>)
+forecast = model.predict(future)
+
+prophet_pred = forecast.set_index(<span class="str">"ds"</span>)[<span class="str">"yhat"</span>].loc[test[<span class="str">"ds"</span>].values]
+print(<span class="str">f"Prophet MAE: {mean_absolute_error(test['y'].values, prophet_pred.values):,.2f}"</span>)
+<span class="cm"># MAE: 1,674,411 — 9% error rate</span></pre></div>
+    <img src="Time%20series%20analysis/images/09_prophet_forecast.png" style="width:100%;margin:12px 0;border-radius:6px">
+    <div class="key-concept">
+      <div class="label">Why Prophet won</div>
+      <p>The events DataFrame correctly neutralised the Iran attack spike — the trend estimate was clean. Prophet correctly started the forecast at ~21M rather than AR's inflated ~29M. Explicit weekly seasonality modelling captured the zigzag AR could only smooth over. No preprocessing pipeline needed at all.</p>
+    </div>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Components plot</h3>
+    <div class="code-block"><pre>model.plot_components(forecast, uncertainty=<span class="kw">False</span>)
+plt.show()</pre></div>
+    <img src="Time%20series%20analysis/images/10_prophet_components.png" style="width:100%;margin:12px 0;border-radius:6px">
+    <table class="styled-table" style="margin-top:12px">
+      <thead><tr><th>Panel</th><th>What it showed</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Trend</strong></td><td>Rapid growth Jan–Aug 2024 (3M → 18M), plateau, peak Jan 2026, then decline. Breaking news spikes correctly absent — isolated to the holidays panel.</td></tr>
+        <tr><td><strong>Holidays</strong></td><td>Trump attempt: +8.5M. Air India crash: +11M. Iran nuclear strike: +11M. US &amp; Israel attack Iran: +14.5M — the largest single event effect.</td></tr>
+        <tr><td><strong>Weekly</strong></td><td>Wednesday peak (+900K). Saturday/Sunday lowest (-1.5M). Classic US mid-week news reading pattern.</td></tr>
+        <tr><td><strong>Yearly</strong></td><td>May strongest (+3M) — US political season. January/November–December weakest (-2.5M). US news cycle drives traffic more than weather.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Final Results and Business Insights</h2>
+    <table class="styled-table">
+      <thead><tr><th>Model</th><th>MAE</th><th>Error rate</th><th>Key weakness</th></tr></thead>
+      <tbody>
+        <tr><td>Holt-Winters</td><td>15,464,162</td><td>86%</td><td>Iran spike corrupted trend — forecast went wrong direction</td></tr>
+        <tr><td>AR</td><td>2,642,868</td><td>15%</td><td>No events mechanism, over-smooth weekly pattern</td></tr>
+        <tr><td><strong>Prophet</strong></td><td><strong>1,674,411</strong></td><td><strong>9%</strong></td><td><strong>Winner</strong></td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:20px; margin-bottom:8px">Business insights from the Prophet components</h3>
+    <table class="styled-table">
+      <thead><tr><th>Finding</th><th>Implication</th></tr></thead>
+      <tbody>
+        <tr><td>Site grew 6× in 8 months in 2024</td><td>Strong audience acquisition phase — now plateauing</td></tr>
+        <tr><td>Breaking news adds 8–14M pageviews per event</td><td>Events are the biggest traffic driver — larger than any seasonal effect</td></tr>
+        <tr><td>US Election added 41M pageviews in one day</td><td>Plan infrastructure capacity around major US political events</td></tr>
+        <tr><td>Mid-week traffic is 2.5M higher than weekends</td><td>Publish important content Tuesday–Thursday for maximum reach</td></tr>
+        <tr><td>May and July are peak months</td><td>Plan editorial capacity around these periods</td></tr>
+        <tr><td>November–December drops ~3M below baseline</td><td>Holiday season is consistently weak — reduce publishing targets</td></tr>
+        <tr><td>Prophet beats AR by 37%</td><td>Always include known one-off events when forecasting news traffic</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-ts9"></div></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('ts9')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('ts8')">← L8: Prophet</button>
+  </div>
+</div>
+
 <!-- TS2: PREPROCESSING FOR TIME SERIES -->
 <div class="page" id="page-ts2">
   <div class="page-header">
@@ -8701,7 +9025,8 @@ const TOPICS = {
   ts5: 'TS L5: Autoregressive Models',
   ts6: 'TS L6: Time Series Testing',
   ts7: 'TS L7: Exponential Smoothing',
-  ts8: 'TS L8: Prophet'
+  ts8: 'TS L8: Prophet',
+  ts9: 'TS L9: Practical Example'
 };
 
 const ALL_QUESTIONS = [
@@ -9055,7 +9380,15 @@ const ALL_QUESTIONS = [
   {t:'ts8', q:'You add bank holidays and tube strikes as separate named events to Prophet. Why give them different holiday names rather than combining them into one?', opts:['Prophet only accepts one event type per model','Giving them different names lets Prophet learn a separate effect size for each type. Bank holidays suppress bike hires; tube strikes boost them. Combined into one name, Prophet would average the two opposing effects and get both wrong.','Different names improve the Fourier order estimation','They must have different names because the dates cannot overlap'], ans:1, exp:'Prophet estimates one coefficient per named holiday group, representing the average effect of that event type on y. Bank holidays in the TFL bike data have a negative effect (people do not commute on holidays). Tube strikes have a strong positive effect (commuters switch to bikes). If both were labelled "event", Prophet would fit one average effect that is somewhere in between — positive enough to partially explain strikes, not negative enough to properly account for holidays. Separate names give the model the freedom to learn that these two event types push in opposite directions.'},
   {t:'ts8', q:'The plot_components() output shows the yearly seasonality panel with many sharp spikes and rapid oscillations. What does this indicate and what should you do?', opts:['The data has a genuinely complex yearly pattern — this is correct','The yearly Fourier order is too high — the model is overfitting the seasonal component to training noise. Reduce yearly_seasonality to a lower value such as 3–5.','The model needs more training data','The ds column contains incorrect dates'], ans:1, exp:'The Fourier order controls how many sine/cosine waves are summed to model the seasonal curve. A high order (e.g. 20) allows the curve to have many oscillations — it can fit the training data very closely, including its noise. In the components plot, overfitting shows up as a wiggly, spiky seasonal curve rather than a smooth interpretable shape. The cure is to reduce the Fourier order. Start with weekly_seasonality=3 and yearly_seasonality=3 for most datasets and check if the component shapes are smooth and interpretable.'},
   {t:'ts8', q:'What are changepoints in Prophet and why does it look only in the first 80% of the training data?', opts:['Changepoints are the seasonal peaks; 80% is the confidence threshold','Changepoints are moments where the trend rate shifts. Prophet places potential changepoints in the first 80% to prevent overfitting the recent end of the series — the last 20% is left as a buffer so the model does not mistake recent noise for a genuine trend change.','Changepoints are outliers identified by L1 regularisation','The 80% rule applies only to weekly seasonality'], ans:1, exp:'A changepoint is a date where the growth rate of the trend changed — growth could have sped up, slowed down, or reversed. Prophet automatically detects these by placing 25 candidate changepoints uniformly in the first 80% of the data, then using L1 regularisation (a sparsity penalty) to keep only those that genuinely improve the fit. The last 20% is excluded from changepoint placement as a safeguard: noisy fluctuations at the end of the series could be mistaken for trend changes, causing the forecast to extrapolate based on recent noise rather than the longer-term pattern.'},
-  {t:'ts8', q:'Why is plot_components() more useful for business insight than the main forecast plot?', opts:['plot_components() always gives lower uncertainty intervals','The forecast plot shows only the combined prediction. plot_components() separates each driver — trend, weekly pattern, yearly pattern, holiday effects — so you can quantify how much each factor contributes and explain the forecast in business terms.','plot_components() is faster to compute','The main forecast plot requires more data than plot_components()'], ans:1, exp:'The main forecast plot shows a single blue line (yhat) and a shaded uncertainty band. It answers "what will happen" but not "why." plot_components() decomposes the forecast into its parts: you can see that summer adds 8,000 hires per day, bank holidays subtract 12,000, and the long-term trend is slowly increasing. This decomposition is what makes Prophet valuable for stakeholder communication — you can say "our forecast for July is high because of seasonal demand, not because of underlying growth" rather than presenting a black-box number.'}
+  {t:'ts8', q:'Why is plot_components() more useful for business insight than the main forecast plot?', opts:['plot_components() always gives lower uncertainty intervals','The forecast plot shows only the combined prediction. plot_components() separates each driver — trend, weekly pattern, yearly pattern, holiday effects — so you can quantify how much each factor contributes and explain the forecast in business terms.','plot_components() is faster to compute','The main forecast plot requires more data than plot_components()'], ans:1, exp:'The main forecast plot shows a single blue line (yhat) and a shaded uncertainty band. It answers "what will happen" but not "why." plot_components() decomposes the forecast into its parts: you can see that summer adds 8,000 hires per day, bank holidays subtract 12,000, and the long-term trend is slowly increasing. This decomposition is what makes Prophet valuable for stakeholder communication — you can say "our forecast for July is high because of seasonal demand, not because of underlying growth" rather than presenting a black-box number.'},
+
+  // TS9
+  {t:'ts9', q:'The ADF test says the series is stationary but the ACF shows a slow decay across all 30 lags. How do you reconcile this?', opts:['The ADF test must be wrong — rerun it with more lags','Both can be true. The ACF slow decay reflects strong autocorrelation, not necessarily a unit-root trend. ADF tests specifically for a unit root — the Jan–Apr 2024 ramp was a temporary growth phase that stabilised, not a permanent drift. ADF detected this correctly.','Slow ACF decay always means non-stationary — diff(7) is needed','The series needs more data before ADF can be trusted'], ans:1, exp:'ACF slow decay is a warning sign but not proof of non-stationarity. It means consecutive values are highly correlated — which is true for this series. ADF tests specifically for a unit root (permanent, unbounded drift). The series grew fast in early 2024 then stabilised at ~20M — a temporary level shift, not a permanent trend. ADF detected this correctly with p=0.0009. Applying diff(7) would over-difference an already-stationary series, destroying real signal and making all three models worse.'},
+  {t:'ts9', q:'Holt-Winters achieved 86% error rate on this dataset despite the series having a clean weekly seasonality. What caused this failure?', opts:['seasonal_periods=7 was the wrong choice','The Iran attack spike at the end of training caused Holt-Winters to conclude the trend was now strongly upward. With no events mechanism, it could not distinguish a one-off event from a genuine trend change — it extrapolated the spike as a new trend.','Holt-Winters requires differencing first','The train/test split was too small'], ans:1, exp:'Holt-Winters saw the last few days of training at 30–35M (the Iran attack spike) and its trend component learned "the series is accelerating upward." Without any way to flag those days as special events, it projected that trajectory forward — forecasting ~36M by June 2026 when the actual traffic declined back to ~17M. This is the fundamental limitation of Holt-Winters on event-driven data: any breaking news spike at the end of training will corrupt the trend estimate.'},
+  {t:'ts9', q:'The AR model selected lag 7 as the optimal order. What does this mean for how it makes predictions?', opts:['The model uses the last 7 days average to predict the next day','Lag 7 means the model uses last week\'s same-day value as the primary predictor — Monday this week is predicted from last Monday. This is the most direct signal because the weekly pattern is the dominant autocorrelation structure in daily news traffic.','Lag 7 means the model differences the series 7 times','The model uses only the 7th lag, ignoring lags 1–6'], ans:1, exp:'ar_select_order with maxlag=14 tried all lags from 1 to 14 and found lag 7 minimised BIC. This means last week\'s same-day observation is the single most useful predictor for tomorrow. It captures the weekly seasonality directly — Monday traffic predicts next Monday, weekend predicts next weekend. The PACF spike at lag 1 was large but lag 7 as a predictor gives a better BIC because it captures the dominant weekly cycle. The result: AR got the direction right (declining after the Iran spike) but was too smooth to capture the sharp weekly swings.'},
+  {t:'ts9', q:'Why did Prophet start its forecast at ~21M while AR started at ~29M, even though both trained on the same data?', opts:['Prophet uses a different scaling method','Prophet\'s events DataFrame absorbed the Iran attack spike — it learned that Feb 28 / Mar 1 were special days worth +14.5M above baseline, and removed that effect from the trend estimate. AR had no such mechanism so the spike inflated its starting point.','AR uses more lags so it weighted recent data more heavily','Prophet always starts forecasts at the series mean'], ans:1, exp:'The Iran attack added ~14.5M pageviews above the underlying baseline. AR treated those spike days as normal data points and learned "the series is currently at ~30M" — so it forecast from there. Prophet\'s events DataFrame told the model those days were a named event (us_israel_iran_attack), learned their effect size separately, and correctly estimated the underlying baseline at ~21M. The difference in starting point (29M vs 21M) accounts for most of the MAE gap between the two models.'},
+  {t:'ts9', q:'The Prophet components plot showed that breaking news events contributed more to traffic than any seasonal factor. What business decision does this inform?', opts:['Reduce the seasonal_periods parameter to account for this','Breaking news is the primary traffic driver — larger than weekly or yearly patterns. Infrastructure capacity planning, resource allocation, and performance targets should be sized around major news events, not just seasonal cycles.','The yearly seasonality model needs more Fourier terms','Switch from additive to multiplicative seasonality'], ans:1, exp:'The holidays panel showed individual event boosts of 8–14M pageviews per event — the largest single event (Iran attack) added 14.5M in one day. The weekly seasonality amplitude was ~1.5M and the yearly swing was ~3M. So a single major news event can deliver 5–10× the traffic of the entire annual seasonal effect. This means infrastructure capacity (servers, CDN), editorial capacity (journalists on call), and traffic targets cannot be set based on seasonal patterns alone — the events calendar is the dominant driver.'},
+  {t:'ts9', q:'What does the day-of-week analysis (flat pattern across the week) tell you about the audience, and why does this matter for modelling?', opts:['The weekly seasonality is wrong and should use period=30 instead','The flat weekday/weekend gap (~11%) confirms predominantly US traffic — Americans read news on weekends almost as much as weekdays. For modelling this means the weekly seasonal component will be subtle, and the events and yearly components will dominate the forecast.','The series should be differenced by 7 before fitting','The data needs to be aggregated to weekly frequency first'], ans:1, exp:'A UK-focused news site typically shows a sharp 30–35% drop on weekends as commuter reading falls away. This series shows only ~11% drop — a pattern consistent with US audiences who read news on weekends for leisure. For modelling: the weekly seasonal component will be small (Fourier order 3 is sufficient, no need for order 10+). The dominant signals are the long-term trend, the yearly cycle (which reflects US political and cultural patterns, not weather), and the breaking news events. This is exactly what the Prophet components confirmed.'}
 ];
 
 const FLASHCARDS = [
@@ -9405,7 +9738,15 @@ const FLASHCARDS = [
   {t:'ts8', front:'Adding holidays and events to Prophet', back:'Build a DataFrame with two columns:\n• holiday: string name for each event type\n• ds: the dates\n\n# Bank holidays\nbank_df = pd.DataFrame({"holiday": "BankHoliday", "ds": holiday_dates})\n\n# Strikes (different name = separate effect learned)\nstrike_df = pd.DataFrame({"holiday": "strike", "ds": strike_dates})\n\n# Combine\nall_events = pd.concat((bank_df, strike_df))\n\n# Pass to model\nmodel = Prophet(holidays=all_events)\n\nSeparate names → separate effect sizes\n→ bank holidays can be negative, strikes positive'},
   {t:'ts8', front:'Fit → make_future_dataframe → predict — the 3-step workflow', back:'# 1. Fit on historical data\nmodel = Prophet(holidays=events)\nmodel.fit(df_data)\n\n# 2. Create future dates DataFrame\n# periods=365 → forecast 1 year ahead\n# include_history=True → also includes past dates\ndf_dates = model.make_future_dataframe(periods=365, include_history=True)\n\n# 3. Predict\npredictions = model.predict(df_dates)\n# predictions["yhat"] = point forecast\n# predictions["yhat_lower/upper"] = 80% interval\n\n# 4. Plot\nmodel.plot(predictions)\nmodel.plot_components(predictions)'},
   {t:'ts8', front:'Fourier order — underfitting vs overfitting seasonality', back:'Prophet models seasonality as sum of sine/cosine waves.\nFourier order = how many waves are summed.\n\nLow order (e.g. 1):\n→ smooth curve, misses sharp daily/weekly patterns\n→ underfitting\n\nDefault (weekly=3, yearly=10):\n→ good balance, works for most datasets\n\nHigh order (e.g. 20):\n→ wiggly curve that follows training noise\n→ overfitting → unstable forecasts\n\nHow to spot: check plot_components()\n→ smooth shape = good\n→ many sharp spikes = reduce the order'},
-  {t:'ts8', front:'Changepoints — what they are and how Prophet finds them', back:'A changepoint = a date where the trend rate changed\n(growth sped up, slowed, or reversed)\n\nHow Prophet finds them:\n1. Places 25 potential changepoints uniformly\n   in the FIRST 80% of training data\n2. Uses L1 regularisation (sparsity penalty)\n   to keep only real changes — as few as possible\n3. Last 20% excluded — prevents fitting end-of-series noise\n\nVisualise:\nfrom prophet.plot import add_changepoints_to_plot\nfig = model.plot(predictions)\nadd_changepoints_to_plot(fig.gca(), model, predictions)\n\nCompare to trend panel in plot_components() —\neach vertical line = kink in the trend'}
+  {t:'ts8', front:'Changepoints — what they are and how Prophet finds them', back:'A changepoint = a date where the trend rate changed\n(growth sped up, slowed, or reversed)\n\nHow Prophet finds them:\n1. Places 25 potential changepoints uniformly\n   in the FIRST 80% of training data\n2. Uses L1 regularisation (sparsity penalty)\n   to keep only real changes — as few as possible\n3. Last 20% excluded — prevents fitting end-of-series noise\n\nVisualise:\nfrom prophet.plot import add_changepoints_to_plot\nfig = model.plot(predictions)\nadd_changepoints_to_plot(fig.gca(), model, predictions)\n\nCompare to trend panel in plot_components() —\neach vertical line = kink in the trend'},
+
+  // TS9 Flashcards
+  {t:'ts9', front:'Breaking news spike detection — the workflow', back:'Step 1: plot the raw series — spikes are visually obvious\nStep 2: filter for extreme values\n  pageviews[pageviews["y"] > 2 * pageviews["y"].median()]\nStep 3: look up what happened on those dates\nStep 4: add to Prophet events DataFrame with unique names\n\nWhy it matters:\n• Holt-Winters: spike at end of training → wrong trend\n• AR: spike inflates starting forecast level\n• Prophet: events absorbed → clean trend estimate\n\nIdentify events BEFORE fitting any model'},
+  {t:'ts9', front:'ADF stationary but ACF shows slow decay — how to reconcile', back:'ACF slow decay = strong autocorrelation (not necessarily non-stationary)\nADF tests specifically for unit root (permanent drift)\n\nThis series: grew fast Jan–Apr 2024 then stabilised at ~20M\n→ temporary level shift, not permanent trend\n→ ADF p=0.0009 → stationary ✓\n\nRule: ADF result overrides visual ACF impression\n\nDo NOT diff if ADF says stationary\n→ over-differencing destroys real signal\n→ makes all three models worse'},
+  {t:'ts9', front:'Holt-Winters failure mode — events at end of training', back:'Problem: breaking news spike at end of training period\n\nHolt-Winters has no events mechanism\n→ sees spike as new trend direction\n→ extrapolates upward\n→ actual traffic returns to baseline\n→ forecast goes completely wrong direction\n\nResult: 86% error rate (15.5M MAE on 17.9M average)\n\nFix options:\n1. Remove spike days from training before fitting\n2. Use damped_trend=True to limit extrapolation\n3. Switch to Prophet with events DataFrame\n\nLesson: never use Holt-Winters on event-driven series\nwhen spikes land near the end of training'},
+  {t:'ts9', front:'Why AR lag 7 and what it means for daily news traffic', back:'ar_select_order(train, maxlag=14, ic="bic")\n→ selected lag 7\n\nMeans: last week same-day value is the best predictor\n→ Monday predicted from last Monday\n→ captures the weekly cycle directly\n\nWhy not lag 1 (PACF spike was bigger)?\n→ lag 7 gives better BIC overall\n→ weekly same-day is more useful for forecasting\n→ lag 1 alone misses the weekly pattern\n\nAR result: 15% error rate — correct direction,\ntoo smooth, misses sharp weekly zigzag,\nno way to handle Iran attack spike'},
+  {t:'ts9', front:'Prophet event names — why unique names matter', back:'Each unique holiday name gets its own coefficient\n\nCorrect: separate names\nevents = {"holiday": ["us_election", "air_india_crash", ...]}\n→ Prophet learns: election = +20M, crash = +11M\n\nWrong: same name for all events\nevents = {"holiday": ["event", "event", "event", ...]}\n→ Prophet learns one average across all events\n→ overestimates some, underestimates others\n\nFor two days of the same event (Iran attack days):\nuse the SAME name → one effect learned across both\n\nProphet result: 9% error rate — events DataFrame\nabsorbed Iran spike, clean trend from day 1'},
+  {t:'ts9', front:'Key business insights from Prophet components', back:'Holidays panel (event effect sizes above baseline):\n• Iran attack: +14.5M — biggest single event\n• Air India crash: +11M\n• Trump assassination attempt: +8.5M\n• US Election: +20M+ on results day\n\nWeekly: Wednesday peak (+900K), Sat/Sun lowest (-1.5M)\n→ publish important content Tue–Thu\n\nYearly: May strongest (+3M), Nov–Dec weakest (-3M)\n→ plan capacity around US political calendar\n\nKey insight: single breaking news event delivers\n5–10× the traffic of the entire yearly seasonal swing\n→ infrastructure must be sized for events, not seasons'}
 ];
 
 // ===================== STATE =====================
@@ -9433,7 +9774,7 @@ function nav(page) {
   document.getElementById('main').scrollTop = 0;
   const navEl = document.querySelector(`[onclick="nav('${page}')"]`);
   if (navEl) navEl.classList.add('active');
-  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8'].includes(page)) {
+  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9'].includes(page)) {
     markVisited(page);
     renderInlineQuiz(page);
   }
@@ -9453,7 +9794,7 @@ function markVisited(w) {
 function updateGlobalProgress() {
   const pct = Math.round((visited.length / 25) * 100);
   document.getElementById('global-progress-bar').style.width = pct + '%';
-  document.getElementById('global-progress-label').textContent = `${visited.length} of 38 lessons visited`;
+  document.getElementById('global-progress-label').textContent = `${visited.length} of 39 lessons visited`;
 }
 
 // ===================== INLINE QUIZ =====================
