@@ -6883,197 +6883,652 @@ axs[1].scatter(X[:,0], X[:,1], c=labels);  axs[1].set_title('Hierarchical k=3')
 </div>
 
 <div class="page" id="page-ul4">
-  <div class="page-header">
-    <div class="chapter-badge">Unsupervised Learning</div>
-    <h1>L4: DBSCAN</h1>
-    <p class="subtitle">Density-Based Spatial Clustering of Applications with Noise — finds clusters of any shape and explicitly labels outliers.</p>
+  <div class="lesson-header">
+    <div class="breadcrumb">Unsupervised Learning · L4</div>
+    <h1>🔵 DBSCAN</h1>
+    <p class="subtitle">Density-Based Spatial Clustering of Applications with Noise — finds clusters of any shape, requires no k upfront, and explicitly identifies outliers</p>
   </div>
 
-  <div class="card">
-    <h2>Why DBSCAN?</h2>
-    <p>K-Means and Hierarchical clustering share two hard limitations:</p>
-    <ul>
-      <li>They force every point into a cluster — outliers get silently absorbed</li>
-      <li>They only find <strong>convex (blob-shaped)</strong> clusters — rings, crescents, and irregular shapes get split incorrectly</li>
+  <h2>Why DBSCAN?</h2>
+  <p>K-Means and Hierarchical clustering share two hard limitations that DBSCAN was designed to fix:</p>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">Problem 1: Forced cluster assignment</p>
+      <p style="margin:0; font-size:0.85rem">K-Means and Hierarchical silently absorb every point into a cluster — even genuine outliers. There is no way to say "this point doesn't belong anywhere."</p>
+    </div>
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">Problem 2: Shape assumptions</p>
+      <p style="margin:0; font-size:0.85rem">Both algorithms assume roughly spherical (blob-shaped) clusters. Rings, crescents, and elongated shapes get incorrectly split into blobs.</p>
+    </div>
+  </div>
+
+  <div class="alert alert-info">
+    <strong>DBSCAN's solution:</strong> define clusters as <em>dense regions of space</em>, separated from other clusters by sparse regions. This allows any shape, explicitly labels genuine outliers as noise (−1), and requires no k upfront.
+  </div>
+
+  <h3>Real-world use cases</h3>
+  <div class="card-grid">
+    <div class="card" style="border-top:3px solid #5b8af5">
+      <div class="badge badge-blue" style="margin-bottom:8px">Anomaly Detection</div>
+      <p style="margin:0; font-size:0.85rem">Fraud detection — fraudulent transactions form sparse outliers (noise = −1) isolated from the dense cluster of normal behaviour. DBSCAN flags them automatically.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #a78bfa">
+      <div class="badge badge-purple" style="margin-bottom:8px">Geospatial</div>
+      <p style="margin:0; font-size:0.85rem">Urban hotspot analysis — city districts, traffic accident clusters, and epidemic outbreak zones form irregular geographic shapes that K-Means cannot capture.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #34d399">
+      <div class="badge badge-green" style="margin-bottom:8px">Image Analysis</div>
+      <p style="margin:0; font-size:0.85rem">Satellite imagery segmentation — forests, water bodies, and urban areas have irregular, non-convex boundaries. DBSCAN traces their true shapes.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #fbbf24">
+      <div class="badge" style="background:rgba(251,191,36,0.15);color:#fbbf24;margin-bottom:8px">Finance</div>
+      <p style="margin:0; font-size:0.85rem">Credit card behaviour clustering — the practical dataset shows DBSCAN identifying a dense "normal usage" cluster with genuine outlier spenders explicitly labelled as noise.</p>
+    </div>
+  </div>
+
+  <h2>The 2 Parameters</h2>
+  <table>
+    <tr><th>Parameter</th><th>What it controls</th><th>Too small</th><th>Too large</th></tr>
+    <tr>
+      <td><code>eps</code> (ε)</td>
+      <td>Search radius — how far to look for neighbours</td>
+      <td>Most points become noise</td>
+      <td>Everything merges into one cluster</td>
+    </tr>
+    <tr>
+      <td><code>min_samples</code></td>
+      <td>Density threshold — minimum neighbours (including self) to be considered dense</td>
+      <td>Everything becomes a core point — noisy clusters</td>
+      <td>Too few cores — most points become noise</td>
+    </tr>
+  </table>
+
+  <div class="card" style="border-left:3px solid var(--accent); margin-top:10px">
+    <p style="margin:0 0 6px; font-weight:600">Starting rules of thumb</p>
+    <ul style="margin:0; font-size:0.85rem; color:var(--text-muted)">
+      <li><strong>min_samples:</strong> start at <code>2 × number of features</code>. For 17 features (credit card data) → <code>min_samples = 34</code>. Increase for noisier data.</li>
+      <li><strong>eps:</strong> plot the nearest-neighbour distance distribution and pick a value in the right tail — where the histogram starts thinning out.</li>
     </ul>
-    <p>DBSCAN solves both. It finds clusters of <strong>any shape</strong>, requires <strong>no k upfront</strong>, and explicitly labels noise points as <strong>-1</strong>.</p>
-    <div class="key-concept">
-      <div class="label">Core Idea</div>
-      <p>A <strong>cluster is a dense region of points, separated from other clusters by sparse regions</strong>. DBSCAN grows clusters by expanding outward from dense areas — not by measuring distance to a centroid.</p>
-    </div>
   </div>
 
-  <div class="card">
-    <h2>The 2 Parameters</h2>
-    <table class="styled-table">
-      <thead><tr><th>Parameter</th><th>What it means</th><th>Too small</th><th>Too large</th></tr></thead>
-      <tbody>
-        <tr><td><code>eps</code> (ε)</td><td>The search radius around each point</td><td>Most points become noise</td><td>Everything merges into one cluster</td></tr>
-        <tr><td><code>min_samples</code></td><td>Minimum neighbours needed inside eps to be "dense"</td><td>Too many cores, noisy clusters</td><td>Too few cores, most points become noise</td></tr>
-      </tbody>
+  <h2>The 3 Point Types</h2>
+  <p>Given eps and min_samples, every point gets exactly one classification:</p>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.84rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:10px 14px; color:var(--text-muted); text-align:left">Type</th>
+        <th style="padding:10px 14px; color:var(--text-muted); text-align:left">Definition</th>
+        <th style="padding:10px 14px; color:var(--text-muted); text-align:left">Role</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:10px 14px"><span style="color:#5b8af5">●</span> <strong>Core point</strong></td>
+        <td style="padding:10px 14px; color:var(--text-muted)">Has ≥ min_samples points (including itself) within radius eps</td>
+        <td style="padding:10px 14px; color:var(--text-muted)">Can <em>start</em> and <em>extend</em> a cluster</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:10px 14px"><span style="color:#f59e0b">●</span> <strong>Border point</strong></td>
+        <td style="padding:10px 14px; color:var(--text-muted)">Fewer than min_samples neighbours, but within eps of a core point</td>
+        <td style="padding:10px 14px; color:var(--text-muted)">Belongs to a cluster but cannot extend it</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 14px"><span style="color:#f87171">✕</span> <strong>Noise point</strong></td>
+        <td style="padding:10px 14px; color:var(--text-muted)">Not within eps of any core point — genuinely isolated</td>
+        <td style="padding:10px 14px; color:#f87171"><strong>Label = −1</strong></td>
+      </tr>
     </table>
-    <div class="key-concept">
-      <div class="label">Starting Rule of Thumb</div>
-      <p><strong>min_samples:</strong> start at <code>2 × number of features</code>. For 10 features → <code>min_samples=20</code>. Increase for noisier data.<br>
-      <strong>eps:</strong> use the nearest-neighbour distance histogram (see below).</p>
-    </div>
   </div>
 
-  <div class="card">
-    <h2>The 3 Point Types</h2>
-    <p>Given eps and min_samples, every point is classified as exactly one of:</p>
-    <table class="styled-table">
-      <thead><tr><th>Type</th><th>Definition</th><th>Label</th></tr></thead>
-      <tbody>
-        <tr><td><strong>Core point</strong></td><td>Has ≥ min_samples neighbours within radius eps (including itself)</td><td>Belongs to a cluster</td></tr>
-        <tr><td><strong>Border point</strong></td><td>Has &lt; min_samples neighbours, but is within eps of a core point</td><td>Belongs to that core's cluster</td></tr>
-        <tr><td><strong>Noise point</strong></td><td>Not within eps of any core point — genuinely isolated</td><td><strong>-1</strong></td></tr>
-      </tbody>
-    </table>
-    <div class="vis-container">
-      <div class="vis-label">Point classification with min_samples = 4</div>
-      <pre style="font-family:monospace; font-size:0.85rem; line-height:1.8; background:var(--bg-secondary); padding:1rem; border-radius:8px; overflow-x:auto;">
-          ┌─── eps radius around A ───┐
-    N     │   •    •    A    •    •   │    B
- (noise)  │        (core point)       │ (border)
-          └───────────────────────────┘
+  <h2>Interactive: DBSCAN Parameter Explorer</h2>
+  <p>Adjust <strong>eps</strong> and <strong>min_samples</strong> to see how every point gets classified in real time. <strong>Core</strong> points (blue) have enough dense neighbours; <strong>border</strong> points (amber) are near a core; <strong>noise</strong> points (red ×) are isolated.</p>
 
-  A: 4 points inside its circle → core
-  B: inside A's circle but &lt;4 of its own → border
-  N: not within eps of any core → noise (label = -1)</pre>
+  <div class="card" style="padding:16px">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:12px">
+      <div>
+        <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px">eps (search radius): <strong id="ul4-eps-val">40</strong>px</label>
+        <input type="range" id="ul4-eps" min="15" max="110" value="40" style="width:100%" oninput="ul4Update()">
+      </div>
+      <div>
+        <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px">min_samples: <strong id="ul4-minsamp-val">4</strong></label>
+        <input type="range" id="ul4-minsamp" min="2" max="9" value="4" style="width:100%" oninput="ul4Update()">
+      </div>
     </div>
+    <canvas id="ul4-param-canvas" width="500" height="270" style="width:100%; max-width:500px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="ul4-param-info" style="margin-top:10px; display:flex; gap:16px; flex-wrap:wrap; font-size:0.8rem; color:var(--text-muted)">
+      <span><span style="color:#5b8af5">●</span> Core: <strong id="ul4-n-core">0</strong></span>
+      <span><span style="color:#f59e0b">●</span> Border: <strong id="ul4-n-border">0</strong></span>
+      <span><span style="color:#f87171">✕</span> Noise: <strong id="ul4-n-noise">0</strong></span>
+      <span>Clusters found: <strong id="ul4-n-clusters" style="color:var(--accent)">0</strong></span>
+    </div>
+    <div style="margin-top:8px; font-size:0.78rem; color:var(--text-muted)">Tip: try eps=40, min_samples=4 for 2 clean clusters. Try eps=110 to see them merge. Try eps=15 to see almost everything become noise.</div>
   </div>
 
-  <div class="card">
-    <h2>How Clusters Form: Reachability</h2>
-    <ul>
-      <li><strong>Directly reachable:</strong> q is within eps of core point p</li>
+  <script>
+  (function(){
+    var PTS=[
+      // Cluster 1 (left blob)
+      {x:88,y:92},{x:115,y:82},{x:132,y:106},{x:95,y:118},{x:120,y:130},{x:142,y:118},
+      {x:104,y:148},{x:82,y:115},{x:158,y:95},{x:145,y:135},
+      // Cluster 2 (right blob)
+      {x:312,y:148},{x:338,y:138},{x:356,y:162},{x:320,y:175},{x:345,y:188},
+      {x:328,y:202},{x:364,y:148},{x:292,y:162},{x:348,y:162},{x:308,y:195},
+      // Noise
+      {x:45,y:235},{x:238,y:45},{x:435,y:82},{x:210,y:220},{x:418,y:248}
+    ];
+    var CLUSTER_COLORS=['#5b8af5','#34d399','#a78bfa','#f59e0b'];
+
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
+
+    function runDBSCAN(eps,minSamp){
+      var n=PTS.length;
+      var counts=new Array(n).fill(0);
+      for(var i=0;i<n;i++)for(var j=0;j<n;j++){
+        var d=Math.hypot(PTS[i].x-PTS[j].x,PTS[i].y-PTS[j].y);
+        if(d<=eps)counts[i]++;
+      }
+      var isCore=counts.map(function(c){return c>=minSamp;});
+      var labels=new Array(n).fill(-2);
+      var cid=0;
+      for(var i=0;i<n;i++){
+        if(!isCore[i]||labels[i]!==-2)continue;
+        var queue=[i];labels[i]=cid;
+        while(queue.length>0){
+          var p=queue.shift();
+          for(var j=0;j<n;j++){
+            if(labels[j]!==-2)continue;
+            var d=Math.hypot(PTS[p].x-PTS[j].x,PTS[p].y-PTS[j].y);
+            if(d<=eps){labels[j]=cid;if(isCore[j])queue.push(j);}
+          }
+        }
+        cid++;
+      }
+      for(var i=0;i<n;i++)if(labels[i]===-2)labels[i]=-1;
+      return{labels,isCore,nClusters:cid};
+    }
+
+    window.ul4Update=function(){
+      var canvas=document.getElementById('ul4-param-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var eps=parseInt(document.getElementById('ul4-eps').value);
+      var ms=parseInt(document.getElementById('ul4-minsamp').value);
+      document.getElementById('ul4-eps-val').textContent=eps;
+      document.getElementById('ul4-minsamp-val').textContent=ms;
+      var res=runDBSCAN(eps,ms);
+      var labels=res.labels,isCore=res.isCore;
+
+      ctx.clearRect(0,0,500,270);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,500,270);
+      // grid
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<500;gx+=32)for(var gy=20;gy<270;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+
+      // Draw eps circles for core points
+      PTS.forEach(function(p,i){
+        if(!isCore[i])return;
+        var col=labels[i]>=0?CLUSTER_COLORS[labels[i]%CLUSTER_COLORS.length]:'#64748b';
+        ctx.beginPath();ctx.arc(p.x,p.y,eps,0,6.28);
+        ctx.fillStyle=hexRgba(col,0.04);ctx.fill();
+        ctx.strokeStyle=hexRgba(col,0.2);ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+      });
+
+      // Draw points
+      var nCore=0,nBorder=0,nNoise=0;
+      PTS.forEach(function(p,i){
+        var lbl=labels[i];
+        var col=lbl>=0?CLUSTER_COLORS[lbl%CLUSTER_COLORS.length]:'#f87171';
+        if(lbl===-1){nNoise++;
+          // Noise: X marker
+          ctx.strokeStyle='#f87171';ctx.lineWidth=2.5;
+          ctx.beginPath();ctx.moveTo(p.x-7,p.y-7);ctx.lineTo(p.x+7,p.y+7);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(p.x+7,p.y-7);ctx.lineTo(p.x-7,p.y+7);ctx.stroke();
+        } else if(isCore[i]){nCore++;
+          // Core: full filled circle + glow
+          ctx.beginPath();ctx.arc(p.x,p.y,11,0,6.28);ctx.fillStyle=hexRgba(col,0.2);ctx.fill();
+          ctx.beginPath();ctx.arc(p.x,p.y,7,0,6.28);ctx.fillStyle=col;ctx.fill();
+          ctx.strokeStyle='#0d1117';ctx.lineWidth=1.5;ctx.stroke();
+        } else {nBorder++;
+          // Border: hollow with border color
+          ctx.beginPath();ctx.arc(p.x,p.y,7,0,6.28);
+          ctx.fillStyle=hexRgba(col,0.35);ctx.fill();
+          ctx.strokeStyle='#f59e0b';ctx.lineWidth=2;ctx.stroke();
+        }
+      });
+      document.getElementById('ul4-n-core').textContent=nCore;
+      document.getElementById('ul4-n-border').textContent=nBorder;
+      document.getElementById('ul4-n-noise').textContent=nNoise;
+      document.getElementById('ul4-n-clusters').textContent=res.nClusters;
+    };
+    ul4Update();
+  })();
+  </script>
+
+  <h2>How Clusters Form: Reachability</h2>
+  <div class="card" style="border-left:3px solid var(--accent)">
+    <ul style="margin:0; font-size:0.87rem; line-height:2; color:var(--text-muted); padding-left:18px">
+      <li><strong>Directly reachable:</strong> point q is within eps of core point p → q is directly reachable from p</li>
       <li><strong>Reachable:</strong> there is a chain of directly-reachable steps from p to q (all intermediate points must be core points)</li>
-      <li><strong>Cluster:</strong> all points reachable from a core point form one cluster</li>
+      <li><strong>Connected:</strong> p and q are density-connected if there exists a point o such that both p and q are reachable from o</li>
+      <li><strong>Cluster:</strong> the maximal set of density-connected points</li>
     </ul>
-    <p>Border points <em>belong</em> to a cluster but cannot <em>extend</em> it — they are endpoints in the chain, not stepping stones.</p>
-    <div class="key-concept">
-      <div class="label">Noise Point Exception</div>
-      <p>A point labelled noise early on can be "rescued" later — if a different core point's expansion reaches it, it becomes a border point. Labels can change during the full sweep.</p>
-    </div>
+    <p style="margin:10px 0 0; font-size:0.84rem; color:var(--text-muted)"><strong>Key insight:</strong> border points <em>belong</em> to a cluster but cannot <em>extend</em> it — they terminate the chain. A point initially labelled noise can later be absorbed if a core point's expansion reaches it.</p>
   </div>
 
-  <div class="card">
-    <h2>The Algorithm (Step by Step)</h2>
-    <ol>
-      <li>Pick any unvisited point</li>
-      <li>Count all neighbours within eps</li>
-      <li>If neighbours ≥ min_samples → <strong>core point</strong> → start/extend a cluster, add all neighbours, recursively expand from each neighbour</li>
-      <li>If neighbours &lt; min_samples and not reachable from any core → label <strong>noise (-1)</strong></li>
-      <li>Repeat until all points have been visited</li>
+  <h2>The Algorithm</h2>
+  <div class="card" style="border-left:3px solid var(--accent)">
+    <ol style="margin:0; font-size:0.88rem; line-height:2.1; color:var(--text-muted); padding-left:20px">
+      <li>Pick any <strong>unvisited</strong> point p. Mark it visited.</li>
+      <li>Count all points within distance eps of p (including p itself).</li>
+      <li>If count ≥ min_samples → p is a <strong>core point</strong> → start a new cluster. Add all eps-neighbours to the cluster. For each neighbour that is also a core point, recursively expand.</li>
+      <li>If count &lt; min_samples and p is not reachable from any core → mark p as <strong>noise (−1)</strong>.</li>
+      <li>Repeat until all points are visited.</li>
     </ol>
-    <p>No random initialisation — the algorithm is fully deterministic. Run it twice on the same data and you get the same result.</p>
+    <p style="margin:12px 0 0; font-size:0.82rem; color:var(--text-muted)">No random initialisation — algorithm is <strong>fully deterministic</strong>. Order of point visits can affect border point assignments but not cluster structure.</p>
   </div>
 
-  <div class="card">
-    <h2>Choosing eps: Nearest-Neighbour Histogram</h2>
-    <p>Before fitting DBSCAN, measure how far each point is from its closest neighbour. This reveals what "typical distance" looks like in your scaled data space.</p>
-    <div class="code-block"><pre><span class="kw">from</span> sklearn.metrics.pairwise <span class="kw">import</span> pairwise_distances
-<span class="kw">import</span> numpy <span class="kw">as</span> np
-<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+  <h2>Interactive: DBSCAN vs K-Means on Non-Convex Data</h2>
+  <p>The most dramatic difference between DBSCAN and K-Means is on <strong>non-convex cluster shapes</strong>. Below: an outer ring and an inner blob. K-Means (k=2) splits the ring down the middle; DBSCAN finds the true structure. Toggle to compare.</p>
 
-<span class="cm"># n × n distance matrix — every point vs every other point</span>
-all_distances = pairwise_distances(X_scaled, metric=<span class="st">'euclidean'</span>)
-
-<span class="cm"># For each point, find distance to nearest neighbour (exclude self = 0)</span>
-neig_distances = [np.min(row[np.nonzero(row)]) <span class="kw">for</span> row <span class="kw">in</span> all_distances]
-
-<span class="cm"># np.nonzero(row) returns indices where row != 0 (excludes the 0.0 self-distance)</span>
-<span class="cm"># np.min(...) picks the smallest remaining distance = nearest neighbour</span>
-
-plt.hist(neig_distances, bins=<span class="num">100</span>)
-plt.xlabel(<span class="st">'Distance to nearest neighbour'</span>)
-plt.ylabel(<span class="st">'Count'</span>)
-plt.show()</pre></div>
-    <div class="vis-container">
-      <div class="vis-label">How to read the histogram</div>
-      <pre style="font-family:monospace; font-size:0.85rem; line-height:1.8; background:var(--bg-secondary); padding:1rem; border-radius:8px;">
- Count
-   │ ████
-   │ ████████
-   │ ████████████
-   │ ████████████████
-   │ ████████████████████▄▄___
-   └────────────────────────────→ distance
-      dense region here   ↑
-                    pick eps in the right tail</pre>
+  <div class="card" style="padding:16px">
+    <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap">
+      <button class="btn btn-outline" id="ul4-kmeans-btn" onclick="ul4ShowMode('kmeans')" style="border-color:#f87171;color:#f87171">K-Means (k=2) — fails</button>
+      <button class="btn btn-primary" id="ul4-dbscan-btn" onclick="ul4ShowMode('dbscan')">DBSCAN — succeeds</button>
     </div>
-    <p>Pick eps at the <strong>right tail</strong> — where the histogram thins out. Start slightly high and tune downward. Too low → almost everything becomes noise. Too high → everything merges into one cluster.</p>
-    <div class="key-concept">
-      <div class="label">O(n²) Warning</div>
-      <p><code>pairwise_distances</code> computes n × n distances. For 8,636 points that is ~74 million calculations — fine here, but too slow for 100k+ rows. For large data, use <code>sklearn.neighbors.NearestNeighbors(n_neighbors=2).fit(X)</code> instead — it only finds the nearest k neighbours, not all pairwise distances.</p>
-    </div>
+    <canvas id="ul4-shape-canvas" width="500" height="280" style="width:100%; max-width:500px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="ul4-shape-desc" style="margin-top:10px; padding:8px 12px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.82rem; color:var(--text-muted); min-height:36px">DBSCAN (eps=48, min_samples=3): correctly identifies the inner blob as one cluster and the outer ring as another. Noise points (×) are genuine outliers.</div>
   </div>
 
-  <div class="card">
-    <h2>Full sklearn Workflow</h2>
-    <div class="code-block"><pre><span class="kw">from</span> sklearn.cluster <span class="kw">import</span> DBSCAN
-<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
-<span class="kw">from</span> sklearn.decomposition <span class="kw">import</span> PCA
-<span class="kw">import</span> numpy <span class="kw">as</span> np
-<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+  <script>
+  (function(){
+    var CX=250,CY=140;
+    // Generate inner blob (10 points, radius 45)
+    var inner=[];
+    for(var i=0;i<10;i++){var a=(i/10)*2*Math.PI;inner.push({x:CX+45*Math.cos(a),y:CY+45*Math.sin(a)});}
+    // Generate outer ring (18 points, radius 108)
+    var outer=[];
+    for(var i=0;i<18;i++){var a=(i/18)*2*Math.PI;outer.push({x:CX+108*Math.cos(a),y:CY+108*Math.sin(a)});}
+    // Noise points
+    var noise=[{x:55,y:55},{x:445,y:55},{x:55,y:240},{x:445,y:240},{x:250,y:258}];
+    var ALL=inner.concat(outer).concat(noise);
 
-<span class="cm"># 1. Scale — eps is a distance, so raw scales dominate without this</span>
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
+
+    // Run real DBSCAN in JS
+    function runDBSCAN(pts,eps,ms){
+      var n=pts.length;
+      var counts=new Array(n).fill(0);
+      for(var i=0;i<n;i++)for(var j=0;j<n;j++)if(Math.hypot(pts[i].x-pts[j].x,pts[i].y-pts[j].y)<=eps)counts[i]++;
+      var isCore=counts.map(function(c){return c>=ms;});
+      var labels=new Array(n).fill(-2);var cid=0;
+      for(var i=0;i<n;i++){
+        if(!isCore[i]||labels[i]!==-2)continue;
+        var q=[i];labels[i]=cid;
+        while(q.length>0){var p=q.shift();
+          for(var j=0;j<n;j++){if(labels[j]!==-2)continue;
+            if(Math.hypot(pts[p].x-pts[j].x,pts[p].y-pts[j].y)<=eps){labels[j]=cid;if(isCore[j])q.push(j);}}
+        }cid++;
+      }
+      for(var i=0;i<n;i++)if(labels[i]===-2)labels[i]=-1;
+      return{labels,isCore};
+    }
+
+    // K-Means simulation (run simplified Lloyd's)
+    function runKMeans(pts,k){
+      // Init centroids: split roughly left-right
+      var cents=[{x:CX-70,y:CY},{x:CX+70,y:CY}];
+      var labels=new Array(pts.length).fill(0);
+      for(var iter=0;iter<20;iter++){
+        // Assign
+        for(var i=0;i<pts.length;i++){
+          var best=0,bd=Infinity;
+          for(var c=0;c<k;c++){var d=Math.hypot(pts[i].x-cents[c].x,pts[i].y-cents[c].y);if(d<bd){bd=d;best=c;}}
+          labels[i]=best;
+        }
+        // Update centroids
+        for(var c=0;c<k;c++){
+          var sx=0,sy=0,cnt=0;
+          for(var i=0;i<pts.length;i++)if(labels[i]===c){sx+=pts[i].x;sy+=pts[i].y;cnt++;}
+          if(cnt>0){cents[c]={x:sx/cnt,y:sy/cnt};}
+        }
+      }
+      return labels;
+    }
+
+    var dbRes=runDBSCAN(ALL,48,3);
+    var kmLabels=runKMeans(ALL,2);
+    var COLORS=['#5b8af5','#34d399','#a78bfa'];
+    var KCOLORS=['#f87171','#fbbf24'];
+    var mode='dbscan';
+
+    function draw(){
+      var canvas=document.getElementById('ul4-shape-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      ctx.clearRect(0,0,500,280);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,500,280);
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<500;gx+=32)for(var gy=20;gy<280;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+
+      if(mode==='dbscan'){
+        var labels=dbRes.labels,isCore=dbRes.isCore;
+        // eps circles for core
+        ALL.forEach(function(p,i){
+          if(!isCore[i]||labels[i]<0)return;
+          var col=COLORS[labels[i]%COLORS.length];
+          ctx.beginPath();ctx.arc(p.x,p.y,48,0,6.28);
+          ctx.fillStyle=hexRgba(col,0.04);ctx.fill();
+        });
+        ALL.forEach(function(p,i){
+          var lbl=labels[i];
+          if(lbl===-1){
+            ctx.strokeStyle='#64748b';ctx.lineWidth=2;
+            ctx.beginPath();ctx.moveTo(p.x-6,p.y-6);ctx.lineTo(p.x+6,p.y+6);ctx.stroke();
+            ctx.beginPath();ctx.moveTo(p.x+6,p.y-6);ctx.lineTo(p.x-6,p.y+6);ctx.stroke();
+          } else {
+            var col=COLORS[lbl%COLORS.length];
+            ctx.beginPath();ctx.arc(p.x,p.y,isCore[i]?8:6,0,6.28);
+            ctx.fillStyle=isCore[i]?col:hexRgba(col,0.55);ctx.fill();
+            ctx.strokeStyle='#0d1117';ctx.lineWidth=1.5;ctx.stroke();
+          }
+        });
+      } else {
+        // K-Means
+        ALL.forEach(function(p,i){
+          var col=KCOLORS[kmLabels[i]%2];
+          ctx.beginPath();ctx.arc(p.x,p.y,8,0,6.28);
+          ctx.fillStyle=col;ctx.fill();
+          ctx.strokeStyle='#0d1117';ctx.lineWidth=1.5;ctx.stroke();
+        });
+        // Draw K-Means centroids
+        var c0x=0,c0y=0,c0n=0,c1x=0,c1y=0,c1n=0;
+        ALL.forEach(function(p,i){if(kmLabels[i]===0){c0x+=p.x;c0y+=p.y;c0n++;}else{c1x+=p.x;c1y+=p.y;c1n++;}});
+        [[c0x/c0n,c0y/c0n,KCOLORS[0]],[c1x/c1n,c1y/c1n,KCOLORS[1]]].forEach(function(a){
+          ctx.beginPath();ctx.arc(a[0],a[1],12,0,6.28);
+          ctx.fillStyle='#0d1117';ctx.fill();ctx.strokeStyle=a[2];ctx.lineWidth=3;ctx.stroke();
+          ctx.fillStyle=a[2];ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillText('×',a[0],a[1]);
+        });
+      }
+
+      // Legend
+      if(mode==='dbscan'){
+        [[COLORS[0],'Inner blob (cluster 0)'],[COLORS[1],'Outer ring (cluster 1)'],['#64748b','Noise (−1)']].forEach(function(a,i){
+          ctx.beginPath();ctx.arc(14,14+i*20,5,0,6.28);ctx.fillStyle=a[0];ctx.fill();
+          ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='10px sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
+          ctx.fillText(a[1],24,14+i*20);
+        });
+      } else {
+        [[KCOLORS[0],'Cluster 0 (wrong — splits ring!)'],[KCOLORS[1],'Cluster 1 (wrong — splits ring!)']].forEach(function(a,i){
+          ctx.beginPath();ctx.arc(14,14+i*20,5,0,6.28);ctx.fillStyle=a[0];ctx.fill();
+          ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='10px sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
+          ctx.fillText(a[1],24,14+i*20);
+        });
+      }
+    }
+
+    var DESCS={
+      dbscan:'DBSCAN (eps=48, min_samples=3): correctly identifies the inner blob as one cluster and the outer ring as another. Noise points (×) are genuine outliers not forced into any cluster.',
+      kmeans:'K-Means (k=2): places centroids (×) near the left and right of the ring, splitting it in two halves. The inner cluster gets absorbed into one half. This is completely wrong — K-Means assumes spherical clusters.'
+    };
+    window.ul4ShowMode=function(m){
+      mode=m;
+      document.getElementById('ul4-shape-desc').textContent=DESCS[m];
+      document.getElementById('ul4-kmeans-btn').style.fontWeight=m==='kmeans'?'700':'400';
+      document.getElementById('ul4-dbscan-btn').style.fontWeight=m==='dbscan'?'700':'400';
+      draw();
+    };
+    draw();
+  })();
+  </script>
+
+  <h2>Data Preprocessing</h2>
+  <p>DBSCAN uses Euclidean distance for its epsilon neighbourhood checks, so preprocessing choices directly control which points are classified as core, border, or noise.</p>
+
+  <h3>1. Feature Scaling — mandatory</h3>
+  <p>Without scaling, features with large magnitudes (e.g. £40,000 credit limit) dominate distance calculations over smaller features (e.g. 0–1 frequency scores). Always scale before fitting DBSCAN.</p>
+  <div class="code-block"><pre><code>from sklearn.preprocessing import StandardScaler
+
 scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+X_scaled = scaler.fit_transform(df)          # z-score: mean=0, std=1
+# Fit on train, transform train and any future data separately</code></pre></div>
 
-<span class="cm"># 2. Fit DBSCAN</span>
-db = DBSCAN(eps=<span class="num">0.5</span>, min_samples=<span class="num">10</span>)
+  <h3>2. Missing Values</h3>
+  <div class="code-block"><pre><code># Drop rows with missing values (if &lt; 5% of dataset)
+df.dropna(inplace=True)
+
+# Or impute with median before scaling
+from sklearn.impute import SimpleImputer
+X_imputed = SimpleImputer(strategy='median').fit_transform(X)</code></pre></div>
+
+  <h3>3. Handling Skewed / Outlier-Heavy Columns</h3>
+  <p>The credit card practical had extreme outliers (max purchases = £49,039 vs mean = £1,025). Binning skewed columns to categories and replacing with medians reduced the outlier effect:</p>
+  <div class="code-block"><pre><code># Bin a skewed column into 6 value ranges, then replace with median of each bin
+def bin_to_median(series):
+    bins = [0, 500, 1000, 3000, 5000, 10000, float('inf')]
+    labels = range(len(bins)-1)
+    binned = pd.cut(series, bins=bins, labels=labels, include_lowest=True)
+    for b in labels:
+        med = series[binned == b].median()
+        series = series.mask(binned == b, med)
+    return series
+
+skewed_cols = ['BALANCE','PURCHASES','CASH_ADVANCE','CREDIT_LIMIT','PAYMENTS']
+for col in skewed_cols:
+    df[col] = bin_to_median(df[col])</code></pre></div>
+
+  <h3>4. Dimensionality Reduction (recommended for d > 15)</h3>
+  <p>In high dimensions all pairwise distances converge to similar values — eps becomes meaningless. Apply PCA first:</p>
+  <div class="code-block"><pre><code>from sklearn.decomposition import PCA
+
+pca = PCA(n_components=0.95)        # keep 95% of variance
+X_pca = pca.fit_transform(X_scaled)
+# Then run DBSCAN on X_pca (typically much fewer dimensions)</code></pre></div>
+
+  <h2>Choosing eps — the KNN Distance Plot</h2>
+  <p>Before fitting, measure how far each point is from its nearest neighbour. The right tail of this distribution shows where density transitions from "dense cluster" to "sparse noise region" — that is your starting eps.</p>
+  <div class="code-block"><pre><code>from sklearn.metrics.pairwise import pairwise_distances
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Compute n×n pairwise distance matrix (n=8,636 → ~74M calculations)
+all_distances = pairwise_distances(X_scaled, metric='euclidean')
+
+# For each point, the distance to its nearest neighbour (exclude self = 0)
+neig_distances = [np.min(row[np.nonzero(row)]) for row in all_distances]
+
+plt.hist(neig_distances, bins=100, density=True)
+plt.xlabel('Distance to nearest neighbour')
+plt.ylabel('Density')
+plt.title('KNN Distance Distribution — pick eps in the right tail')
+plt.axvline(x=2.0, color='red', linestyle='--', label='candidate eps=2.0')
+plt.legend()
+plt.show()</code></pre></div>
+
+  <div class="alert alert-warn">
+    <strong>O(n²) warning:</strong> <code>pairwise_distances</code> computes all n×n distances. For 8,636 points → ~74M calculations — fine. For 100k+ points, use <code>sklearn.neighbors.NearestNeighbors(n_neighbors=2).fit(X)</code> instead — it only finds the k nearest neighbours, not all pairwise distances.
+  </div>
+
+  <h2>Full sklearn Workflow</h2>
+  <h3>Credit card customer clustering (from the practical)</h3>
+  <div class="code-block"><pre><code>import numpy as np, pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import DBSCAN
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.metrics.pairwise import pairwise_distances
+
+# ── 1. Load data ─────────────────────────────────────────────
+df = pd.read_csv('CC GENERAL.csv').drop('CUST_ID', axis=1)
+df.dropna(inplace=True)   # drop 314 rows with missing MINIMUM_PAYMENTS
+
+# ── 2. Scale ─────────────────────────────────────────────────
+X_scaled = StandardScaler().fit_transform(df)
+
+# ── 3. Find eps via nearest-neighbour distances ───────────────
+all_d = pairwise_distances(X_scaled, metric='euclidean')
+neig_d = [np.min(row[np.nonzero(row)]) for row in all_d]
+# Inspect histogram → right tail starts around eps=2.0
+
+# ── 4. Fit DBSCAN ─────────────────────────────────────────────
+# Rule of thumb: min_samples = 2 × features = 2 × 17 = 34
+db = DBSCAN(eps=2, min_samples=34)
 labels = db.fit_predict(X_scaled)
 
-<span class="cm"># 3. Summarise results</span>
-n_clusters = len(set(labels)) - (<span class="num">1</span> <span class="kw">if</span> -<span class="num">1</span> <span class="kw">in</span> labels <span class="kw">else</span> <span class="num">0</span>)
-n_noise    = (labels == -<span class="num">1</span>).sum()
-print(<span class="st">f"Clusters: {n_clusters},  Noise points: {n_noise} ({n_noise/len(labels)*100:.1f}%)"</span>)
+# ── 5. Summarise ─────────────────────────────────────────────
+n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+n_noise = (labels == -1).sum()
+print(f"Clusters: {n_clusters},  Noise: {n_noise} ({n_noise/len(labels)*100:.1f}%)")
+# → Clusters: 1,  Noise: X   (initial params often give 1 big cluster + noise)
 
-<span class="cm"># 4. Visualise via PCA (reduce to 2D for plotting)</span>
-X_2d = PCA(n_components=<span class="num">2</span>).fit_transform(X_scaled)
-plt.scatter(X_2d[:, <span class="num">0</span>], X_2d[:, <span class="num">1</span>], c=labels, s=<span class="num">5</span>, cmap=<span class="st">'tab10'</span>)
-plt.colorbar(label=<span class="st">'Cluster  (-1 = noise)'</span>)
-plt.title(<span class="st">'DBSCAN clusters (PCA projection)'</span>)
-plt.show()</pre></div>
-    <div class="key-concept">
-      <div class="label">Why clusters can overlap in the PCA plot</div>
-      <p>DBSCAN separates points in the <strong>full feature space</strong> (all dimensions). PCA compresses that to 2D — dimensions are lost. Points that are well-separated in high-D can appear at the same position in 2D. The clustering is still valid; the plot just cannot show the full separation.</p>
-    </div>
+# ── 6. Visualise via PCA ──────────────────────────────────────
+X_2d = PCA(n_components=2).fit_transform(X_scaled)
+plt.scatter(X_2d[:,0], X_2d[:,1], c=labels, s=5, cmap='tab10')
+plt.colorbar(label='Cluster  (−1 = noise)')
+plt.title('DBSCAN on credit card data (PCA projection)')
+plt.show()</code></pre></div>
+
+  <div class="alert alert-info">
+    <strong>Practical finding:</strong> With initial params (eps=2, min_samples=34) on the full 17-feature dataset, DBSCAN found 1 cluster + noise. Switching to outlier-handled data (binned columns, eps=1.1) revealed 5 meaningful clusters — demonstrating how sensitive results are to preprocessing and parameter choice.
   </div>
 
-  <div class="card">
-    <h2>DBSCAN vs K-Means vs Hierarchical</h2>
-    <table class="styled-table">
-      <thead><tr><th></th><th>K-Means</th><th>Hierarchical</th><th>DBSCAN</th></tr></thead>
-      <tbody>
-        <tr><td><strong>Need k upfront?</strong></td><td>Yes</td><td>No (dendrogram)</td><td>No</td></tr>
-        <tr><td><strong>Cluster shapes</strong></td><td>Spherical only</td><td>Any (Ward ≈ spherical)</td><td>Any shape</td></tr>
-        <tr><td><strong>Handles outliers?</strong></td><td>No — absorbs them</td><td>No — absorbs them</td><td>Yes — labels as -1</td></tr>
-        <tr><td><strong>Deterministic?</strong></td><td>No (random init)</td><td>Yes</td><td>Yes</td></tr>
-        <tr><td><strong>Speed</strong></td><td>O(n·k·t) — fast</td><td>O(n²)–O(n³)</td><td>O(n²) naive</td></tr>
-        <tr><td><strong>Best for</strong></td><td>Known k, clean data, blobs, large datasets</td><td>Exploration, taxonomy, small data</td><td>Irregular shapes, anomaly detection, noisy data</td></tr>
-      </tbody>
+  <h3>Using PCA to improve clustering in high dimensions</h3>
+  <div class="code-block"><pre><code># Apply PCA first, then DBSCAN on the 2D projection
+pca = PCA(n_components=2)
+X_principal = pca.fit_transform(X_scaled)
+
+# The 2D PCA space is denser than the 17D space, so eps needs to be smaller
+db_pca = DBSCAN(eps=2, min_samples=34)
+pca_labels = db_pca.fit_predict(X_principal)
+
+print(np.unique(pca_labels))
+# → Typically assigns nearly all points to one cluster (PCA space is denser)
+
+# On outlier-handled data with eps=1.1: finds 5 clusters
+db2 = DBSCAN(eps=1.1, min_samples=34)
+labels2 = db2.fit_predict(scaled_cat_df)
+print(pd.Series(labels2).value_counts())
+# cluster 0: 3794 | cluster 2: 137 | cluster 4: 58 | noise(-1): 4563</code></pre></div>
+
+  <h2>Evaluation Methods</h2>
+  <p>DBSCAN outputs vary widely with parameters. Use multiple signals to assess quality.</p>
+
+  <h3>1. Noise fraction — a key diagnostic</h3>
+  <p>Too many noise points (&gt;50%) suggests eps is too small. Too few (&lt;1%) suggests eps is too large and outliers are being absorbed into clusters.</p>
+  <div class="code-block"><pre><code>noise_fraction = (labels == -1).sum() / len(labels)
+print(f"Noise fraction: {noise_fraction:.1%}")
+# Aim for a noise fraction that makes domain sense
+# For fraud detection: 5–15% noise may be expected
+# For customer segmentation: &lt;20% noise is usually appropriate</code></pre></div>
+
+  <h3>2. Silhouette Score (excluding noise)</h3>
+  <div class="code-block"><pre><code>from sklearn.metrics import silhouette_score
+
+# Exclude noise points — they have no cluster to compare against
+mask = labels != -1
+if mask.sum() &gt; 1 and len(set(labels[mask])) &gt; 1:
+    score = silhouette_score(X_scaled[mask], labels[mask])
+    print(f"Silhouette (non-noise): {score:.3f}")
+# &gt; 0.5 = good separation; &lt; 0.25 = clusters overlap heavily</code></pre></div>
+
+  <h3>3. Parameter sensitivity — sweep eps</h3>
+  <div class="code-block"><pre><code>for eps in [0.5, 1.0, 1.5, 2.0, 3.0]:
+    lbl = DBSCAN(eps=eps, min_samples=34).fit_predict(X_scaled)
+    nc = len(set(lbl)) - (1 if -1 in lbl else 0)
+    nn = (lbl==-1).sum()
+    print(f"eps={eps:.1f}: {nc} clusters, {nn} noise ({nn/len(lbl)*100:.0f}%)")
+# Watch for the "knee" where cluster count stabilises</code></pre></div>
+
+  <h2>DBSCAN vs K-Means vs Hierarchical</h2>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:10px 14px; color:var(--text-muted); text-align:left"></th>
+        <th style="padding:10px 14px; color:#5b8af5; text-align:center">K-Means</th>
+        <th style="padding:10px 14px; color:#34d399; text-align:center">Hierarchical</th>
+        <th style="padding:10px 14px; color:#a78bfa; text-align:center">DBSCAN</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; font-weight:600">Need k upfront?</td>
+        <td style="padding:9px 14px; color:#f87171; text-align:center">Yes</td>
+        <td style="padding:9px 14px; color:#fbbf24; text-align:center">No (cut dendrogram)</td>
+        <td style="padding:9px 14px; color:#34d399; text-align:center">No</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; font-weight:600">Cluster shapes</td>
+        <td style="padding:9px 14px; color:#f87171; text-align:center">Spherical only</td>
+        <td style="padding:9px 14px; color:#fbbf24; text-align:center">Ward ≈ spherical</td>
+        <td style="padding:9px 14px; color:#34d399; text-align:center">Any shape</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; font-weight:600">Handles outliers?</td>
+        <td style="padding:9px 14px; color:#f87171; text-align:center">Silently absorbs</td>
+        <td style="padding:9px 14px; color:#f87171; text-align:center">Silently absorbs</td>
+        <td style="padding:9px 14px; color:#34d399; text-align:center">Labels as −1</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; font-weight:600">Deterministic?</td>
+        <td style="padding:9px 14px; color:#f87171; text-align:center">No (random init)</td>
+        <td style="padding:9px 14px; color:#34d399; text-align:center">Yes</td>
+        <td style="padding:9px 14px; color:#34d399; text-align:center">Yes</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; font-weight:600">Speed</td>
+        <td style="padding:9px 14px; color:#34d399; text-align:center">O(n·k·t) — fast</td>
+        <td style="padding:9px 14px; color:#fbbf24; text-align:center">O(n² log n)</td>
+        <td style="padding:9px 14px; color:#fbbf24; text-align:center">O(n²) naive; O(n log n) with index</td>
+      </tr>
+      <tr>
+        <td style="padding:9px 14px; font-weight:600">Best for</td>
+        <td style="padding:9px 14px; color:var(--text-muted); text-align:center">Known k, clean blobs, large n</td>
+        <td style="padding:9px 14px; color:var(--text-muted); text-align:center">Exploration, taxonomy, small n</td>
+        <td style="padding:9px 14px; color:var(--text-muted); text-align:center">Irregular shapes, anomaly detection, noisy data</td>
+      </tr>
     </table>
   </div>
 
-  <div class="card">
-    <h2>Pros and Cons</h2>
-    <table class="styled-table">
-      <thead><tr><th>Pros</th><th>Cons</th></tr></thead>
-      <tbody>
-        <tr><td>No k needed — discovers number of clusters from data density</td><td>eps and min_samples are hard to tune without domain knowledge</td></tr>
-        <tr><td>Finds clusters of any shape</td><td>Struggles with clusters of <strong>varying density</strong> — one global eps cannot fit all</td></tr>
-        <tr><td>Explicitly marks outliers as -1</td><td>O(n²) distance computation — slow on large datasets</td></tr>
-        <tr><td>Deterministic — same result every run</td><td>Must scale features — eps is distance-sensitive</td></tr>
-        <tr><td>Robust to input outliers (does not pull clusters toward them)</td><td>High dimensionality: all distances become similar (curse of dimensionality)</td></tr>
-      </tbody>
+  <h2>HDBSCAN — the Next Step</h2>
+  <div class="card" style="border-left:3px solid #a78bfa">
+    <p style="margin:0 0 8px; font-weight:600; color:#a78bfa">Hierarchical DBSCAN</p>
+    <p style="margin:0 0 8px; font-size:0.87rem; color:var(--text-muted)">DBSCAN's biggest weakness is that a single global eps cannot handle clusters of <strong>varying density</strong> — it either misses sparse clusters or merges dense ones. HDBSCAN fixes this by running DBSCAN at all eps values simultaneously and extracting the most stable clusters.</p>
+    <ul style="margin:0; font-size:0.85rem; color:var(--text-muted)">
+      <li>Only one meaningful parameter: <code>min_cluster_size</code></li>
+      <li>Handles clusters of different densities in the same dataset</li>
+      <li>Available in sklearn ≥ 1.3: <code>sklearn.cluster.HDBSCAN</code></li>
+    </ul>
+    <div class="code-block" style="margin-top:12px"><pre><code>from sklearn.cluster import HDBSCAN
+
+hdb = HDBSCAN(min_cluster_size=50, min_samples=5)
+labels = hdb.fit_predict(X_scaled)
+# Soft clustering also available: hdb.probabilities_ gives membership confidence</code></pre></div>
+  </div>
+
+  <h2>Pros and Cons</h2>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.84rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:10px 14px; color:#34d399; text-align:left">✅ Pros</th>
+        <th style="padding:10px 14px; color:#f87171; text-align:left">❌ Cons</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; color:var(--text-muted)">No k needed — cluster count emerges from the data</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">eps and min_samples are hard to tune without domain knowledge</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; color:var(--text-muted)">Finds clusters of any shape — rings, crescents, elongated blobs</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">Struggles with clusters of <strong>varying density</strong> — one eps cannot fit all (use HDBSCAN)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; color:var(--text-muted)">Explicitly marks outliers as −1 — great for anomaly detection</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">O(n²) pairwise distances — slow for n &gt; 50,000 without a spatial index</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; color:var(--text-muted)">Fully deterministic — same result on every run</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">Must scale features before running — eps is distance-sensitive</td>
+      </tr>
+      <tr>
+        <td style="padding:9px 14px; color:var(--text-muted)">Robust to outliers — they don't pull cluster centroids off-centre</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">High dimensions: all distances become similar (curse of dimensionality) — apply PCA first</td>
+      </tr>
     </table>
-    <div class="key-concept">
-      <div class="label">HDBSCAN — the next step</div>
-      <p>HDBSCAN (Hierarchical DBSCAN) allows eps to vary across the data — it finds clusters of different densities simultaneously and requires only one parameter (min_samples). Available via the <code>hdbscan</code> package and sklearn ≥ 1.3 (<code>sklearn.cluster.HDBSCAN</code>).</p>
-    </div>
+  </div>
+
+  <div class="alert alert-info">
+    <strong>Rule of thumb:</strong> Use DBSCAN when you suspect irregular cluster shapes, have known outliers to detect, or want the number of clusters to emerge from the data. For n &gt; 50,000, use a spatial index (<code>algorithm='ball_tree'</code> or <code>'kd_tree'</code> in sklearn) or switch to HDBSCAN.
   </div>
 
   <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-ul4"></div></div>
