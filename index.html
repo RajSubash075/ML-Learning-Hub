@@ -57,8 +57,8 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 .nav-chapter-items.collapsed { display: none; }
 
 /* MAIN */
-#main { margin-left: 260px; height: 100vh; overflow-y: auto; background: var(--bg); }
-.page { display: none; padding: 32px 40px; max-width: 900px; }
+#main { margin-left: 260px; width: calc(100% - 260px); height: 100vh; overflow-y: auto; background: var(--bg); }
+.page { display: none; padding: 32px 40px; width: 100%; }
 .page.active { display: block; }
 
 /* TYPOGRAPHY */
@@ -6172,253 +6172,706 @@ print(<span class="str">f'Silhouette: {score:.3f}'</span>)
   <div class="lesson-header">
     <div class="breadcrumb">Unsupervised Learning · L3</div>
     <h1>🌳 Hierarchical Clustering</h1>
-    <p class="subtitle">Building a tree of nested clusters — no need to choose k upfront, and the dendrogram reveals structure at every level</p>
+    <p class="subtitle">Building a tree of nested clusters — no need to choose k upfront, and the dendrogram reveals multi-level structure in a single run</p>
+  </div>
+
+  <h2>What is Hierarchical Clustering?</h2>
+  <p>Hierarchical clustering groups data into a <strong>tree of nested clusters</strong>. Unlike K-Means (which gives flat labels), it produces a complete hierarchy — you can zoom in to see fine sub-groups, or zoom out for a high-level view, all from a single algorithm run. The key output is a <strong>dendrogram</strong>: a tree diagram showing every merge the algorithm performed.</p>
+
+  <div class="alert alert-info">
+    <strong>No need to choose k upfront.</strong> K-Means forces you to commit to a number of clusters before running. Hierarchical clustering builds the full tree first — you choose k afterwards by deciding where to "cut" the dendrogram.
+  </div>
+
+  <h3>Why it matters — real-world use cases</h3>
+  <div class="card-grid">
+    <div class="card" style="border-top:3px solid #5b8af5">
+      <div class="badge badge-blue" style="margin-bottom:8px">Biology</div>
+      <p style="margin:0; font-size:0.85rem">Phylogenetic trees — species cluster into genera, genera into families. The tree of life is a natural hierarchy discovered by clustering genetic sequences.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #a78bfa">
+      <div class="badge badge-purple" style="margin-bottom:8px">E-Commerce</div>
+      <p style="margin:0; font-size:0.85rem">Customer segmentation — "high spenders" sub-cluster into "frequent buyers" and "large single orders". Reveals customer tiers at multiple resolutions simultaneously.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #34d399">
+      <div class="badge badge-green" style="margin-bottom:8px">NLP / Text</div>
+      <p style="margin:0; font-size:0.85rem">Document clustering — "sedan" and "SUV" are sub-clusters of "car", which is a sub-cluster of "vehicle". Captures semantic similarity at multiple levels of granularity.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #fbbf24">
+      <div class="badge" style="background:rgba(251,191,36,0.15);color:#fbbf24;margin-bottom:8px">Bioinformatics</div>
+      <p style="margin:0; font-size:0.85rem">Gene expression — genes that respond similarly to stimuli cluster together, revealing co-expression modules and biological pathways from RNA-Seq data.</p>
+    </div>
   </div>
 
   <h2>Flat vs Hierarchical Clusters</h2>
-  <p>K-Means gives you <strong>flat clusters</strong> — each point is assigned to exactly one cluster and that's it. There is no relationship between clusters themselves.</p>
-  <p>Hierarchical clustering gives you a <strong>tree of clusters</strong> — clusters are made of smaller sub-clusters, which are made of even smaller sub-clusters. Every point can be related to every other point by how far up the tree you need to go before they share a cluster.</p>
-
-  <div class="callout callout-info">
-    <strong>Why does this matter?</strong> Real-world data is often hierarchically structured. Species group into genera, genera into families. Towns group into counties, counties into countries. Words for "sedan" and "SUV" group under "car", which groups under "vehicle". Hierarchical clustering finds this kind of multi-level structure automatically.
-  </div>
-
-  <h2>Two Approaches: Divisive vs Agglomerative</h2>
-
   <div class="card" style="padding:0; overflow:hidden">
     <table style="width:100%; font-size:0.84rem; border-collapse:collapse">
-      <tr style="background:var(--surface); border-bottom:1px solid var(--border)">
-        <th style="text-align:left; padding:10px 14px; color:var(--text-muted)">Approach</th>
-        <th style="text-align:left; padding:10px 14px; color:var(--text-muted)">Direction</th>
-        <th style="text-align:left; padding:10px 14px; color:var(--text-muted)">How it works</th>
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:10px 14px; color:var(--text-muted); text-align:left"></th>
+        <th style="padding:10px 14px; color:#5b8af5; text-align:left">Flat — K-Means</th>
+        <th style="padding:10px 14px; color:#34d399; text-align:left">Hierarchical</th>
       </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:10px 14px"><strong>Divisive</strong></td>
-        <td style="padding:10px 14px">Top-down</td>
-        <td style="padding:10px 14px">Start with all points in one cluster → split repeatedly. Hard to implement — splitting requires searching all possible divisions.</td>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; font-weight:600">Output</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">One label per point</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">Full tree of all possible clusterings</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; font-weight:600">Choose k?</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">Before running</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">After running, by cutting the dendrogram</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; font-weight:600">Cluster relationships</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">None — clusters are independent</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">Full hierarchy — clusters nested inside clusters</td>
       </tr>
       <tr>
-        <td style="padding:10px 14px"><strong>Agglomerative</strong> ✅</td>
-        <td style="padding:10px 14px">Bottom-up</td>
-        <td style="padding:10px 14px">Start with every point as its own cluster → merge the two nearest repeatedly. Simple — at each step just find the closest pair.</td>
+        <td style="padding:9px 14px; font-weight:600">Explainability</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">Low — just integer labels</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">High — the dendrogram tells the full story</td>
       </tr>
     </table>
   </div>
 
-  <p style="margin-top:12px">In practice, <strong>agglomerative clustering</strong> is the standard. We'll focus on this.</p>
+  <h2>Two Approaches: Divisive vs Agglomerative</h2>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.84rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:10px 14px; color:var(--text-muted); text-align:left">Approach</th>
+        <th style="padding:10px 14px; color:var(--text-muted); text-align:left">Direction</th>
+        <th style="padding:10px 14px; color:var(--text-muted); text-align:left">Mechanism</th>
+        <th style="padding:10px 14px; color:var(--text-muted); text-align:left">In practice</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:10px 14px"><strong>Divisive</strong></td>
+        <td style="padding:10px 14px; color:var(--text-muted)">Top-down ↓</td>
+        <td style="padding:10px 14px; color:var(--text-muted)">All points in one cluster → split repeatedly</td>
+        <td style="padding:10px 14px; color:#f87171">Rarely used — searching all possible splits is NP-hard</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 14px"><strong>Agglomerative ✅</strong></td>
+        <td style="padding:10px 14px; color:var(--text-muted)">Bottom-up ↑</td>
+        <td style="padding:10px 14px; color:var(--text-muted)">Each point its own cluster → merge the two nearest repeatedly</td>
+        <td style="padding:10px 14px; color:#34d399">Standard — simple greedy decisions, O(n² log n) with optimisations</td>
+      </tr>
+    </table>
+  </div>
 
-  <h2>The Agglomerative Algorithm</h2>
+  <h2>Interactive: Agglomerative Clustering Step-by-Step</h2>
+  <p>Six points start as individual clusters. Click <strong>Next Step</strong> to watch the algorithm merge them from nearest to furthest. Notice the big distance jump between within-cluster and between-cluster merges — that gap is where you should cut the dendrogram.</p>
 
+  <div class="card" style="padding:16px">
+    <canvas id="ul3-agglo-canvas" width="500" height="285" style="width:100%; max-width:500px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div style="margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="ul3AggloNext()" id="ul3-agglo-btn">Next Step ▶</button>
+      <button class="btn btn-outline" onclick="ul3AggloReset()">↺ Reset</button>
+      <div id="ul3-agglo-status" style="font-size:0.82rem; color:var(--text-muted); flex:1; min-width:200px">Step 0/5 — Every point is its own cluster</div>
+    </div>
+    <div style="margin-top:10px; display:flex; gap:14px; flex-wrap:wrap">
+      <span style="font-size:0.75rem; color:var(--text-muted)"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#5b8af5;margin-right:4px;vertical-align:middle"></span>Cluster A</span>
+      <span style="font-size:0.75rem; color:var(--text-muted)"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#a78bfa;margin-right:4px;vertical-align:middle"></span>Cluster B</span>
+      <span style="font-size:0.75rem; color:var(--text-muted)"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#34d399;margin-right:4px;vertical-align:middle"></span>Cluster C</span>
+      <span style="font-size:0.75rem; color:var(--text-muted)"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle"></span>A+C merged</span>
+      <span style="font-size:0.75rem; color:var(--text-muted)"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f87171;margin-right:4px;vertical-align:middle"></span>All merged</span>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    var PTS=[{x:80,y:82},{x:118,y:100},{x:275,y:76},{x:310,y:98},{x:162,y:205},{x:200,y:223}];
+    var STEPS=[
+      {colors:['#64748b','#64748b','#64748b','#64748b','#64748b','#64748b'],mergeIdx:[-1,-1],label:'Step 0/5 — Every point is its own cluster (6 clusters)'},
+      {colors:['#64748b','#64748b','#64748b','#64748b','#34d399','#34d399'],mergeIdx:[4,5],label:'Step 1/5 — Merge 5 & 6 → Cluster C (distance ≈ 38). Nearest pair.'},
+      {colors:['#64748b','#64748b','#a78bfa','#a78bfa','#34d399','#34d399'],mergeIdx:[2,3],label:'Step 2/5 — Merge 3 & 4 → Cluster B (distance ≈ 40). Still within-cluster.'},
+      {colors:['#5b8af5','#5b8af5','#a78bfa','#a78bfa','#34d399','#34d399'],mergeIdx:[0,1],label:'Step 3/5 — Merge 1 & 2 → Cluster A (distance ≈ 43). All 3 clusters formed.'},
+      {colors:['#f59e0b','#f59e0b','#a78bfa','#a78bfa','#f59e0b','#f59e0b'],mergeIdx:[0,4],label:'Step 4/5 — Merge Cluster A & C (distance ≈ 153). BIG jump — natural boundary!'},
+      {colors:['#f87171','#f87171','#f87171','#f87171','#f87171','#f87171'],mergeIdx:[0,2],label:'Step 5/5 — All merged (distance ≈ 169). One cluster remains — algorithm complete.'}
+    ];
+    var step=0;
+
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
+
+    function roundRect(ctx,x,y,w,h,r){
+      ctx.beginPath();
+      ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+      ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+      ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+      ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);
+      ctx.closePath();
+    }
+
+    function drawHull(ctx,indices,color){
+      var pts=indices.map(function(i){return PTS[i];});
+      var pad=22;
+      var minX=Math.min.apply(null,pts.map(function(p){return p.x;}))-pad;
+      var maxX=Math.max.apply(null,pts.map(function(p){return p.x;}))+pad;
+      var minY=Math.min.apply(null,pts.map(function(p){return p.y;}))-pad;
+      var maxY=Math.max.apply(null,pts.map(function(p){return p.y;}))+pad;
+      var r=Math.min((maxX-minX),(maxY-minY))/2;
+      roundRect(ctx,minX,minY,maxX-minX,maxY-minY,Math.min(r,30));
+      ctx.strokeStyle=color;ctx.lineWidth=2;ctx.setLineDash([5,3]);ctx.stroke();
+      ctx.fillStyle=hexRgba(color,0.09);ctx.fill();ctx.setLineDash([]);
+    }
+
+    function draw(){
+      var canvas=document.getElementById('ul3-agglo-canvas');
+      if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var s=STEPS[step];
+      ctx.clearRect(0,0,500,285);
+      ctx.fillStyle='#0d1117';ctx.fillRect(0,0,500,285);
+      // grid dots
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<500;gx+=32)for(var gy=20;gy<285;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+      // hulls
+      if(step===1)drawHull(ctx,[4,5],'#34d399');
+      if(step===2){drawHull(ctx,[4,5],'#34d399');drawHull(ctx,[2,3],'#a78bfa');}
+      if(step===3){drawHull(ctx,[4,5],'#34d399');drawHull(ctx,[2,3],'#a78bfa');drawHull(ctx,[0,1],'#5b8af5');}
+      if(step===4){drawHull(ctx,[2,3],'#a78bfa');drawHull(ctx,[0,1,4,5],'#f59e0b');}
+      if(step===5)drawHull(ctx,[0,1,2,3,4,5],'#f87171');
+      // distance line for current merge
+      if(step>=1 && step<=3){
+        var mi=s.mergeIdx;
+        var pa=PTS[mi[0]],pb=PTS[mi[1]];
+        ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);
+        ctx.strokeStyle='#fbbf24';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);
+        var mx=(pa.x+pb.x)/2,my=(pa.y+pb.y)/2;
+        ctx.fillStyle='#fbbf24';ctx.font='11px monospace';ctx.textAlign='center';
+        ctx.fillText('d≈'+(step===1?38:step===2?40:43),mx,my-10);
+      }
+      // points
+      PTS.forEach(function(p,i){
+        var col=s.colors[i];
+        ctx.beginPath();ctx.arc(p.x,p.y,12,0,6.28);ctx.fillStyle=hexRgba(col,0.18);ctx.fill();
+        ctx.beginPath();ctx.arc(p.x,p.y,7,0,6.28);ctx.fillStyle=col;ctx.fill();
+        ctx.strokeStyle='#0d1117';ctx.lineWidth=1.5;ctx.stroke();
+        ctx.fillStyle=col;ctx.font='11px monospace';ctx.textAlign='center';
+        ctx.fillText(i+1,p.x,p.y-15);
+      });
+    }
+
+    window.ul3AggloNext=function(){
+      if(step<5){step++;document.getElementById('ul3-agglo-status').textContent=STEPS[step].label;
+        if(step===5)document.getElementById('ul3-agglo-btn').disabled=true;draw();}
+    };
+    window.ul3AggloReset=function(){
+      step=0;document.getElementById('ul3-agglo-status').textContent=STEPS[0].label;
+      document.getElementById('ul3-agglo-btn').disabled=false;draw();
+    };
+    draw();
+  })();
+  </script>
+
+  <h2>The Algorithm</h2>
   <div class="card" style="border-left:3px solid var(--accent)">
-    <ol style="margin:0; font-size:0.88rem; line-height:2; color:var(--text-muted); padding-left:20px">
-      <li><strong>Initialise</strong> — treat every data point as its own cluster (N clusters total)</li>
-      <li><strong>Find</strong> the two clusters with the smallest distance D(cᵢ, cⱼ)</li>
-      <li><strong>Merge</strong> them into one combined cluster</li>
-      <li><strong>Remove</strong> the two old clusters, add the new merged one</li>
-      <li>If only one cluster remains → <strong>stop</strong>. Otherwise → go to step 2</li>
+    <ol style="margin:0; font-size:0.88rem; line-height:2.1; color:var(--text-muted); padding-left:20px">
+      <li><strong>Initialise</strong> — treat every data point as its own cluster. You have N clusters.</li>
+      <li><strong>Compute</strong> the N×N pairwise distance matrix between all clusters using your chosen metric and linkage.</li>
+      <li><strong>Find</strong> the pair (cᵢ, cⱼ) with the smallest distance.</li>
+      <li><strong>Merge</strong> them into a new combined cluster. Record this merge event (who merged and at what distance).</li>
+      <li><strong>Update</strong> the distance matrix to reflect the new cluster.</li>
+      <li>If more than one cluster remains → go to step 3. Otherwise stop.</li>
     </ol>
+    <p style="margin:12px 0 0; font-size:0.82rem; color:var(--text-muted)">After N−1 merges all points share one cluster. The full history of merges is the dendrogram.</p>
   </div>
 
   <h2>Two Decisions You Must Make</h2>
 
-  <h3>1. Distance measure — how far apart are two individual points?</h3>
-  <p>The standard choice is <strong>Euclidean distance</strong> — the straight-line distance between two points in feature space. Other options include cosine similarity (for text) or Manhattan distance.</p>
+  <h3>1. Distance Metric — how far apart are two individual points?</h3>
+  <table>
+    <tr><th>Metric</th><th>Formula</th><th>Best for</th></tr>
+    <tr><td><strong>Euclidean ✅</strong></td><td style="font-family:monospace;font-size:0.8rem">√Σ(xᵢ−yᵢ)²</td><td>Continuous, well-scaled numeric data (default)</td></tr>
+    <tr><td><strong>Manhattan</strong></td><td style="font-family:monospace;font-size:0.8rem">Σ|xᵢ−yᵢ|</td><td>High-dimensional data; less sensitive to outliers</td></tr>
+    <tr><td><strong>Cosine</strong></td><td style="font-family:monospace;font-size:0.8rem">1 − (x·y)/(‖x‖‖y‖)</td><td>Text / sparse vectors — direction matters, not magnitude</td></tr>
+  </table>
 
-  <div class="code-block"><pre><code># X[:,0] = all rows, column 0 — first feature of every point
-# X[:,1] = all rows, column 1 — second feature of every point
-# c=y    = colour each point by its true label
-
-plt.scatter(X[:, 0], X[:, 1], c=y)
-# ↑ quickly shows whether true groups are separable in 2D before clustering</code></pre></div>
-
-  <h3>2. Linkage — how far apart are two clusters (each with multiple points)?</h3>
-
+  <h3>2. Linkage — how far apart are two multi-point clusters?</h3>
   <div class="card" style="padding:0; overflow:hidden">
     <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
-      <tr style="background:var(--surface); border-bottom:1px solid var(--border)">
-        <th style="text-align:left; padding:9px 12px; color:var(--text-muted)">Linkage</th>
-        <th style="text-align:left; padding:9px 12px; color:var(--text-muted)">Measures distance between…</th>
-        <th style="text-align:left; padding:9px 12px; color:var(--text-muted)">Risk</th>
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:10px 14px; color:var(--text-muted); text-align:left">Linkage</th>
+        <th style="padding:10px 14px; color:var(--text-muted); text-align:left">Distance defined as…</th>
+        <th style="padding:10px 14px; color:var(--text-muted); text-align:left">Weakness</th>
       </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:9px 12px"><strong>Single</strong></td>
-        <td style="padding:9px 12px">The two <em>nearest</em> points across clusters</td>
-        <td style="padding:9px 12px">Chaining — one outlier can pull two clusters together early</td>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:10px 14px"><strong>Single</strong></td>
+        <td style="padding:10px 14px; color:var(--text-muted)">Distance between the two <em>nearest</em> points across clusters</td>
+        <td style="padding:10px 14px; color:#f87171">Chaining — one outlier bridges two distant clusters early</td>
       </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:9px 12px"><strong>Complete</strong></td>
-        <td style="padding:9px 12px">The two <em>furthest</em> points across clusters</td>
-        <td style="padding:9px 12px">One outlier can prevent a natural merge</td>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:10px 14px"><strong>Complete</strong></td>
+        <td style="padding:10px 14px; color:var(--text-muted)">Distance between the two <em>furthest</em> points across clusters</td>
+        <td style="padding:10px 14px; color:#fbbf24">One outlier can block a natural merge indefinitely</td>
       </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:9px 12px"><strong>Average</strong></td>
-        <td style="padding:9px 12px">The distance between cluster <em>centroids</em></td>
-        <td style="padding:9px 12px">Can produce unbalanced clusters of very different sizes</td>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:10px 14px"><strong>Average</strong></td>
+        <td style="padding:10px 14px; color:var(--text-muted)">Centroid-to-centroid distance</td>
+        <td style="padding:10px 14px; color:#fbbf24">Can push most data into one giant cluster (seen in the practical!)</td>
       </tr>
       <tr>
-        <td style="padding:9px 12px"><strong>Ward ✅</strong></td>
-        <td style="padding:9px 12px">Merge that minimises the <em>increase in total variance</em></td>
-        <td style="padding:9px 12px">Best default — produces compact, balanced clusters</td>
+        <td style="padding:10px 14px"><strong>Ward ✅</strong></td>
+        <td style="padding:10px 14px; color:var(--text-muted)">Merge that minimises the <em>increase in total within-cluster variance</em></td>
+        <td style="padding:10px 14px; color:#34d399">Best default — produces compact, balanced clusters</td>
       </tr>
     </table>
   </div>
 
-  <div class="callout callout-warning">
-    <strong>Average vs Ward in practice:</strong> Average linkage can push most data into one huge cluster with a few outlier singletons. Ward's method tends to produce more balanced clusters because it directly minimises within-cluster variance at each merge. <strong>Start with Ward unless you have a reason not to.</strong>
+  <h3>Interactive: How Different Linkages Measure Distance</h3>
+  <p>The yellow line shows the distance measured between clusters X (blue) and Y (purple). Z (green) is a third cluster for reference. Toggle to see how each linkage method defines inter-cluster distance.</p>
+
+  <div class="card" style="padding:16px">
+    <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:12px">
+      <label style="font-size:0.83rem; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:5px"><input type="radio" name="ul3lnk" value="single" checked onchange="ul3DrawLink()"> Single</label>
+      <label style="font-size:0.83rem; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:5px"><input type="radio" name="ul3lnk" value="complete" onchange="ul3DrawLink()"> Complete</label>
+      <label style="font-size:0.83rem; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:5px"><input type="radio" name="ul3lnk" value="average" onchange="ul3DrawLink()"> Average</label>
+      <label style="font-size:0.83rem; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:5px"><input type="radio" name="ul3lnk" value="ward" onchange="ul3DrawLink()"> Ward</label>
+    </div>
+    <canvas id="ul3-link-canvas" width="500" height="255" style="width:100%; max-width:500px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="ul3-link-desc" style="margin-top:10px; font-size:0.82rem; color:var(--text-muted); padding:8px 12px; background:rgba(255,255,255,0.03); border-radius:6px; min-height:36px">Single linkage: distance = nearest pair. Vulnerable to chaining — one bridge point can incorrectly merge distant groups.</div>
+  </div>
+
+  <script>
+  (function(){
+    var CX=[{x:82,y:95},{x:115,y:118},{x:90,y:140}];
+    var CY=[{x:305,y:90},{x:338,y:112},{x:315,y:138}];
+    var CZ=[{x:195,y:205},{x:228,y:220}];
+    function cen(pts){var sx=0,sy=0;pts.forEach(function(p){sx+=p.x;sy+=p.y;});return{x:sx/pts.length,y:sy/pts.length};}
+    function dst(a,b){return Math.sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));}
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
+    var DESCS={
+      single:'Single linkage: distance = nearest pair between X and Y. Vulnerable to "chaining" — one outlier can bridge two otherwise distant groups.',
+      complete:'Complete linkage: distance = furthest pair between X and Y. Robust to chaining, but a single outlier can block a natural merge.',
+      average:'Average linkage: distance = centroid-to-centroid. A compromise — less sensitive to outliers than single or complete linkage.',
+      ward:'Ward linkage: choose the merge that minimises the increase in total within-cluster variance when X and Y are combined. ✅ Best default.'
+    };
+    window.ul3DrawLink=function(){
+      var canvas=document.getElementById('ul3-link-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var mode=document.querySelector('input[name="ul3lnk"]:checked').value;
+      document.getElementById('ul3-link-desc').textContent=DESCS[mode];
+      ctx.clearRect(0,0,500,255);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,500,255);
+      // grid
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<500;gx+=32)for(var gy=20;gy<255;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+      // cluster halos
+      [[CX,'#5b8af5','X'],[CY,'#a78bfa','Y'],[CZ,'#34d399','Z']].forEach(function(arr){
+        var pts=arr[0],col=arr[1],lbl=arr[2];
+        var c=cen(pts),r=Math.max.apply(null,pts.map(function(p){return dst(c,p);}))+26;
+        ctx.beginPath();ctx.arc(c.x,c.y,r,0,6.28);
+        ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.globalAlpha=0.45;ctx.stroke();ctx.globalAlpha=1;
+        ctx.fillStyle=hexRgba(col,0.08);ctx.fill();ctx.setLineDash([]);
+        ctx.fillStyle=col;ctx.font='bold 12px sans-serif';ctx.textAlign='center';
+        ctx.fillText('Cluster '+lbl,c.x,c.y-r-7);
+      });
+      // distance indicator
+      ctx.lineWidth=2;ctx.strokeStyle='#fbbf24';ctx.setLineDash([6,3]);
+      var ccx=cen(CX),ccy=cen(CY);
+      if(mode==='single'){
+        var best={d:Infinity,a:null,b:null};
+        CX.forEach(function(a){CY.forEach(function(b){var d=dst(a,b);if(d<best.d)best={d:d,a:a,b:b};});});
+        ctx.beginPath();ctx.moveTo(best.a.x,best.a.y);ctx.lineTo(best.b.x,best.b.y);ctx.stroke();
+        ctx.fillStyle='#fbbf24';ctx.font='11px monospace';ctx.textAlign='center';
+        ctx.fillText('min = '+Math.round(best.d),(best.a.x+best.b.x)/2,(best.a.y+best.b.y)/2-9);
+      } else if(mode==='complete'){
+        var worst={d:-1,a:null,b:null};
+        CX.forEach(function(a){CY.forEach(function(b){var d=dst(a,b);if(d>worst.d)worst={d:d,a:a,b:b};});});
+        ctx.beginPath();ctx.moveTo(worst.a.x,worst.a.y);ctx.lineTo(worst.b.x,worst.b.y);ctx.stroke();
+        ctx.fillStyle='#fbbf24';ctx.font='11px monospace';ctx.textAlign='center';
+        ctx.fillText('max = '+Math.round(worst.d),(worst.a.x+worst.b.x)/2,(worst.a.y+worst.b.y)/2-9);
+      } else if(mode==='average'){
+        ctx.beginPath();ctx.moveTo(ccx.x,ccx.y);ctx.lineTo(ccy.x,ccy.y);ctx.stroke();
+        ctx.fillStyle='#fbbf24';ctx.font='11px monospace';ctx.textAlign='center';
+        ctx.fillText('centroid dist = '+Math.round(dst(ccx,ccy)),(ccx.x+ccy.x)/2,(ccx.y+ccy.y)/2-9);
+        [[ccx,'#5b8af5'],[ccy,'#a78bfa']].forEach(function(arr){
+          ctx.beginPath();ctx.arc(arr[0].x,arr[0].y,5,0,6.28);
+          ctx.fillStyle=arr[1];ctx.fill();ctx.strokeStyle='#fbbf24';ctx.lineWidth=2;ctx.stroke();
+        });
+      } else {
+        var all=CX.concat(CY),mc=cen(all),r=Math.max.apply(null,all.map(function(p){return dst(mc,p);}))+18;
+        ctx.beginPath();ctx.arc(mc.x,mc.y,r,0,6.28);ctx.stroke();
+        ctx.fillStyle=hexRgba('#fbbf24',0.05);ctx.fill();
+        ctx.setLineDash([]);ctx.fillStyle='#fbbf24';ctx.font='11px monospace';ctx.textAlign='center';
+        ctx.fillText('Ward: min Δvariance from merging X+Y',mc.x,mc.y+r+15);
+      }
+      ctx.setLineDash([]);
+      // draw points
+      [[CX,'#5b8af5'],[CY,'#a78bfa'],[CZ,'#34d399']].forEach(function(arr){
+        arr[0].forEach(function(p){
+          ctx.beginPath();ctx.arc(p.x,p.y,7,0,6.28);ctx.fillStyle=arr[1];ctx.fill();
+          ctx.strokeStyle='#0d1117';ctx.lineWidth=1.5;ctx.stroke();
+        });
+      });
+    };
+    ul3DrawLink();
+  })();
+  </script>
+
+  <h2>Data Preprocessing for Hierarchical Clustering</h2>
+  <p>Hierarchical clustering is <strong>distance-based</strong>, making it highly sensitive to scale and data quality. Good preprocessing directly determines cluster quality.</p>
+
+  <h3>1. Feature Scaling — the most critical step</h3>
+  <p>A feature measured in thousands (e.g. total revenue) will dominate one measured in ones (e.g. number of orders) if you don't scale. Always standardise before clustering.</p>
+  <div class="code-block"><pre><code>from sklearn.preprocessing import StandardScaler
+
+# StandardScaler: z-score normalisation → mean=0, std=1 (recommended default)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# MinMaxScaler alternative: scales to [0,1]
+# More sensitive to outliers — use StandardScaler unless you have a reason not to</code></pre></div>
+
+  <h3>2. Handling Outliers</h3>
+  <div class="card" style="padding:14px 18px; border-left:3px solid #f87171">
+    <p style="margin:0 0 8px; font-weight:600; color:#f87171">Why outliers are dangerous in hierarchical clustering</p>
+    <ul style="margin:0; font-size:0.85rem; color:var(--text-muted)">
+      <li><strong>Single linkage:</strong> one outlier forms a "bridge" between two distant clusters, incorrectly merging them early — the chaining effect</li>
+      <li><strong>Average / Ward:</strong> an outlier forces a cluster to merge at an unnaturally high distance, distorting the whole dendrogram</li>
+    </ul>
+    <p style="margin:10px 0 0; font-size:0.85rem; color:var(--text-muted)">Detect with IQR-based trimming or Isolation Forest. Cap or remove before fitting.</p>
+  </div>
+
+  <h3>3. Missing Values</h3>
+  <div class="code-block"><pre><code>from sklearn.impute import SimpleImputer
+
+# Impute with column median (robust to outliers)
+imputer = SimpleImputer(strategy='median')
+X_imputed = imputer.fit_transform(X)
+
+# Or drop rows if missing values are few
+df_clean = df.dropna()</code></pre></div>
+
+  <h3>4. Dimensionality Reduction (recommended for d > 20)</h3>
+  <p>In high dimensions Euclidean distance loses meaning — all points appear equally far apart. Apply PCA first to reduce noise and speed up clustering.</p>
+  <div class="code-block"><pre><code>from sklearn.decomposition import PCA
+
+# Keep 95% of variance
+pca = PCA(n_components=0.95)
+X_pca = pca.fit_transform(X_scaled)
+print(f"Reduced from {X.shape[1]} to {X_pca.shape[1]} dimensions")
+# Cluster on X_pca instead of X_scaled</code></pre></div>
+
+  <h3>5. Categorical Variables</h3>
+  <div class="code-block"><pre><code># Option 1: one-hot encode then scale
+from sklearn.preprocessing import OneHotEncoder
+enc = OneHotEncoder(sparse_output=False)
+X_cat = enc.fit_transform(df[['category_col']])
+
+# Option 2: Gower distance handles mixed types natively
+import gower
+dist_matrix = gower.gower_matrix(df)   # pip install gower
+# Pass the pre-computed distance matrix directly
+Z = linkage(dist_matrix, method='average')</code></pre></div>
+
+  <h2>When to Use Hierarchical Clustering</h2>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.84rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:10px 14px; color:#34d399; text-align:left">Use it when…</th>
+        <th style="padding:10px 14px; color:#f87171; text-align:left">Avoid it when…</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; color:var(--text-muted)">You don't know k and want to explore many values from one run</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">n &gt; 10,000 — O(n²) memory and O(n² log n) time becomes prohibitive</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; color:var(--text-muted)">Data has genuine hierarchical structure (taxonomy, geography, ontologies)</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">Many outliers need explicit labelling — use DBSCAN instead</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; color:var(--text-muted)">Interpretability matters — dendrograms communicate structure clearly to stakeholders</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">Clusters are non-convex / irregular in shape (rings, crescents)</td>
+      </tr>
+      <tr>
+        <td style="padding:9px 14px; color:var(--text-muted)">n is small-to-medium (&lt; 5,000) and you want maximum insight before committing to k</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">You need to classify new incoming data — no predict() for new points</td>
+      </tr>
+    </table>
   </div>
 
   <h2>Implementation</h2>
-
-  <h3>scipy — builds the full hierarchy</h3>
+  <h3>scipy — build the full hierarchy</h3>
   <div class="code-block"><pre><code>from scipy.cluster.hierarchy import linkage, dendrogram
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
 
-# Build the full hierarchy — returns a linkage matrix Z
-Z = linkage(customers, method='ward', metric='euclidean')
-#                       ↑ linkage type    ↑ distance measure
+X_scaled = StandardScaler().fit_transform(customers[features])
 
-# Plot the full dendrogram
+# linkage() returns a matrix Z of shape (n-1, 4)
+# Each row: [cluster_a, cluster_b, merge_distance, new_cluster_size]
+Z = linkage(X_scaled, method='ward', metric='euclidean')
+
 plt.figure(figsize=(18, 6))
 dendrogram(Z)
-plt.ylabel('Distance')
+plt.ylabel('Ward Distance')
 plt.xlabel('Sample index')
 plt.show()</code></pre></div>
 
-  <h3>sklearn — get flat cluster labels directly</h3>
+  <h3>sklearn — get flat cluster labels</h3>
   <div class="code-block"><pre><code>from sklearn.cluster import AgglomerativeClustering
 
-agglomerative = AgglomerativeClustering(
-    n_clusters=3,       # how many flat clusters to return
+model = AgglomerativeClustering(
+    n_clusters=3,       # cut the tree to produce 3 clusters
     linkage='ward',
     metric='euclidean'
 )
-
-# fit_predict does both fit and predict in one step
-cluster_assignment = agglomerative.fit_predict(customers)</code></pre></div>
+labels = model.fit_predict(X_scaled)
+# labels: array of shape (n,) — values 0, 1, ..., k-1
+# Note: no predict() method for new data — must refit on the full dataset</code></pre></div>
 
   <h2>Dendrograms — How to Read Them</h2>
-  <p>A dendrogram is a tree diagram that records every merge the algorithm made:</p>
-
-  <div class="card" style="border-left:3px solid var(--accent); font-family:monospace; font-size:0.82rem; line-height:2">
-    <p style="margin:0 0 6px; font-family:inherit; color:var(--text-muted)"><strong>Y-axis = Distance</strong> at which two clusters were merged</p>
-    <p style="margin:0 0 6px; font-family:inherit; color:var(--text-muted)"><strong>Horizontal bar height</strong> = how dissimilar those two groups were when they joined</p>
-    <p style="margin:0; font-family:inherit; color:var(--text-muted)"><strong>X-axis</strong> = data points (or cluster sizes in brackets)</p>
+  <div class="card" style="border-left:3px solid var(--accent); padding:16px">
+    <ul style="margin:0; font-size:0.85rem; line-height:1.95; color:var(--text-muted); padding-left:18px">
+      <li><strong>Y-axis (height):</strong> the distance at which two groups merged. Taller bar = more different groups joining.</li>
+      <li><strong>Horizontal bar:</strong> one merge event. Its height is the distance between the two sub-trees being joined.</li>
+      <li><strong>Tall vertical gap before a bar:</strong> a strong natural cluster boundary — this is where you should cut.</li>
+      <li><strong>X-axis:</strong> individual point indices, or <code>(n)</code> = a cluster of size n after truncation.</li>
+    </ul>
   </div>
 
-  <div class="card" style="background:var(--surface); margin-top:12px; padding:16px 20px">
-    <p style="margin:0 0 10px; font-size:0.85rem; font-weight:600">Reading the dendrogram visually:</p>
-    <pre style="margin:0; font-size:0.8rem; color:var(--text-muted); line-height:1.9">130 ─── biggest merge (most different groups joined here)
-    │
- 85 ─── second biggest gap ← natural break in the data
-    │
- 63 ─── within-cluster merges (similar points)
-    │
- 22 ─── very similar points merging early
-    │
-  0 ─── individual data points at the bottom</pre>
-    <p style="margin:10px 0 0; font-size:0.82rem; color:var(--text-muted)"><strong>Key rule:</strong> A tall vertical gap before a horizontal bar = a natural break. The data on either side of that gap is genuinely different.</p>
+  <h3>Interactive: Adjust the Cut Height to Choose k</h3>
+  <p>Drag the slider left and right. The red dashed line is the cut — every vertical branch it crosses becomes one cluster. Notice how the big gap between heights 30 and 110 makes 3 clusters the most natural choice.</p>
+
+  <div class="card" style="padding:16px">
+    <canvas id="ul3-dendro-canvas" width="530" height="268" style="width:100%; max-width:530px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div style="margin-top:12px; display:flex; align-items:center; gap:10px">
+      <span style="font-size:0.78rem; color:var(--text-muted)">Low cut</span>
+      <input type="range" id="ul3-dendro-slider" min="0" max="155" value="80" style="flex:1" oninput="ul3DrawDendro()">
+      <span style="font-size:0.78rem; color:var(--text-muted)">High cut</span>
+    </div>
+    <div style="margin-top:8px; text-align:center">
+      <span id="ul3-dendro-info" style="font-size:0.88rem; color:var(--accent); font-weight:600">Cut at height 80 → 3 clusters</span>
+    </div>
   </div>
 
-  <h3>How to choose k from a dendrogram</h3>
-  <p>Imagine drawing a horizontal line across the chart. Every time your line crosses a vertical branch = one cluster:</p>
+  <script>
+  (function(){
+    var LEAF_X=[55,105,195,245,335,385];
+    var Y_LEAF=245, Y_TOP=22, H_MAX=155;
+    var W=530, H=268;
+    // merges: {lCx, rCx, h, newCx, leafPts}
+    var MERGES=[
+      {lCx:55, rCx:105,h:20, newCx:80, leafPts:[0,1]},
+      {lCx:195,rCx:245,h:25, newCx:220,leafPts:[2,3]},
+      {lCx:335,rCx:385,h:30, newCx:360,leafPts:[4,5]},
+      {lCx:80, rCx:220,h:110,newCx:150,leafPts:[0,1,2,3]},
+      {lCx:150,rCx:360,h:150,newCx:255,leafPts:[0,1,2,3,4,5]}
+    ];
+    var COLORS=['#5b8af5','#a78bfa','#34d399','#f59e0b','#f87171','#e879f9'];
+    function hToY(h){return Y_LEAF-(h/H_MAX)*(Y_LEAF-Y_TOP);}
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
 
-  <div class="card" style="background:var(--surface); padding:14px 20px">
-    <pre style="margin:0; font-size:0.82rem; color:var(--text-muted); line-height:2">Cut at height 100  →  line crosses 2 branches  →  2 clusters
-Cut at height 70   →  line crosses 3 branches  →  3 clusters
-Cut at height 40   →  line crosses 5 branches  →  5 clusters
+    function getClusters(cutH){
+      var cls=LEAF_X.map(function(lx,i){return{leafPts:[i],cx:lx};});
+      MERGES.forEach(function(m){
+        if(m.h<=cutH){
+          var ia=cls.findIndex(function(c){return Math.abs(c.cx-m.lCx)<1;});
+          var ib=cls.findIndex(function(c){return Math.abs(c.cx-m.rCx)<1;});
+          if(ia>=0&&ib>=0&&ia!==ib){
+            var merged={leafPts:cls[ia].leafPts.concat(cls[ib].leafPts),cx:m.newCx};
+            var nc=cls.filter(function(_,i){return i!==ia&&i!==ib;});
+            nc.push(merged);cls=nc;
+          }
+        }
+      });
+      return cls;
+    }
 
-↳ Choose the cut height just below the LARGEST gap — that gives
-  you the most natural number of clusters.</pre>
-  </div>
+    function bottomH(){
+      var bh={};
+      LEAF_X.forEach(function(lx){bh[lx]=0;});
+      MERGES.forEach(function(m){bh[m.newCx]=m.h;});
+      return bh;
+    }
 
-  <h2>Truncation — Simplifying Large Dendrograms</h2>
-  <p>With 150+ data points the full dendrogram is unreadable. Truncation shows only the top <strong>p</strong> merges:</p>
+    window.ul3DrawDendro=function(){
+      var canvas=document.getElementById('ul3-dendro-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var cutH=parseInt(document.getElementById('ul3-dendro-slider').value);
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+      // grid
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<W;gx+=30)for(var gy=20;gy<H;gy+=30){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+      // y-axis
+      ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(40,Y_TOP-8);ctx.lineTo(40,Y_LEAF+5);ctx.stroke();
+      [0,25,50,75,100,125,150].forEach(function(h){
+        var y=hToY(h);
+        ctx.setLineDash([2,4]);ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=0.8;
+        ctx.beginPath();ctx.moveTo(42,y);ctx.lineTo(W-8,y);ctx.stroke();ctx.setLineDash([]);
+        ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px monospace';ctx.textAlign='right';
+        ctx.fillText(h,35,y+4);
+      });
+      // clusters for coloring
+      var cls=getClusters(cutH);
+      var bh=bottomH();
+      function mergeColor(m){
+        if(m.h>cutH)return'#2d3561';
+        var ci=cls.findIndex(function(c){return m.leafPts.every(function(p){return c.leafPts.indexOf(p)>=0;});});
+        return ci>=0?COLORS[ci%COLORS.length]:'#5b8af5';
+      }
+      // draw merges
+      MERGES.forEach(function(m){
+        var col=mergeColor(m);
+        var lw=m.h<=cutH?2.5:1.5;
+        var y=hToY(m.h);
+        var lBotY=hToY(bh[m.lCx]||0);
+        var rBotY=hToY(bh[m.rCx]||0);
+        ctx.strokeStyle=col;ctx.lineWidth=lw;
+        ctx.beginPath();ctx.moveTo(m.lCx,y);ctx.lineTo(m.rCx,y);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(m.lCx,y);ctx.lineTo(m.lCx,lBotY);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(m.rCx,y);ctx.lineTo(m.rCx,rBotY);ctx.stroke();
+      });
+      // cut line
+      var cutY=hToY(cutH);
+      ctx.setLineDash([6,4]);ctx.strokeStyle='#f87171';ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(42,cutY);ctx.lineTo(W-6,cutY);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='#f87171';ctx.font='bold 10px sans-serif';ctx.textAlign='right';
+      ctx.fillText('cut = '+cutH,W-8,cutY-5);
+      // leaf points + labels
+      LEAF_X.forEach(function(lx,i){
+        var ci=cls.findIndex(function(c){return c.leafPts.indexOf(i)>=0;});
+        var col=ci>=0?COLORS[ci%COLORS.length]:'#64748b';
+        ctx.beginPath();ctx.arc(lx,Y_LEAF,5,0,6.28);ctx.fillStyle=col;ctx.fill();
+        ctx.strokeStyle='#0d1117';ctx.lineWidth=1.5;ctx.stroke();
+        ctx.fillStyle=col;ctx.font='10px monospace';ctx.textAlign='center';
+        ctx.fillText(i+1,lx,Y_LEAF+17);
+      });
+      // info
+      var k=cls.length;
+      document.getElementById('ul3-dendro-info').textContent='Cut at height '+cutH+' → '+k+' cluster'+(k===1?'':'s');
+    };
+    ul3DrawDendro();
+  })();
+  </script>
 
+  <h3>Truncation — simplifying large dendrograms</h3>
   <div class="code-block"><pre><code>plt.figure(figsize=(18, 6))
 dendrogram(
     Z,
-    truncate_mode='lastp',   # show only the last p merges
-    p=20,                    # number of leaf nodes to show
-    color_threshold=70       # colour branches that merge below this height the same colour
+    truncate_mode='lastp',  # keep only the last p non-singleton nodes
+    p=20,                   # show the 20 most recent merges
+    color_threshold=5.0     # colour all branches below this height the same
 )
-plt.ylabel('Distance')
-plt.xlabel('Sample index or (cluster size)')
-plt.show()
+plt.ylabel('Ward Distance')
+plt.xlabel('Sample or (cluster size)')
+# (83) = 83 customers merged at this node; 42 = individual customer #42
+plt.show()</code></pre></div>
 
-# Numbers in (brackets) = cluster size e.g. (83) means 83 customers merged into this node
-# Numbers without brackets = a single data point's index</code></pre></div>
+  <h2>Evaluation Methods</h2>
+  <p>No single "correct" answer exists — use multiple metrics together and combine with domain knowledge.</p>
 
-  <h2>Visualising and Understanding Clusters</h2>
+  <h3>1. Dendrogram Gap Analysis (visual)</h3>
+  <p>The most important diagnostic. Find the <strong>largest vertical gap</strong> before a horizontal bar. A large gap means the two sub-trees being merged were genuinely dissimilar — a natural cluster boundary. Cut just below it.</p>
 
-  <div class="code-block"><pre><code># After getting flat cluster labels, use pairplot to visualise
-def pairplot_cluster(df, cols, cluster_assignment):
-    df_tmp = df.copy()
-    df_tmp['cluster'] = cluster_assignment
-    sns.pairplot(df_tmp, vars=cols, hue='cluster')
+  <h3>2. Silhouette Score</h3>
+  <p>Measures how similar each point is to its own cluster vs the nearest other cluster. Ranges −1 (misassigned) to +1 (well-assigned). Aim for &gt; 0.5.</p>
+  <div class="code-block"><pre><code>from sklearn.metrics import silhouette_score
 
-pairplot_cluster(customers, ['mean_spent', 'max_spent'], cluster_assignment)
+for k in range(2, 9):
+    labels = AgglomerativeClustering(n_clusters=k, linkage='ward').fit_predict(X_scaled)
+    score = silhouette_score(X_scaled, labels)
+    print(f"k={k}: silhouette = {score:.3f}")
+# k=3: silhouette = 0.512  ← choose the highest value</code></pre></div>
 
-# Compare clusters side by side with scatter — true labels vs cluster assignment
-fig, axs = plt.subplots(1, 2, figsize=(12, 4), sharey=True, sharex=True)
-axs[0].scatter(X[:, 0], X[:, 1], c=y)                # true labels
-axs[1].scatter(X[:, 0], X[:, 1], c=cluster_assignment)  # learned clusters
-plt.show()
-# Note: colours won't match between plots — cluster 0 may correspond to species 2
-# What matters is the SHAPE of the groupings, not the colours</code></pre></div>
+  <h3>3. Cophenetic Correlation Coefficient</h3>
+  <p>Measures how faithfully the dendrogram preserves original pairwise distances. Closer to <strong>1.0 = better</strong>. Above 0.75 is generally good; below 0.6 suggests the chosen linkage is a poor fit for the data.</p>
+  <div class="code-block"><pre><code>from scipy.cluster.hierarchy import cophenet
+from scipy.spatial.distance import pdist
 
-  <div class="callout callout-info">
-    <strong>Why colours won't match:</strong> Cluster numbering is arbitrary — K-Means or AgglomerativeClustering assigns label "0" to whichever cluster it finds first. The important thing when comparing is whether the same points are grouped together, not what number they were given.
+Z = linkage(X_scaled, method='ward', metric='euclidean')
+c, _ = cophenet(Z, pdist(X_scaled))
+print(f"Cophenetic correlation: {c:.4f}")
+# 0.85+ → excellent; 0.6–0.85 → acceptable; &lt; 0.6 → consider a different linkage</code></pre></div>
+
+  <h3>4. Elbow Method — Average Within-Cluster Variance</h3>
+  <p>Plot average within-cluster variance vs k. The "elbow" is where adding more clusters stops reducing variance significantly. Confirmed by the practical: the elbow at k=2 or 3 matches the visual dendrogram gap.</p>
+  <div class="code-block"><pre><code>def cluster_variance(points):
+    N = points.shape[0]
+    if N &lt; 2: return 0
+    total = sum(0.5 * np.linalg.norm(points[i] - points[j])**2
+                for i in range(N) for j in range(N))
+    return total / (N**2)
+
+avg_vars = []
+for k in range(1, 11):
+    labels = AgglomerativeClustering(n_clusters=k, linkage='ward').fit_predict(X_scaled)
+    avg_vars.append(np.mean([cluster_variance(X_scaled[labels==c]) for c in np.unique(labels)]))
+
+plt.plot(range(1, 11), avg_vars, marker='o', color='#5b8af5')
+plt.xlabel('k'); plt.ylabel('Average Within-Cluster Variance')
+plt.axvline(x=3, color='#f87171', linestyle='--', label='Elbow at k=3')
+plt.legend(); plt.show()</code></pre></div>
+
+  <h2>Real-World Example: Customer Segmentation</h2>
+  <p>From the practical notebook, using an Online Retail dataset of ~4,000 customers with features: total spend, order frequency, average basket size, refunds.</p>
+
+  <h3>Key finding: linkage method has a huge impact</h3>
+  <div class="code-block"><pre><code># Average linkage first — reveals the imbalance problem
+Z_avg = linkage(customers, method='average', metric='euclidean')
+dendrogram(Z_avg)
+# → One enormous cluster + a few singletons. Nearly useless for segmentation.
+
+# Switch to Ward — produces three balanced, interpretable segments
+Z_ward = linkage(customers, method='ward', metric='euclidean')
+dendrogram(Z_ward, truncate_mode='lastp', p=20, color_threshold=70)
+# → Three clearly distinct super-clusters visible in the dendrogram</code></pre></div>
+
+  <div class="alert alert-warn">
+    <strong>Practical lesson:</strong> Average linkage pushed nearly all customers into one massive cluster. Ward linkage produced three balanced, meaningful segments. Always try multiple linkage methods and compare dendrograms before committing.
   </div>
 
-  <h2>Elbow Method for Hierarchical Clustering</h2>
-  <p>If you don't know how many clusters to use, compute the variance within each flat clustering for different values of k:</p>
+  <h3>Profiling the clusters</h3>
+  <div class="code-block"><pre><code>model = AgglomerativeClustering(n_clusters=3, linkage='ward', metric='euclidean')
+customers['cluster'] = model.fit_predict(customers[features])
 
-  <div class="code-block"><pre><code>def cluster_variance(points):
-    """Mean within-cluster variance — lower means tighter clusters."""
-    N = points.shape[0]
-    total = 0
-    for i in range(N):
-        for j in range(N):
-            total += 0.5 * np.linalg.norm(points[i, :] - points[j, :]) ** 2
-    return total / (N ** 2)
+# Profile each cluster
+print(customers.groupby('cluster')[features].mean().round(2))
+# cluster 0: low total_spent, high n_orders → "frequent bargain shoppers"
+# cluster 1: high total_spent, low n_orders → "occasional big spenders"
+# cluster 2: medium spend + orders → "mid-tier regulars"
 
-# Plot variance vs number of clusters — look for the elbow
-variances = []
-for k in range(2, 15):
-    ac = AgglomerativeClustering(n_clusters=k, linkage='ward')
-    labels = ac.fit_predict(X)
-    cluster_vars = [cluster_variance(X[labels == c]) for c in np.unique(labels)]
-    variances.append(np.mean(cluster_vars))
+# Visualise separation
+sns.pairplot(customers, vars=['mean_spent', 'max_spent', 'n_orders'], hue='cluster')
+plt.show()
 
-plt.plot(range(2, 15), variances, marker='s')
-plt.xlabel('Number of Clusters')
-plt.ylabel('Mean Within-Cluster Variance')
-plt.title('Elbow Method')</code></pre></div>
+# Compare to true labels (Iris example) — side by side
+fig, axs = plt.subplots(1, 2, figsize=(12, 4), sharey=True, sharex=True)
+axs[0].scatter(X[:,0], X[:,1], c=y_true);  axs[0].set_title('True Labels')
+axs[1].scatter(X[:,0], X[:,1], c=labels);  axs[1].set_title('Hierarchical k=3')
+# Colours won't match — numbering is arbitrary. The SHAPE of groupings is what matters.</code></pre></div>
 
   <h2>Pros and Cons</h2>
   <div class="card" style="padding:0; overflow:hidden">
     <table style="width:100%; font-size:0.84rem; border-collapse:collapse">
-      <tr style="background:var(--surface); border-bottom:1px solid var(--border)">
-        <th style="text-align:left; padding:8px 14px; color:#10b981">✅ Pros</th>
-        <th style="text-align:left; padding:8px 14px; color:#ef4444">❌ Cons</th>
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:10px 14px; color:#34d399; text-align:left">✅ Pros</th>
+        <th style="padding:10px 14px; color:#f87171; text-align:left">❌ Cons</th>
       </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:8px 14px">No need to choose k upfront — cut wherever you like</td>
-        <td style="padding:8px 14px">Slower than K-Means — O(n³) for naive implementation</td>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; color:var(--text-muted)">No need to choose k upfront — explore all values from one dendrogram</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">Slow for large n — O(n² log n) time, O(n²) memory</td>
       </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:8px 14px">Dendrogram shows structure at ALL levels in one plot</td>
-        <td style="padding:8px 14px">Can give poor results in high-dimensional data</td>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; color:var(--text-muted)">Dendrogram reveals structure at every resolution in one interpretable plot</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">Cannot predict cluster for new data — must refit the whole model</td>
       </tr>
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:8px 14px">Intuitive and easy to explain to non-technical stakeholders</td>
-        <td style="padding:8px 14px">Linkage choice is rarely theoretically justified — mostly heuristic</td>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; color:var(--text-muted)">Finds naturally hierarchical structure (biology, geography, language)</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">Early merges are irreversible — a bad local decision propagates upward</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:9px 14px; color:var(--text-muted)">Fully deterministic — same result every run, no random seed issues</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">Struggles in high dimensions — distances become uniform (curse of dimensionality)</td>
       </tr>
       <tr>
-        <td style="padding:8px 14px">One run gives you every possible flat clustering</td>
-        <td style="padding:8px 14px">Early merges are irreversible — a bad merge can't be undone</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">Intuitive dendrogram output — easy to explain to non-technical audiences</td>
+        <td style="padding:9px 14px; color:var(--text-muted)">Assumes convex cluster shapes — rings or crescents will be split incorrectly</td>
       </tr>
     </table>
+  </div>
+
+  <div class="alert alert-info">
+    <strong>Rule of thumb:</strong> For n &lt; 5,000 where interpretability matters, hierarchical clustering with Ward linkage is an excellent first choice. For n &gt; 10,000, or when you need to classify new incoming data, use K-Means or DBSCAN instead.
   </div>
 
   <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-ul3"></div></div>
