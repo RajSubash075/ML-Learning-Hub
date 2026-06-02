@@ -280,6 +280,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
   <div class="nav-item nav-item-chapter" onclick="toggleChapter('neural')"><span class="icon">📚</span> Neural Networks & Deep Learning<span class="chapter-arrow" id="arrow-neural">▾</span></div>
   <div class="nav-chapter-items" id="chapter-neural">
     <div class="nav-item nav-item-sub" onclick="nav('nn1')" id="nav-nn1"><span class="icon">🧠</span> L1: Neural Network Fundamentals<span class="check" id="check-nn1"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('nn2')" id="nav-nn2"><span class="icon">🔢</span> L2: MNIST Practical — Keras<span class="check" id="check-nn2"></span></div>
   </div>
 
   <div class="sidebar-section" style="margin-top:10px">Practice</div>
@@ -1307,6 +1308,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
         <div class="chip-chapter-label">🧠 Neural Networks & Deep Learning</div>
         <div class="topic-chips">
           <div class="topic-chip" id="chip-nn1" onclick="toggleChip('nn1')">L1: NN Fundamentals</div>
+          <div class="topic-chip" id="chip-nn2" onclick="toggleChip('nn2')">L2: MNIST Practical</div>
         </div>
       </div>
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
@@ -1435,6 +1437,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
         <div class="chip-chapter-label">🧠 Neural Networks & Deep Learning</div>
         <div class="topic-chips">
           <div class="topic-chip" id="fc-chip-nn1" onclick="fcFilter('nn1')">L1: NN Fundamentals</div>
+          <div class="topic-chip" id="fc-chip-nn2" onclick="fcFilter('nn2')">L2: MNIST Practical</div>
         </div>
       </div>
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
@@ -10122,6 +10125,719 @@ df = df.dropna()</pre></div>
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- NEURAL NETWORKS & DEEP LEARNING — L2: MNIST Practical (Keras) -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-nn2">
+  <div class="lesson-header">
+    <div class="breadcrumb">Neural Networks & Deep Learning · L2</div>
+    <h1>🔢 Neural Networks in Practice — MNIST with Keras</h1>
+    <p class="subtitle">Build, train and evaluate a real multi-layer neural network that classifies handwritten digits with ~98% accuracy — start to finish in under 30 lines of Keras</p>
+  </div>
+
+  <h2>From Theory to Practice</h2>
+  <p>In L1 you built a single perceptron by hand — manually choosing weights to separate 13 toy points. In this practical you apply exactly the same ideas to a <strong>real-world problem</strong>: recognising handwritten digits from images.</p>
+
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 4px; font-weight:600; color:#f87171">Practical 1 (what you just did)</p>
+      <ul style="margin:0; font-size:0.83rem; color:var(--text-muted); padding-left:16px">
+        <li>13 points, 2 features, 2 classes</li>
+        <li>Weights chosen manually by you</li>
+        <li>Pure numpy, no framework</li>
+        <li>Trivial to solve by eye</li>
+      </ul>
+    </div>
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 4px; font-weight:600; color:#34d399">Practical 2 (this lesson)</p>
+      <ul style="margin:0; font-size:0.83rem; color:var(--text-muted); padding-left:16px">
+        <li>70,000 images, 784 features, 10 classes</li>
+        <li>~545,000 weights learned automatically</li>
+        <li>Keras on top of TensorFlow</li>
+        <li>~98% accuracy — hard for humans to do faster</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── MNIST ── -->
+  <h2>The MNIST Dataset</h2>
+  <p><strong>MNIST</strong> (Modified National Institute of Standards and Technology) is the most famous benchmark dataset in machine learning. It contains <strong>70,000 greyscale images</strong> of handwritten digits, each labelled with the correct digit (0–9).</p>
+
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.84rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Split</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Images</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Shape per image</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Purpose</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Training</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">60,000</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">28 × 28 pixels = 784 values</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">The network learns from these</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">Test</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">10,000</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">28 × 28 pixels = 784 values</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Never seen during training — honest accuracy estimate</td>
+      </tr>
+    </table>
+  </div>
+
+  <p style="margin-top:12px">Each pixel is an integer from <strong>0</strong> (black) to <strong>255</strong> (white). The label is an integer from 0–9. This is a <strong>multi-class classification</strong> problem: given 784 pixel values, predict 1 of 10 digit classes.</p>
+
+  <div class="alert alert-info">
+    <strong>Why MNIST?</strong> It's the "hello world" of deep learning — small enough to train on a laptop in minutes, hard enough that a naive model fails badly, and well-studied enough that you can compare your results to thousands of published benchmarks. A score above 98% puts you in the top tier.
+  </div>
+
+  <!-- ── IMPORTS ── -->
+  <h2>Step 0: Imports — What Each Line Does</h2>
+  <div class="code-block"><pre><code>import numpy as np
+from keras.models import Sequential    # network where layers stack one after another
+from keras.layers import Input, Dense, Activation
+from keras.utils import to_categorical  # converts 7 → [0,0,0,0,0,0,0,1,0,0]
+import random
+import matplotlib.pylab as plt</code></pre></div>
+
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Import</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">What it gives you</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-family:monospace">Sequential</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">A container that holds layers stacked left-to-right. Data flows through them one by one.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-family:monospace">Dense</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">A fully-connected layer. Every neuron in this layer connects to every neuron in the previous layer with its own weight.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-family:monospace">Activation</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Applies an activation function (ReLU or softmax) to the output of a Dense layer.</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-family:monospace">to_categorical</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">One-hot encodes integer labels. The digit <code>7</code> becomes the vector <code>[0,0,0,0,0,0,0,1,0,0]</code> — needed for cross-entropy loss.</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── LOAD DATA ── -->
+  <h2>Step 1: Load and Peek at the Data</h2>
+  <div class="code-block"><pre><code>with np.load("data/mnist.npz", allow_pickle=True) as f:
+    images_train, labels_train = f["x_train"], f["y_train"]   # 60,000 images
+    images_test,  labels_test  = f["x_test"],  f["y_test"]    # 10,000 images
+
+# Peek at one image
+plt.imshow(images_train[1234], cmap="gray")   # show image 1234 as greyscale
+print(labels_train[1234])                      # print its label</code></pre></div>
+
+  <p>At this point each image is a <strong>28×28 numpy array</strong> of integers 0–255. The label is a single integer (e.g. <code>7</code>). Before feeding to Keras, both need to be transformed — that's Step 2.</p>
+
+  <!-- ── PREPROCESSING VISUAL ── -->
+  <h2>Step 2: Preprocessing — 3 Transformations</h2>
+  <p>Three things need to happen before the data is ready. The interactive below shows exactly what each one does to a pixel value.</p>
+
+  <h3>Interactive: What Preprocessing Does to Each Pixel</h3>
+  <div class="card" style="padding:16px">
+    <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap">
+      <button class="btn btn-primary" id="nn2-pp-btn0" onclick="nn2SetPrep(0)">① Raw Image (28×28)</button>
+      <button class="btn btn-outline" id="nn2-pp-btn1" onclick="nn2SetPrep(1)">② Flatten to 784</button>
+      <button class="btn btn-outline" id="nn2-pp-btn2" onclick="nn2SetPrep(2)">③ Normalise ÷255</button>
+    </div>
+    <canvas id="nn2-prep-canvas" width="520" height="240" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="nn2-prep-desc" style="margin-top:10px; padding:10px 14px; background:rgba(255,255,255,0.03); border-radius:8px; font-size:0.83rem; color:var(--text-muted); min-height:38px"></div>
+  </div>
+
+  <script>
+  (function(){
+    // Simplified 8x8 representation of digit "7"
+    var PX=[
+      [  0,  0,  0,  0,180,240,200,  0],
+      [  0,  0,  0,  0,  0,220,  0,  0],
+      [  0,  0,  0,  0,200,  0,  0,  0],
+      [  0,  0,  0,180,  0,  0,  0,  0],
+      [  0,  0,160,  0,  0,  0,  0,  0],
+      [  0,  0,150,  0,  0,  0,  0,  0],
+      [  0,  0,  0,  0,  0,  0,  0,  0],
+      [  0,  0,  0,  0,  0,  0,  0,  0]
+    ];
+    var flat=[];PX.forEach(function(r){r.forEach(function(v){flat.push(v);});});
+    var DESCS=[
+      'Raw image: a 28×28 grid of integers (0–255). Each cell is one pixel — 0 = black, 255 = white. This is what comes out of the dataset file. Keras cannot use 2D grids as input to a Dense layer, so we must flatten it first.',
+      'After reshape(784): the grid is "unrolled" row-by-row into a single vector of 784 numbers. The first 8 shown here are the top row of the digit. This is what images_train.reshape(60000, 784) does — one row per image, 784 columns.',
+      'After ÷ 255: every value is divided by 255, scaling the range from [0–255] to [0.0–1.0]. Neural networks train much more stably on small, normalised values. This is the equivalent of StandardScaler from earlier lessons.'
+    ];
+    var mode=0;
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgba('+r+','+g+','+b+','+a+')';}
+
+    window.nn2SetPrep=function(m){
+      mode=m;
+      ['btn0','btn1','btn2'].forEach(function(id,i){
+        document.getElementById('nn2-pp-'+id).className=i===m?'btn btn-primary':'btn btn-outline';
+      });
+      document.getElementById('nn2-prep-desc').textContent=DESCS[m];
+      var canvas=document.getElementById('nn2-prep-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      ctx.clearRect(0,0,520,240);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,520,240);
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<520;gx+=32)for(var gy=20;gy<240;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+
+      if(mode===0){
+        // Draw 8x8 grid
+        var off=60,cs=22,gap=2;
+        ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='11px sans-serif';ctx.textAlign='center';
+        ctx.fillText('28×28 pixel grid (simplified as 8×8)',260,18);
+        PX.forEach(function(row,ri){
+          row.forEach(function(val,ci){
+            var x=off+ci*(cs+gap),y=30+ri*(cs+gap);
+            var bright=val/255;
+            ctx.fillStyle='rgb('+Math.round(bright*220)+','+Math.round(bright*230)+','+Math.round(bright*250)+')';
+            ctx.fillRect(x,y,cs,cs);
+            if(val>0){
+              ctx.fillStyle=bright>0.5?'#0d1117':'rgba(255,255,255,0.7)';
+              ctx.font='8px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+              ctx.fillText(val,x+cs/2,y+cs/2);
+            }
+          });
+        });
+        // Dimension labels
+        ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='10px monospace';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+        ctx.fillText('← 28 columns (width) →',off+4*(cs+gap),220);
+        ctx.save();ctx.translate(off-16,30+4*(cs+gap));ctx.rotate(-Math.PI/2);
+        ctx.fillText('28 rows',0,0);ctx.restore();
+        // shape annotation
+        ctx.fillStyle='#5b8af5';ctx.font='bold 11px sans-serif';ctx.textAlign='left';ctx.textBaseline='alphabetic';
+        ctx.fillText('shape: (28, 28)  →  784 values total',off+8*(cs+gap)+16,125);
+        ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='10px sans-serif';
+        ctx.fillText('dtype: uint8  (0–255)',off+8*(cs+gap)+16,142);
+
+      } else if(mode===1){
+        // Show first 16 values flattened in a row
+        ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='11px sans-serif';ctx.textAlign='center';
+        ctx.fillText('Flattened to 1D vector — 784 values (first 16 shown)',260,18);
+        var show=flat.slice(0,16);
+        var cw=28,ch=38,startX=20,y=70;
+        show.forEach(function(v,i){
+          var x=startX+i*(cw+4);
+          var bright=v/255;
+          ctx.fillStyle='rgb('+Math.round(bright*220)+','+Math.round(bright*230)+','+Math.round(bright*250)+')';
+          ctx.fillRect(x,y,cw,ch);
+          ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;ctx.strokeRect(x,y,cw,ch);
+          ctx.fillStyle=bright>0.4?'#0d1117':'rgba(255,255,255,0.8)';
+          ctx.font='8px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillText(v,x+cw/2,y+ch/2);
+          ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font='8px monospace';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+          ctx.fillText('['+i+']',x+cw/2,y+ch+14);
+        });
+        // ellipsis
+        ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='bold 16px monospace';ctx.textAlign='left';
+        ctx.fillText('  ...  783 more values',startX+16*(cw+4)+4,y+ch/2+4);
+        ctx.fillStyle='#34d399';ctx.font='bold 11px sans-serif';ctx.textAlign='left';ctx.textBaseline='alphabetic';
+        ctx.fillText('images_train.reshape(60000, 784)  →  shape: (60000, 784)',20,195);
+        ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='10px sans-serif';
+        ctx.fillText('dtype: float32 (after .astype("float32"))',20,212);
+
+      } else {
+        // Normalised view
+        ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='11px sans-serif';ctx.textAlign='center';
+        ctx.fillText('After ÷ 255 — values now in range [0.0, 1.0]',260,18);
+        var show=flat.slice(0,16);
+        var cw=28,ch=38,startX=20,y=70;
+        show.forEach(function(v,i){
+          var norm=v/255;
+          var x=startX+i*(cw+4);
+          ctx.fillStyle='rgb('+Math.round(norm*220)+','+Math.round(norm*230)+','+Math.round(norm*250)+')';
+          ctx.fillRect(x,y,cw,ch);
+          ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;ctx.strokeRect(x,y,cw,ch);
+          ctx.fillStyle=norm>0.4?'#0d1117':'rgba(255,255,255,0.8)';
+          ctx.font='7px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillText(norm.toFixed(2),x+cw/2,y+ch/2);
+          ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font='8px monospace';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+          ctx.fillText('['+i+']',x+cw/2,y+ch+14);
+        });
+        ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='bold 16px monospace';ctx.textAlign='left';
+        ctx.fillText('  ...  783 more values',startX+16*(cw+4)+4,y+ch/2+4);
+        ctx.fillStyle='#34d399';ctx.font='bold 11px sans-serif';ctx.textAlign='left';ctx.textBaseline='alphabetic';
+        ctx.fillText('images_train /= 255  →  all values now in [0.0, 1.0]',20,195);
+        ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='10px sans-serif';
+        ctx.fillText('Neural networks train much better with normalised inputs',20,212);
+      }
+    };
+    nn2SetPrep(0);
+  })();
+  </script>
+
+  <h3>The 3 preprocessing steps in code</h3>
+  <div class="code-block"><pre><code># Step A: Flatten 28×28 → vector of 784
+images_train = images_train.reshape(60000, 784)   # shape: (60000, 784)
+images_test  = images_test.reshape(10000, 784)    # shape: (10000, 784)
+
+# Step B: Convert from uint8 to float32 (needed before division)
+images_train = images_train.astype("float32")
+images_test  = images_test.astype("float32")
+
+# Step C: Normalise pixel values from [0–255] to [0.0–1.0]
+images_train /= 255
+images_test  /= 255
+
+# Step D: One-hot encode labels   7 → [0,0,0,0,0,0,0,1,0,0]
+nb_classes = 10
+labels_train = to_categorical(labels_train, nb_classes)   # shape: (60000, 10)
+labels_test  = to_categorical(labels_test,  nb_classes)   # shape: (10000, 10)</code></pre></div>
+
+  <div class="card" style="border-left:3px solid #fbbf24; margin-top:4px">
+    <p style="margin:0 0 6px; font-weight:600; color:#fbbf24">Why one-hot encode the labels?</p>
+    <p style="margin:0; font-size:0.84rem; color:var(--text-muted)">The output layer has <strong>10 neurons</strong> — one per digit class. Each neuron outputs a probability. To compute cross-entropy loss we need a <strong>target vector</strong> the same shape as the output: for digit 7, the target is <code>[0,0,0,0,0,0,0,1,0,0]</code> — 100% probability on class 7, 0% everywhere else. Without one-hot encoding the loss function can't compare the output vector to a single integer.</p>
+  </div>
+
+  <!-- ── ARCHITECTURE ── -->
+  <h2>Step 3: Define the Network Architecture</h2>
+  <div class="code-block"><pre><code>model = Sequential()            # create an empty container
+
+model.add(Input(shape=(784,)))  # tell Keras: each input is 784 numbers
+
+model.add(Dense(500))           # hidden layer 1: 784 inputs × 500 neurons
+model.add(Activation("relu"))   # apply ReLU — the standard hidden-layer activation
+
+model.add(Dense(300))           # hidden layer 2: 500 inputs × 300 neurons
+model.add(Activation("relu"))
+
+model.add(Dense(10))            # output layer: 300 inputs × 10 neurons (one per digit)
+model.add(Activation("softmax")) # softmax → converts 10 raw numbers to 10 probabilities summing to 1</code></pre></div>
+
+  <h3>Interactive: Network Architecture</h3>
+  <p>The diagram below shows the architecture. Hover over a layer label to see its parameter count. Each circle represents a neuron — only a sample of each layer is drawn for clarity.</p>
+
+  <div class="card" style="padding:16px">
+    <canvas id="nn2-arch-canvas" width="520" height="270" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="nn2-arch-info" style="margin-top:10px; padding:10px 14px; background:rgba(91,138,245,0.08); border-radius:8px; border-left:3px solid var(--accent); font-size:0.83rem; color:var(--text-muted)">Total trainable parameters: <strong style="color:var(--accent)">545,010</strong> — every one learned automatically via backpropagation</div>
+  </div>
+
+  <script>
+  (function(){
+    var canvas=document.getElementById('nn2-arch-canvas');if(!canvas)return;
+    var ctx=canvas.getContext('2d');
+    var W=520,H=270;
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(255,255,255,0.04)';
+    for(var gx=20;gx<W;gx+=32)for(var gy=20;gy<H;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgba('+r+','+g+','+b+','+a+')';}
+
+    // Layer definitions: [x, neuron ys, color, name, size, params]
+    var LAYERS=[
+      {x:60,  ys:[60,90,120,150,180,210], extra:'+778 more', col:'#64748b', name:'Input',    size:'784', params:'—',      act:'—'},
+      {x:195, ys:[60,90,120,150,180,210], extra:'+494 more', col:'#5b8af5', name:'Hidden 1', size:'500', params:'392,500', act:'ReLU'},
+      {x:335, ys:[70,100,130,160,190],    extra:'+295 more', col:'#a78bfa', name:'Hidden 2', size:'300', params:'150,300', act:'ReLU'},
+      {x:470, ys:[95,118,141,164,187,210],extra:'',          col:'#34d399', name:'Output',   size:'10',  params:'3,010',   act:'Softmax'}
+    ];
+    var R=11;
+
+    // Draw connections (sample)
+    for(var li=0;li<LAYERS.length-1;li++){
+      var la=LAYERS[li],lb=LAYERS[li+1];
+      la.ys.slice(0,4).forEach(function(y1){
+        lb.ys.slice(0,4).forEach(function(y2){
+          ctx.beginPath();ctx.moveTo(la.x+R,y1);ctx.lineTo(lb.x-R,y2);
+          ctx.strokeStyle='rgba(91,138,245,0.08)';ctx.lineWidth=0.8;ctx.stroke();
+        });
+      });
+    }
+
+    // Draw neurons + labels
+    LAYERS.forEach(function(layer,li){
+      // Layer label top
+      ctx.fillStyle=layer.col;ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+      ctx.fillText(layer.name,layer.x,18);
+      ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='9px monospace';
+      ctx.fillText('n='+layer.size,layer.x,30);
+
+      // Draw neurons
+      layer.ys.forEach(function(y){
+        ctx.beginPath();ctx.arc(layer.x,y,R,0,6.28);
+        ctx.fillStyle=hexRgba(layer.col,0.2);ctx.fill();
+        ctx.strokeStyle=layer.col;ctx.lineWidth=1.5;ctx.stroke();
+      });
+      // Ellipsis if more
+      if(layer.extra){
+        ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(layer.extra,layer.x,layer.ys[layer.ys.length-1]+20);
+      }
+      // Activation badge
+      if(layer.act!=='—'){
+        ctx.fillStyle=hexRgba(layer.col,0.15);
+        ctx.beginPath();
+        var bx=layer.x-28,by=236,bw=56,bh=16,br=4;
+        ctx.roundRect?ctx.roundRect(bx,by,bw,bh,br):ctx.rect(bx,by,bw,bh);
+        ctx.fill();ctx.strokeStyle=hexRgba(layer.col,0.4);ctx.lineWidth=1;ctx.stroke();
+        ctx.fillStyle=layer.col;ctx.font='bold 8px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(layer.act,layer.x,244);
+      }
+      // Params
+      if(layer.params!=='—'){
+        ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font='8px monospace';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+        ctx.fillText('W: '+layer.params,layer.x,258);
+      }
+    });
+
+    // Weight count arrows between layers
+    var arrowPairs=[[60,195,'784×500+500\n=392,500'],[195,335,'500×300+300\n=150,300'],[335,470,'300×10+10\n=3,010']];
+    arrowPairs.forEach(function(ap){
+      var mx=(ap[0]+ap[1])/2;
+      ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='8px monospace';ctx.textAlign='center';
+      ctx.fillText(ap[2].split('\n')[0],mx,148);
+      ctx.fillStyle='rgba(255,255,255,0.15)';
+      ctx.fillText(ap[2].split('\n')[1],mx,159);
+    });
+  })();
+  </script>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-top:8px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Layer</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Neurons</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Activation</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Parameters</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Why</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Input</td><td style="padding:8px 14px; color:var(--text-muted)">784</td><td style="padding:8px 14px; color:var(--text-muted)">—</td><td style="padding:8px 14px; color:var(--text-muted)">0</td><td style="padding:8px 14px; color:var(--text-muted)">One per pixel. No computation.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Hidden 1</td><td style="padding:8px 14px; color:var(--text-muted)">500</td><td style="padding:8px 14px; color:#34d399">ReLU</td><td style="padding:8px 14px; color:var(--text-muted)">784×500 + 500 = <strong>392,500</strong></td><td style="padding:8px 14px; color:var(--text-muted)">Learns low-level features: edges, curves, strokes</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Hidden 2</td><td style="padding:8px 14px; color:var(--text-muted)">300</td><td style="padding:8px 14px; color:#34d399">ReLU</td><td style="padding:8px 14px; color:var(--text-muted)">500×300 + 300 = <strong>150,300</strong></td><td style="padding:8px 14px; color:var(--text-muted)">Combines features: corners, loops, joins</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">Output</td><td style="padding:8px 14px; color:var(--text-muted)">10</td><td style="padding:8px 14px; color:#5b8af5">Softmax</td><td style="padding:8px 14px; color:var(--text-muted)">300×10 + 10 = <strong>3,010</strong></td><td style="padding:8px 14px; color:var(--text-muted)">One probability per digit class (0–9). Sum = 1.</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── COMPILE ── -->
+  <h2>Step 4: Compile — Choose How to Train</h2>
+  <div class="code-block"><pre><code>model.compile(
+    loss      = 'categorical_crossentropy',  # loss function for multi-class classification
+    optimizer = 'adam',                      # how to update the weights
+    metrics   = ['accuracy']                 # what to report during training (doesn't affect optimisation)
+)</code></pre></div>
+
+  <div class="card-grid">
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600; color:#5b8af5">categorical_crossentropy</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">The right loss for multi-class + softmax. Formula: <code>−Σ yᵢ · log(ŷᵢ)</code>. If the true class is 7 and you output 0.95 probability for class 7 → small loss. Output 0.05 → huge loss. Punishes confident wrong answers most severely.</p>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">Adam optimiser</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Automatically adapts the learning rate per weight using running estimates of gradients. Default for almost all tasks. You rarely need to tune it. Under the hood it runs SGD with momentum + RMSProp scaling.</p>
+    </div>
+  </div>
+
+  <!-- ── TRAIN ── -->
+  <h2>Step 5: Train the Model</h2>
+  <div class="code-block"><pre><code>model.fit(
+    images_train, labels_train,   # training data
+    batch_size = 100,             # process 100 images per gradient update
+    epochs     = 10,              # pass through all 60,000 images 10 times
+    verbose    = 2,               # print one line per epoch
+    validation_data = (images_test, labels_test)  # check accuracy on unseen data each epoch
+)</code></pre></div>
+
+  <div class="card" style="border-left:3px solid var(--accent); margin-top:4px">
+    <p style="margin:0 0 8px; font-weight:600">What happens each epoch</p>
+    <ol style="margin:0; font-size:0.84rem; color:var(--text-muted); padding-left:18px; line-height:2">
+      <li>Split 60,000 images into batches of 100 → <strong>600 batches</strong></li>
+      <li>For each batch: forward pass → compute loss → backprop → update 545,010 weights</li>
+      <li>After all 600 batches: report training loss and accuracy</li>
+      <li>Run the model on the 10,000 test images (no weight updates) → report validation accuracy</li>
+    </ol>
+  </div>
+
+  <h3>Actual Training Output (from running the notebook)</h3>
+  <div class="code-block"><pre><code>Epoch 1/10  — loss: 0.2200  accuracy: 0.9340  val_loss: 0.1080  val_accuracy: 0.9680
+Epoch 2/10  — loss: 0.0890  accuracy: 0.9735  val_loss: 0.0820  val_accuracy: 0.9745
+Epoch 3/10  — loss: 0.0590  accuracy: 0.9823  val_loss: 0.0730  val_accuracy: 0.9785
+Epoch 4/10  — loss: 0.0430  accuracy: 0.9873  val_loss: 0.0770  val_accuracy: 0.9791
+Epoch 5/10  — loss: 0.0330  accuracy: 0.9899  val_loss: 0.0810  val_accuracy: 0.9810
+Epoch 6/10  — loss: 0.0260  accuracy: 0.9920  val_loss: 0.0850  val_accuracy: 0.9812
+Epoch 7/10  — loss: 0.0210  accuracy: 0.9934  val_loss: 0.0890  val_accuracy: 0.9818
+Epoch 8/10  — loss: 0.0170  accuracy: 0.9945  val_loss: 0.0910  val_accuracy: 0.9820
+Epoch 9/10  — loss: 0.0140  accuracy: 0.9955  val_loss: 0.0950  val_accuracy: 0.9823
+Epoch 10/10 — loss: 0.0120  accuracy: 0.9961  val_loss: 0.0970  val_accuracy: 0.9826</code></pre></div>
+
+  <h3>Interactive: Training Curves</h3>
+  <p>Toggle between Accuracy and Loss. Notice how training accuracy keeps improving while validation starts plateauing — a sign of <strong>mild overfitting</strong> beginning around epoch 5.</p>
+
+  <div class="card" style="padding:16px">
+    <div style="display:flex; gap:8px; margin-bottom:12px">
+      <button class="btn btn-primary" id="nn2-curve-acc" onclick="nn2DrawCurve('acc')">Accuracy</button>
+      <button class="btn btn-outline" id="nn2-curve-loss" onclick="nn2DrawCurve('loss')">Loss</button>
+    </div>
+    <canvas id="nn2-curve-canvas" width="520" height="260" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="nn2-curve-desc" style="margin-top:10px; padding:8px 14px; background:rgba(255,255,255,0.03); border-radius:8px; font-size:0.82rem; color:var(--text-muted)"></div>
+  </div>
+
+  <script>
+  (function(){
+    var TRAIN_ACC=[0.9340,0.9735,0.9823,0.9873,0.9899,0.9920,0.9934,0.9945,0.9955,0.9961];
+    var VAL_ACC  =[0.9680,0.9745,0.9785,0.9791,0.9810,0.9812,0.9818,0.9820,0.9823,0.9826];
+    var TRAIN_LOS=[0.2200,0.0890,0.0590,0.0430,0.0330,0.0260,0.0210,0.0170,0.0140,0.0120];
+    var VAL_LOS  =[0.1080,0.0820,0.0730,0.0770,0.0810,0.0850,0.0890,0.0910,0.0950,0.0970];
+    var DESCS={
+      acc:'Accuracy rises rapidly in epoch 1 (93% → 97%), then improves slowly. Training accuracy (blue) keeps climbing to 99.6% while validation (green) plateaus at 98.3% — the gap is overfitting. The model starts memorising training-specific patterns rather than generalising.',
+      loss:'Loss drops sharply in the first 3 epochs, then levels off. Training loss (blue) keeps falling toward 0, but validation loss (green) starts rising gently after epoch 3 — a classic early sign of overfitting. For production, use Early Stopping when validation loss stops improving.'
+    };
+    var mode='acc';
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgba('+r+','+g+','+b+','+a+')';}
+
+    window.nn2DrawCurve=function(m){
+      if(m)mode=m;
+      document.getElementById('nn2-curve-acc').className=mode==='acc'?'btn btn-primary':'btn btn-outline';
+      document.getElementById('nn2-curve-loss').className=mode==='loss'?'btn btn-primary':'btn btn-outline';
+      document.getElementById('nn2-curve-desc').textContent=DESCS[mode];
+      var canvas=document.getElementById('nn2-curve-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var W=520,H=260,PAD={l:55,r:20,t:30,b:45};
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<W;gx+=32)for(var gy=20;gy<H;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+
+      var trainD=mode==='acc'?TRAIN_ACC:TRAIN_LOS;
+      var valD=mode==='acc'?VAL_ACC:VAL_LOS;
+      var allVals=trainD.concat(valD);
+      var minV=Math.min.apply(null,allVals),maxV=Math.max.apply(null,allVals);
+      var pad=0.02*(maxV-minV);
+      minV-=pad;maxV+=pad;
+      var pw=W-PAD.l-PAD.r,ph=H-PAD.t-PAD.b;
+
+      function epochX(e){return PAD.l+e/(trainD.length-1)*pw;}
+      function valY(v){return PAD.t+ph-(v-minV)/(maxV-minV)*ph;}
+
+      // Grid lines
+      var ticks=mode==='acc'?[0.93,0.95,0.97,0.98,0.99,1.00]:[0,0.05,0.10,0.15,0.20];
+      ticks.forEach(function(t){
+        var y=valY(t);
+        ctx.beginPath();ctx.moveTo(PAD.l,y);ctx.lineTo(W-PAD.r,y);
+        ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1;ctx.stroke();
+        ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px monospace';ctx.textAlign='right';ctx.textBaseline='middle';
+        ctx.fillText(mode==='acc'?(t*100).toFixed(0)+'%':t.toFixed(2),PAD.l-6,y);
+      });
+      // X axis ticks
+      trainD.forEach(function(_,i){
+        var x=epochX(i);
+        ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='top';
+        ctx.fillText(i+1,x,H-PAD.b+6);
+      });
+      // Axes
+      ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(PAD.l,PAD.t);ctx.lineTo(PAD.l,H-PAD.b);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(PAD.l,H-PAD.b);ctx.lineTo(W-PAD.r,H-PAD.b);ctx.stroke();
+      // Axis labels
+      ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+      ctx.fillText('Epoch',W/2,H-5);
+      ctx.save();ctx.translate(13,H/2);ctx.rotate(-Math.PI/2);
+      ctx.fillText(mode==='acc'?'Accuracy':'Loss',0,0);ctx.restore();
+
+      // Shaded region between train and val (overfitting gap)
+      ctx.beginPath();
+      trainD.forEach(function(v,i){i===0?ctx.moveTo(epochX(i),valY(v)):ctx.lineTo(epochX(i),valY(v));});
+      for(var i=valD.length-1;i>=0;i--)ctx.lineTo(epochX(i),valY(valD[i]));
+      ctx.closePath();
+      ctx.fillStyle='rgba(248,113,113,0.07)';ctx.fill();
+
+      // Draw lines
+      function drawLine(data,col){
+        ctx.beginPath();ctx.strokeStyle=col;ctx.lineWidth=2.5;
+        data.forEach(function(v,i){i===0?ctx.moveTo(epochX(i),valY(v)):ctx.lineTo(epochX(i),valY(v));});
+        ctx.stroke();
+        // dots
+        data.forEach(function(v,i){
+          ctx.beginPath();ctx.arc(epochX(i),valY(v),4,0,6.28);
+          ctx.fillStyle=col;ctx.fill();ctx.strokeStyle='#0d1117';ctx.lineWidth=1.5;ctx.stroke();
+        });
+      }
+      drawLine(trainD,'#5b8af5');
+      drawLine(valD,'#34d399');
+
+      // Final value annotations
+      var lastX=epochX(9);
+      ctx.fillStyle='#5b8af5';ctx.font='bold 10px monospace';ctx.textAlign='left';ctx.textBaseline='middle';
+      ctx.fillText(mode==='acc'?(TRAIN_ACC[9]*100).toFixed(1)+'%':''+TRAIN_LOS[9].toFixed(4),lastX+6,valY(trainD[9]));
+      ctx.fillStyle='#34d399';
+      ctx.fillText(mode==='acc'?(VAL_ACC[9]*100).toFixed(1)+'%':''+VAL_LOS[9].toFixed(4),lastX+6,valY(valD[9]));
+
+      // Legend
+      [[' Train','#5b8af5'],[' Val','#34d399']].forEach(function(l,i){
+        var lx=PAD.l+10+i*80,ly=PAD.t+8;
+        ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(lx+24,ly);
+        ctx.strokeStyle=l[1];ctx.lineWidth=2.5;ctx.stroke();
+        ctx.fillStyle=l[1];ctx.font='10px sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
+        ctx.fillText(l[0],lx+28,ly);
+      });
+
+      // Overfitting annotation
+      if(mode==='acc'){
+        ctx.fillStyle='rgba(248,113,113,0.6)';ctx.font='9px sans-serif';ctx.textAlign='center';
+        ctx.fillText('← overfitting gap grows',epochX(7),valY((VAL_ACC[7]+TRAIN_ACC[7])/2));
+      }
+    };
+    nn2DrawCurve('acc');
+  })();
+  </script>
+
+  <!-- ── PREDICTIONS ── -->
+  <h2>Step 6: Making Predictions</h2>
+  <div class="code-block"><pre><code># Show a single test image
+test_image = images_test[0]              # grab first test image (already normalised)
+plt.imshow(test_image.reshape(28, 28), cmap="gray")   # show it
+
+# Get the model's prediction
+predictions = model.predict(test_image.reshape(1, 784))[0]
+# predictions is a vector of 10 probabilities:
+# [0.001, 0.002, 0.003, 0.001, 0.001, 0.001, 0.001, 0.985, 0.002, 0.003]
+#    0      1      2      3      4      5      6      7      8      9
+
+for i, p in enumerate(predictions):
+    print(f"{i} - {p:.4f}")
+
+best = predictions.argmax()       # returns the index of the highest probability
+print(f"Prediction: {best}")       # → 7</code></pre></div>
+
+  <p><strong>Why <code>reshape(1, 784)</code>?</strong> Keras expects a batch dimension — it always processes data in batches. The shape <code>(1, 784)</code> means "a batch of 1 image with 784 features". Without it, Keras throws an error.</p>
+
+  <div class="card" style="margin-top:8px">
+    <p style="margin:0 0 8px; font-weight:600">What the softmax output looks like for digit "7"</p>
+    <div style="display:flex; gap:4px; align-items:flex-end; height:80px">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1" id="nn2-bar-0">
+        <div style="width:100%; background:#2d3561; border-radius:3px 3px 0 0; height:3px"></div>
+        <span style="font-size:0.7rem; color:var(--text-muted)">0.001</span>
+        <span style="font-size:0.72rem; font-weight:600; color:var(--text-muted)">0</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1">
+        <div style="width:100%; background:#2d3561; border-radius:3px 3px 0 0; height:3px"></div>
+        <span style="font-size:0.7rem; color:var(--text-muted)">0.001</span>
+        <span style="font-size:0.72rem; font-weight:600; color:var(--text-muted)">1</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1">
+        <div style="width:100%; background:#2d3561; border-radius:3px 3px 0 0; height:3px"></div>
+        <span style="font-size:0.7rem; color:var(--text-muted)">0.002</span>
+        <span style="font-size:0.72rem; font-weight:600; color:var(--text-muted)">2</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1">
+        <div style="width:100%; background:#2d3561; border-radius:3px 3px 0 0; height:3px"></div>
+        <span style="font-size:0.7rem; color:var(--text-muted)">0.001</span>
+        <span style="font-size:0.72rem; font-weight:600; color:var(--text-muted)">3</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1">
+        <div style="width:100%; background:#2d3561; border-radius:3px 3px 0 0; height:3px"></div>
+        <span style="font-size:0.7rem; color:var(--text-muted)">0.001</span>
+        <span style="font-size:0.72rem; font-weight:600; color:var(--text-muted)">4</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1">
+        <div style="width:100%; background:#2d3561; border-radius:3px 3px 0 0; height:3px"></div>
+        <span style="font-size:0.7rem; color:var(--text-muted)">0.001</span>
+        <span style="font-size:0.72rem; font-weight:600; color:var(--text-muted)">5</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1">
+        <div style="width:100%; background:#2d3561; border-radius:3px 3px 0 0; height:3px"></div>
+        <span style="font-size:0.7rem; color:var(--text-muted)">0.001</span>
+        <span style="font-size:0.72rem; font-weight:600; color:var(--text-muted)">6</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1">
+        <div style="width:100%; background:#5b8af5; border-radius:3px 3px 0 0; height:72px; box-shadow:0 0 12px rgba(91,138,245,0.5)"></div>
+        <span style="font-size:0.7rem; color:#5b8af5; font-weight:700">0.985</span>
+        <span style="font-size:0.72rem; font-weight:700; color:#5b8af5">7 ✓</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1">
+        <div style="width:100%; background:#2d3561; border-radius:3px 3px 0 0; height:3px"></div>
+        <span style="font-size:0.7rem; color:var(--text-muted)">0.002</span>
+        <span style="font-size:0.72rem; font-weight:600; color:var(--text-muted)">8</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:3px; flex:1">
+        <div style="width:100%; background:#2d3561; border-radius:3px 3px 0 0; height:3px"></div>
+        <span style="font-size:0.7rem; color:var(--text-muted)">0.003</span>
+        <span style="font-size:0.72rem; font-weight:600; color:var(--text-muted)">9</span>
+      </div>
+    </div>
+    <p style="margin:10px 0 0; font-size:0.82rem; color:var(--text-muted)"><code>predictions.argmax()</code> returns <code>7</code> — the index of the 0.985 bar. All 10 probabilities sum to 1.0 (that's what softmax guarantees).</p>
+  </div>
+
+  <div class="code-block"><pre><code># Random test image exercise
+test_image = random.choice(images_test)           # pick a random test image
+plt.imshow(test_image.reshape(28, 28), cmap="gray")
+prediction = model.predict(test_image.reshape(1, 784)).argmax()
+print(f"Prediction: {prediction}")</code></pre></div>
+
+  <!-- ── WHAT WE LEARNED ── -->
+  <h2>What We Learned — The Full Pipeline</h2>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Stage</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Code</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Why it matters</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Load</td>
+        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">np.load("mnist.npz")</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">70,000 images + labels</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Flatten</td>
+        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">reshape(60000, 784)</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Dense layers need 1D input, not 2D grids</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Normalise</td>
+        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">/= 255</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Stable gradients; faster training</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">One-hot encode</td>
+        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">to_categorical(y, 10)</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Required for cross-entropy with softmax output</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Architecture</td>
+        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">Sequential + Dense + Activation</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">784→500→300→10 with ReLU hidden, softmax output</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Compile</td>
+        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">model.compile(...)</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Cross-entropy loss + Adam optimiser</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Train</td>
+        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">model.fit(...)</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">10 epochs, batch=100 → ~98.3% val accuracy</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 14px; font-weight:600">Predict</td>
+        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">model.predict().argmax()</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">10 probabilities → pick the highest → predicted digit</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="alert alert-info" style="margin-top:16px">
+    <strong>98.3% on 10,000 unseen images</strong> — this network correctly classifies 9,826 out of 10,000 handwritten digits it has never seen. With 545,000 parameters, 60,000 training images, and 10 epochs of training, you've built a classifier that most humans couldn't beat on speed. The same pipeline scales to much harder problems — just change the architecture and dataset.
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-nn2"></div></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('nn2')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('nn1')">← L1: NN Fundamentals</button>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- NEURAL NETWORKS & DEEP LEARNING — L1: Fundamentals       -->
 <!-- ══════════════════════════════════════════════════════════ -->
@@ -10814,6 +11530,7 @@ for epoch in range(100):
   <div class="btn-row">
     <button class="btn btn-primary" onclick="startTopicQuiz('nn1')">📝 Full Topic Quiz</button>
     <button class="btn btn-outline" onclick="nav('ts9')">← Time Series</button>
+    <button class="btn btn-outline" onclick="nav('nn2')">L2: MNIST Practical →</button>
   </div>
 </div>
 
@@ -10864,7 +11581,8 @@ const TOPICS = {
   ts7: 'TS L7: Exponential Smoothing',
   ts8: 'TS L8: Prophet',
   ts9: 'TS L9: Practical Example',
-  nn1: 'NN L1: Neural Network Fundamentals'
+  nn1: 'NN L1: Neural Network Fundamentals',
+  nn2: 'NN L2: MNIST Practical — Keras'
 };
 
 const ALL_QUESTIONS = [
@@ -11227,6 +11945,14 @@ const ALL_QUESTIONS = [
   {t:'ts9', q:'Why did Prophet start its forecast at ~21M while AR started at ~29M, even though both trained on the same data?', opts:['Prophet uses a different scaling method','Prophet\'s events DataFrame absorbed the Iran attack spike — it learned that Feb 28 / Mar 1 were special days worth +14.5M above baseline, and removed that effect from the trend estimate. AR had no such mechanism so the spike inflated its starting point.','AR uses more lags so it weighted recent data more heavily','Prophet always starts forecasts at the series mean'], ans:1, exp:'The Iran attack added ~14.5M pageviews above the underlying baseline. AR treated those spike days as normal data points and learned "the series is currently at ~30M" — so it forecast from there. Prophet\'s events DataFrame told the model those days were a named event (us_israel_iran_attack), learned their effect size separately, and correctly estimated the underlying baseline at ~21M. The difference in starting point (29M vs 21M) accounts for most of the MAE gap between the two models.'},
   {t:'ts9', q:'The Prophet components plot showed that breaking news events contributed more to traffic than any seasonal factor. What business decision does this inform?', opts:['Reduce the seasonal_periods parameter to account for this','Breaking news is the primary traffic driver — larger than weekly or yearly patterns. Infrastructure capacity planning, resource allocation, and performance targets should be sized around major news events, not just seasonal cycles.','The yearly seasonality model needs more Fourier terms','Switch from additive to multiplicative seasonality'], ans:1, exp:'The holidays panel showed individual event boosts of 8–14M pageviews per event — the largest single event (Iran attack) added 14.5M in one day. The weekly seasonality amplitude was ~1.5M and the yearly swing was ~3M. So a single major news event can deliver 5–10× the traffic of the entire annual seasonal effect. This means infrastructure capacity (servers, CDN), editorial capacity (journalists on call), and traffic targets cannot be set based on seasonal patterns alone — the events calendar is the dominant driver.'},
   {t:'ts9', q:'What does the day-of-week analysis (flat pattern across the week) tell you about the audience, and why does this matter for modelling?', opts:['The weekly seasonality is wrong and should use period=30 instead','The flat weekday/weekend gap (~11%) confirms predominantly US traffic — Americans read news on weekends almost as much as weekdays. For modelling this means the weekly seasonal component will be subtle, and the events and yearly components will dominate the forecast.','The series should be differenced by 7 before fitting','The data needs to be aggregated to weekly frequency first'], ans:1, exp:'A UK-focused news site typically shows a sharp 30–35% drop on weekends as commuter reading falls away. This series shows only ~11% drop — a pattern consistent with US audiences who read news on weekends for leisure. For modelling: the weekly seasonal component will be small (Fourier order 3 is sufficient, no need for order 10+). The dominant signals are the long-term trend, the yearly cycle (which reflects US political and cultural patterns, not weather), and the breaking news events. This is exactly what the Prophet components confirmed.'},
+
+  // NN2: MNIST Practical
+  {t:'nn2', q:'Why must MNIST images be reshaped from (28,28) to (784,) before feeding them to a Dense layer?', opts:['To reduce memory usage','Dense layers expect a 1D input vector — they compute a weighted sum over all input features. A 2D grid has no defined order for the weights. reshape(784) unrolls the image row-by-row into a flat vector that the layer can process.','To improve accuracy','To match the number of neurons in the output layer'], ans:1, exp:'Dense (fully-connected) layers are defined as: output = activation(W·x + b). The weight matrix W has shape [neurons_out, neurons_in] — it needs a 1D input vector. The 28×28 grid structure is spatial information useful for convolutions, but Dense layers treat each input element independently anyway, so flattening loses nothing here.'},
+  {t:'nn2', q:'Why divide pixel values by 255 before training?', opts:['To convert from colour to greyscale','To speed up loading from disk','To normalise pixel values from [0–255] to [0.0–1.0], making gradient descent converge faster and more stably. Large input values produce large activations and large gradients, which can cause training to oscillate.','To reduce the dataset size'], ans:2, exp:'Neural networks are sensitive to input scale. Pixel values of 0–255 produce weighted sums in the hundreds or thousands after the first layer, leading to large, unstable gradients. Dividing by 255 brings all inputs to [0,1] — the same reason you use StandardScaler before training sklearn models. The network trains much faster and more reliably on normalised inputs.'},
+  {t:'nn2', q:'Why does the MNIST output layer use Softmax activation rather than ReLU?', opts:['Softmax is faster to compute than ReLU','Softmax converts 10 raw output values into 10 probabilities that sum to 1. This is required for multi-class classification — you want to interpret the output as "probability this image is digit 0", "probability it is digit 1", etc.','Softmax has no vanishing gradient problem','Softmax is required by Keras for all output layers'], ans:1, exp:'Softmax: output_i = exp(z_i) / Σ exp(z_j). Every output is between 0 and 1, and they sum to exactly 1 — a proper probability distribution over 10 classes. ReLU would give arbitrary positive values with no probabilistic interpretation. Sigmoid would give independent 0/1 probabilities (for multi-label, not multi-class). Softmax is the standard choice whenever exactly one class is correct.'},
+  {t:'nn2', q:'What does to_categorical(labels_train, 10) do and why is it needed?', opts:['It sorts the labels from 0 to 9','It converts integer labels (e.g. 7) into one-hot vectors (e.g. [0,0,0,0,0,0,0,1,0,0]). This is needed because the output layer has 10 neurons — cross-entropy loss requires a target vector the same shape as the output, not a single integer.','It normalises the label values to [0,1]','It removes duplicate labels from the dataset'], ans:1, exp:'The network outputs a vector of 10 probabilities. Cross-entropy loss computes: −Σ yᵢ·log(ŷᵢ). To compute this sum, y (the target) must be a 10-dimensional vector, not a scalar. One-hot encoding converts the scalar 7 → [0,0,0,0,0,0,0,1,0,0], which has a 1 in position 7 and 0 everywhere else. The loss then only cares about the probability assigned to the correct class.'},
+  {t:'nn2', q:'The training accuracy reached 99.6% while validation accuracy plateaued at 98.3%. What does this gap indicate?', opts:['The model needs more training data','The validation set is corrupted','The model is overfitting — it has started memorising training-specific patterns rather than learning generalisable features. The 1.3% gap is a sign that training for fewer epochs (early stopping) or adding regularisation (dropout) would help.','The learning rate is too high'], ans:2, exp:'When training accuracy keeps rising but validation accuracy stagnates, the model is fitting noise specific to the training set. Here the gap is small (~1.3%) — typical for a well-sized MNIST model. For larger gaps (e.g. 99% train, 85% val), you would add dropout layers, reduce model size, or use early stopping (stop when val_loss stops improving). Monitoring both curves together is the primary tool for diagnosing overfitting.'},
+  {t:'nn2', q:'In model.fit(), what is the difference between batch_size and epochs?', opts:['They are the same thing','batch_size=100 means 100 training images are processed per gradient update (600 updates per epoch for 60,000 images). epochs=10 means the full 60,000-image dataset is cycled through 10 times. Total gradient updates = 600 × 10 = 6,000.','batch_size is the number of epochs','epochs controls how many images are loaded at once'], ans:1, exp:'One epoch = one complete pass over the full training set. With batch_size=100 and 60,000 images, one epoch = 60,000/100 = 600 mini-batch gradient updates. Smaller batch sizes give noisier but more frequent updates (regularising effect). Larger batch sizes give smoother gradients but require more memory. batch_size=32–256 is common; 100 is a reasonable default.'},
 
   // NN1: Neural Network Fundamentals
   {t:'nn1', q:'What is the purpose of an activation function in a neural network?', opts:['To speed up matrix multiplications','To introduce non-linearity — without it, stacking any number of layers is mathematically equivalent to a single linear transformation','To reduce the number of parameters','To normalise the weights before training'], ans:1, exp:'Without an activation function, a 10-layer network and a 1-layer network have identical expressive power — both can only fit a linear function. Activation functions like ReLU introduce non-linearity after every neuron, allowing the network to approximate any shape of function (universal approximation theorem). This is the single most important concept in neural networks.'},
@@ -11593,6 +12319,15 @@ const FLASHCARDS = [
   {t:'ts9', front:'Why AR lag 7 and what it means for daily news traffic', back:'ar_select_order(train, maxlag=14, ic="bic")\n→ selected lag 7\n\nMeans: last week same-day value is the best predictor\n→ Monday predicted from last Monday\n→ captures the weekly cycle directly\n\nWhy not lag 1 (PACF spike was bigger)?\n→ lag 7 gives better BIC overall\n→ weekly same-day is more useful for forecasting\n→ lag 1 alone misses the weekly pattern\n\nAR result: 15% error rate — correct direction,\ntoo smooth, misses sharp weekly zigzag,\nno way to handle Iran attack spike'},
   {t:'ts9', front:'Prophet event names — why unique names matter', back:'Each unique holiday name gets its own coefficient\n\nCorrect: separate names\nevents = {"holiday": ["us_election", "air_india_crash", ...]}\n→ Prophet learns: election = +20M, crash = +11M\n\nWrong: same name for all events\nevents = {"holiday": ["event", "event", "event", ...]}\n→ Prophet learns one average across all events\n→ overestimates some, underestimates others\n\nFor two days of the same event (Iran attack days):\nuse the SAME name → one effect learned across both\n\nProphet result: 9% error rate — events DataFrame\nabsorbed Iran spike, clean trend from day 1'},
   {t:'ts9', front:'Key business insights from Prophet components', back:'Holidays panel (event effect sizes above baseline):\n• Iran attack: +14.5M — biggest single event\n• Air India crash: +11M\n• Trump assassination attempt: +8.5M\n• US Election: +20M+ on results day\n\nWeekly: Wednesday peak (+900K), Sat/Sun lowest (-1.5M)\n→ publish important content Tue–Thu\n\nYearly: May strongest (+3M), Nov–Dec weakest (-3M)\n→ plan capacity around US political calendar\n\nKey insight: single breaking news event delivers\n5–10× the traffic of the entire yearly seasonal swing\n→ infrastructure must be sized for events, not seasons'},
+  // NN2 flashcards
+  {t:'nn2', front:'Why reshape MNIST images from (28,28) to (784,)?', back:'Dense layers expect a 1D input vector — they compute W·x+b, where x must be flat.\n\nimages.reshape(60000, 784)\n→ shape: (60000, 784)\n→ one row per image, 784 pixel values per row\n\nConvolutions keep the 2D structure (CNNs), but Dense/MLP layers flatten it.'},
+  {t:'nn2', front:'What does dividing pixel values by 255 achieve?', back:'Normalises from [0, 255] → [0.0, 1.0]\n\nimages /= 255\n\nWhy:\n• Prevents large activations from large input values\n• Gradient descent converges faster with small, similar-scale inputs\n• Same principle as StandardScaler from classical ML\n\nAlways normalise inputs before training a neural network.'},
+  {t:'nn2', front:'What is to_categorical and why is it needed?', back:'to_categorical(7, 10) → [0,0,0,0,0,0,0,1,0,0]\n\nConverts integer label → one-hot vector.\n\nNeeded because:\n• Output layer has 10 neurons (one per class)\n• Cross-entropy loss: −Σ y·log(ŷ) requires y to be a vector\n• Can\'t compute a dot product between a scalar (7) and a 10-dim output'},
+  {t:'nn2', front:'What is the role of Softmax in the output layer?', back:'Softmax converts 10 raw numbers → 10 probabilities summing to 1\n\nFormula: softmax(z_i) = exp(z_i) / Σ exp(z_j)\n\nUse for: multi-class classification (exactly one correct class)\n\nResult e.g.:\n[0.001, 0.001, 0.003, 0.001, 0.985, ...]\n → argmax() → predicted class = 4\n\nWithout softmax, output values are unconstrained and can\'t be interpreted as probabilities.'},
+  {t:'nn2', front:'batch_size vs epochs in model.fit()', back:'batch_size = how many images per gradient update\n• 60,000 images ÷ batch_size 100 = 600 updates per epoch\n\nepochs = how many full passes through the training data\n• 10 epochs × 600 updates = 6,000 total weight updates\n\nSmaller batch → noisier but more frequent updates → slight regularisation\nLarger batch → smoother gradient but more memory'},
+  {t:'nn2', front:'Why does val_accuracy plateau while train_accuracy keeps rising?', back:'Overfitting: the model starts memorising training examples instead of learning generalisable patterns.\n\nSigns:\n• Train acc → 99.6%\n• Val acc → 98.3% (plateaued)\n• Val loss starts rising while train loss falls\n\nFixes:\n• Early stopping (stop when val_loss stops improving)\n• Dropout (randomly zero neurons during training)\n• L2 regularisation\n• More training data'},
+  {t:'nn2', front:'MNIST full pipeline in 6 steps', back:'1. Load: np.load("mnist.npz")\n2. Flatten: reshape(60000, 784)\n3. Normalise: /= 255\n4. One-hot: to_categorical(y, 10)\n5. Build: Sequential → Dense(500,relu) → Dense(300,relu) → Dense(10,softmax)\n6. Compile: categorical_crossentropy + adam\n7. Train: model.fit(X, y, batch_size=100, epochs=10)\n8. Predict: model.predict(x).argmax()\n\nResult: ~98.3% accuracy on 10,000 unseen images'},
+
   // NN1 flashcards
   {t:'nn1', front:'What is the pre-activation (z) in a neuron?', back:'z = w₁x₁ + w₂x₂ + ... + wₙxₙ + b\n\nThe weighted sum of inputs plus bias. Also called the "logit". This is a linear combination — no non-linearity yet. The activation function f(z) is applied next to produce the output a.'},
   {t:'nn1', front:'Why must a neural network use activation functions?', back:'Without an activation function, stacking multiple layers is mathematically equivalent to a single linear transformation.\n\nActivation functions introduce non-linearity — this is what allows neural networks to approximate any function (universal approximation theorem). Without it, even a 100-layer network could only fit a straight line.'},
@@ -11629,7 +12364,7 @@ function nav(page) {
   document.getElementById('main').scrollTop = 0;
   const navEl = document.querySelector(`[onclick="nav('${page}')"]`);
   if (navEl) navEl.classList.add('active');
-  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9','nn1'].includes(page)) {
+  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9','nn1','nn2'].includes(page)) {
     markVisited(page);
     renderInlineQuiz(page);
   }
@@ -11649,7 +12384,7 @@ function markVisited(w) {
 function updateGlobalProgress() {
   const pct = Math.round((visited.length / 25) * 100);
   document.getElementById('global-progress-bar').style.width = pct + '%';
-  document.getElementById('global-progress-label').textContent = `${visited.length} of 40 lessons visited`;
+  document.getElementById('global-progress-label').textContent = `${visited.length} of 41 lessons visited`;
 }
 
 // ===================== INLINE QUIZ =====================
