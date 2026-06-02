@@ -281,6 +281,9 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
   <div class="nav-chapter-items" id="chapter-neural">
     <div class="nav-item nav-item-sub" onclick="nav('nn1')" id="nav-nn1"><span class="icon">🧠</span> L1: Neural Network Fundamentals<span class="check" id="check-nn1"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('nn2')" id="nav-nn2"><span class="icon">🔢</span> L2: MNIST Practical — Keras<span class="check" id="check-nn2"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('nn3')" id="nav-nn3"><span class="icon">📉</span> L3: Gradient Descent — From Scratch<span class="check" id="check-nn3"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('nn4')" id="nav-nn4"><span class="icon">🌸</span> L4: Classification with GD<span class="check" id="check-nn4"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('nn5')" id="nav-nn5"><span class="icon">⚙️</span> L5: Training a Neural Network<span class="check" id="check-nn5"></span></div>
   </div>
 
   <div class="sidebar-section" style="margin-top:10px">Practice</div>
@@ -1309,6 +1312,9 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
         <div class="topic-chips">
           <div class="topic-chip" id="chip-nn1" onclick="toggleChip('nn1')">L1: NN Fundamentals</div>
           <div class="topic-chip" id="chip-nn2" onclick="toggleChip('nn2')">L2: MNIST Practical</div>
+          <div class="topic-chip" id="chip-nn3" onclick="toggleChip('nn3')">L3: Gradient Descent</div>
+          <div class="topic-chip" id="chip-nn4" onclick="toggleChip('nn4')">L4: Classification GD</div>
+          <div class="topic-chip" id="chip-nn5" onclick="toggleChip('nn5')">L5: Training a NN</div>
         </div>
       </div>
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
@@ -1438,6 +1444,9 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
         <div class="topic-chips">
           <div class="topic-chip" id="fc-chip-nn1" onclick="fcFilter('nn1')">L1: NN Fundamentals</div>
           <div class="topic-chip" id="fc-chip-nn2" onclick="fcFilter('nn2')">L2: MNIST Practical</div>
+          <div class="topic-chip" id="fc-chip-nn3" onclick="fcFilter('nn3')">L3: Gradient Descent</div>
+          <div class="topic-chip" id="fc-chip-nn4" onclick="fcFilter('nn4')">L4: Classification GD</div>
+          <div class="topic-chip" id="fc-chip-nn5" onclick="fcFilter('nn5')">L5: Training a NN</div>
         </div>
       </div>
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
@@ -10125,6 +10134,1793 @@ df = df.dropna()</pre></div>
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- NEURAL NETWORKS & DEEP LEARNING — L3: Gradient Descent Practical -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-nn3">
+  <div class="lesson-header">
+    <div class="breadcrumb">Neural Networks & Deep Learning · L3</div>
+    <h1>📉 Gradient Descent — From Scratch</h1>
+    <p class="subtitle">Implement the core optimisation algorithm that trains every neural network — understand why learning rate and starting point are the two most critical decisions</p>
+  </div>
+
+  <h2>Why Gradient Descent?</h2>
+  <p>Training a neural network means finding the weights that minimise the loss function. The loss depends on potentially <strong>millions of weights</strong> — you can't try every combination. Gradient descent solves this by asking a simple question at every step:</p>
+  <div class="card" style="border-left:3px solid var(--accent)">
+    <p style="margin:0; font-size:0.95rem; color:var(--text)"><strong>"In which direction should I move each weight to make the loss go down — and by how much?"</strong></p>
+    <p style="margin:8px 0 0; font-size:0.84rem; color:var(--text-muted)">The gradient ∇L tells you the direction. The learning rate λ controls the step size. Move in the <em>opposite</em> direction of the gradient (downhill) and repeat until you reach a minimum.</p>
+  </div>
+
+  <div class="alert alert-info" style="margin-top:12px">
+    <strong>The core update rule — memorise this:</strong><br>
+    <code style="font-size:0.9rem">θ_new = θ_old − λ × g(θ_old)</code><br>
+    where g(θ) = ∂L/∂θ is the gradient and λ (lambda) is the learning rate. This one equation trains every neural network ever built.
+  </div>
+
+  <!-- ── SECTION 1: THE LOSS FUNCTION ── -->
+  <h2>Part 1: The Loss Function and Its Gradient</h2>
+  <p>The practical uses this loss function (a bowl-shaped curve with a minimum at θ=0):</p>
+  <div class="code-block"><pre><code>import numpy as np
+import matplotlib.pyplot as plt
+
+# Define the loss function
+L = lambda theta: np.sqrt(1 - np.exp(-(theta**2) / 10))
+
+# Plot it on the interval (-4, 4)
+theta = np.linspace(-4, 4, 500)
+plt.plot(theta, L(theta))
+plt.xlabel(r"$\theta$")
+plt.ylabel(r"$\mathcal{L}(\theta)$")
+plt.show()</code></pre></div>
+
+  <p><strong>Why this function?</strong> It has one clear minimum at θ=0 (L=0), is smooth and differentiable, and its bowl shape makes it easy to visualise gradient descent descending to the bottom. In real neural networks, L is the cross-entropy or MSE — same idea, just over millions of parameters.</p>
+
+  <h3>The Gradient — What Does It Mean?</h3>
+  <p>The gradient of L(θ) = √(1 − exp(−θ²/10)) is derived using the chain rule:</p>
+  <div class="code-block"><pre><code># The gradient (derivative of L with respect to theta)
+g = lambda theta: theta * np.exp(-(theta**2) / 10) / (10 * L(theta))
+
+# Plot both together
+theta = np.linspace(-4, 4, 100)
+plt.plot(theta, L(theta), label=r"$\mathcal{L}(\theta)$ — loss")
+plt.plot(theta, g(theta), label=r"$g(\theta)$ — gradient")
+plt.xlabel(r"$\theta$")
+plt.legend()
+plt.show()</code></pre></div>
+
+  <div class="card" style="border-left:3px solid #fbbf24">
+    <p style="margin:0 0 6px; font-weight:600; color:#fbbf24">Key insight: gradient = slope of the loss</p>
+    <ul style="margin:0; font-size:0.84rem; color:var(--text-muted); padding-left:18px; line-height:1.9">
+      <li>Where L is <strong>rising steeply</strong> (right side, θ > 0) → g is <strong>large positive</strong> → step <em>left</em> (subtract)</li>
+      <li>Where L is <strong>falling steeply</strong> (left side, θ &lt; 0) → g is <strong>large negative</strong> → step <em>right</em> (subtract a negative = add)</li>
+      <li>At the <strong>minimum</strong> (θ = 0) → g = 0 → <strong>no step</strong> → algorithm stops naturally</li>
+    </ul>
+  </div>
+
+  <!-- VIZ 1: Gradient = Slope -->
+  <h3>Interactive: Gradient is the Slope — See It Live</h3>
+  <p>Move the slider to position θ on the curve. The <strong>blue dot</strong> shows your position, the <strong>green tangent line</strong> shows the slope, and the <strong>red arrow</strong> shows the gradient g(θ) — notice how it's zero at the minimum and grows as you move away.</p>
+
+  <div class="card" style="padding:16px">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px">
+      <label style="font-size:0.82rem; color:var(--text-muted); white-space:nowrap">θ = <strong id="nn3-slope-val">2.0</strong></label>
+      <input type="range" id="nn3-slope-slider" min="-4" max="4" step="0.05" value="2.0" style="flex:1" oninput="nn3DrawSlope()">
+    </div>
+    <canvas id="nn3-slope-canvas" width="520" height="260" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="nn3-slope-info" style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; font-size:0.83rem">
+      <div style="padding:8px 12px; background:rgba(91,138,245,0.1); border-radius:6px; border-left:3px solid #5b8af5">
+        <div style="color:var(--text-muted); font-size:0.75rem">Current θ</div>
+        <div id="nn3-info-theta" style="color:#5b8af5; font-weight:700; font-family:monospace"></div>
+      </div>
+      <div style="padding:8px 12px; background:rgba(52,211,153,0.1); border-radius:6px; border-left:3px solid #34d399">
+        <div style="color:var(--text-muted); font-size:0.75rem">Loss L(θ)</div>
+        <div id="nn3-info-loss" style="color:#34d399; font-weight:700; font-family:monospace"></div>
+      </div>
+      <div style="padding:8px 12px; background:rgba(248,113,113,0.1); border-radius:6px; border-left:3px solid #f87171">
+        <div style="color:var(--text-muted); font-size:0.75rem">Gradient g(θ)</div>
+        <div id="nn3-info-grad" style="color:#f87171; font-weight:700; font-family:monospace"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    function L1(t){var v=1-Math.exp(-t*t/10);return v<0?0:Math.sqrt(v);}
+    function g1(t){var l=L1(t);if(l<1e-9)return 0;return t*Math.exp(-t*t/10)/(10*l);}
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),gg=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgba('+r+','+gg+','+b+','+a+')';}
+
+    window.nn3DrawSlope=function(){
+      var canvas=document.getElementById('nn3-slope-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var theta=parseFloat(document.getElementById('nn3-slope-slider').value);
+      document.getElementById('nn3-slope-val').textContent=theta.toFixed(2);
+      var W=520,H=260,PL=50,PR=15,PT=20,PB=35;
+      var xMin=-4.5,xMax=4.5,yMin=-0.15,yMax=1.15;
+      function xp(x){return PL+(x-xMin)/(xMax-xMin)*(W-PL-PR);}
+      function yp(y){return PT+(yMax-y)/(yMax-yMin)*(H-PT-PB);}
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<W;gx+=32)for(var gy=20;gy<H;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+      // Axes
+      ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(PL,PT);ctx.lineTo(PL,H-PB);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(PL,yp(0));ctx.lineTo(W-PR,yp(0));ctx.stroke();
+      // Axis labels
+      ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='top';
+      [-4,-3,-2,-1,0,1,2,3,4].forEach(function(v){ctx.fillText(v,xp(v),H-PB+4);});
+      ctx.textAlign='right';ctx.textBaseline='middle';
+      [0,0.25,0.5,0.75,1.0].forEach(function(v){ctx.fillText(v.toFixed(2),PL-4,yp(v));});
+      // g(theta) curve — dashed
+      ctx.beginPath();ctx.strokeStyle='rgba(248,113,113,0.55)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+      for(var i=0;i<=200;i++){var t=xMin+i*(xMax-xMin)/200;var first=i===0;if(first)ctx.moveTo(xp(t),yp(g1(t)));else ctx.lineTo(xp(t),yp(g1(t)));}ctx.stroke();ctx.setLineDash([]);
+      // L(theta) curve
+      ctx.beginPath();ctx.strokeStyle='#5b8af5';ctx.lineWidth=2.5;
+      for(var i=0;i<=200;i++){var t=xMin+i*(xMax-xMin)/200;if(i===0)ctx.moveTo(xp(t),yp(L1(t)));else ctx.lineTo(xp(t),yp(L1(t)));}ctx.stroke();
+      // Legend
+      ctx.fillStyle='#5b8af5';ctx.font='10px sans-serif';ctx.textAlign='left';ctx.fillText('— L(θ)',W-100,PT+10);
+      ctx.fillStyle='rgba(248,113,113,0.7)';ctx.fillText('- - g(θ)',W-100,PT+24);
+      // Zero line labels
+      ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px sans-serif';
+      ctx.fillText('g(θ) = 0 here',xp(0)+4,yp(0)-8);
+
+      var lv=L1(theta),gv=g1(theta);
+      // Tangent line at theta
+      var tang_len=1.5;
+      var tx1=theta-tang_len,tx2=theta+tang_len;
+      var ty1=lv+gv*(tx1-theta),ty2=lv+gv*(tx2-theta);
+      ctx.beginPath();ctx.moveTo(xp(tx1),yp(ty1));ctx.lineTo(xp(tx2),yp(ty2));
+      ctx.strokeStyle='#34d399';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);ctx.stroke();ctx.setLineDash([]);
+      // Gradient arrow
+      var arrowLen=Math.min(1.2,Math.abs(gv)*3)*Math.sign(gv);
+      var ax1=xp(theta),ay1=yp(lv),ax2=xp(theta+arrowLen*0.35),ay2=yp(lv);
+      ctx.beginPath();ctx.moveTo(ax1,ay1);ctx.lineTo(ax2,ay2);
+      ctx.strokeStyle='#f87171';ctx.lineWidth=2;ctx.stroke();
+      // arrowhead
+      var dir=ax2>ax1?1:-1;
+      ctx.beginPath();ctx.moveTo(ax2,ay2);ctx.lineTo(ax2-dir*8,ay2-5);ctx.lineTo(ax2-dir*8,ay2+5);ctx.closePath();
+      ctx.fillStyle='#f87171';ctx.fill();
+      ctx.fillStyle='#f87171';ctx.font='bold 9px monospace';ctx.textAlign='center';
+      ctx.fillText('g='+gv.toFixed(3),ax2+(dir>0?18:-18),ay2-1);
+      // Current position dot
+      ctx.beginPath();ctx.arc(xp(theta),yp(lv),7,0,6.28);
+      ctx.fillStyle='#5b8af5';ctx.fill();ctx.strokeStyle='#0d1117';ctx.lineWidth=2;ctx.stroke();
+      // Step arrow (where GD would go)
+      var stepSize=0.9,nextTheta=theta-stepSize*gv;
+      var nextL=L1(nextTheta);
+      ctx.beginPath();ctx.moveTo(xp(theta),yp(lv));ctx.lineTo(xp(nextTheta),yp(lv));
+      ctx.strokeStyle='rgba(167,139,250,0.5)';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+      ctx.beginPath();ctx.arc(xp(nextTheta),yp(nextL),5,0,6.28);
+      ctx.fillStyle='#a78bfa';ctx.fill();
+      ctx.fillStyle='rgba(167,139,250,0.7)';ctx.font='9px monospace';ctx.textAlign='center';
+      ctx.fillText('next θ (λ=0.9)',xp(nextTheta),yp(nextL)-12);
+      // Info
+      document.getElementById('nn3-info-theta').textContent=theta.toFixed(3);
+      document.getElementById('nn3-info-loss').textContent=lv.toFixed(4);
+      document.getElementById('nn3-info-grad').textContent=(gv>=0?'+':'')+gv.toFixed(4)+(Math.abs(gv)<0.01?' ← at minimum!':'');
+    };
+    nn3DrawSlope();
+  })();
+  </script>
+
+  <!-- ── SECTION 2: simpleGD IMPLEMENTATION ── -->
+  <h2>Part 2: Implementing simpleGD</h2>
+  <div class="code-block"><pre><code>def simpleGD(theta0, L, g, lmbda, nr_steps):
+    """
+    theta0   : starting value of theta
+    L        : the loss function  L(theta) → scalar
+    g        : gradient function  g(theta) → scalar
+    lmbda    : learning rate (step size)
+    nr_steps : number of gradient descent steps to take
+
+    Returns a (nr_steps+1) × 2 array:
+    [[theta_0, L(theta_0)],
+     [theta_1, L(theta_1)],
+     ...
+     [theta_n, L(theta_n)]]
+    """
+    points = np.zeros((nr_steps + 1, 2))   # pre-allocate the output array
+    points[0, :] = [theta0, L(theta0)]     # store the starting point
+    theta = theta0
+
+    for ii in range(nr_steps):
+        theta -= lmbda * g(theta)           # THE CORE UPDATE RULE: θ = θ − λ·g(θ)
+        points[ii + 1, :] = [theta, L(theta)]   # record each step
+
+    return points</code></pre></div>
+
+  <div class="card-grid" style="margin-top:8px">
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600; color:#5b8af5">Why store all the points?</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">The <code>points</code> array records every (θ, L) pair visited. This lets you plot the full path afterwards. In a real optimiser you wouldn't store this — you only need the current θ — but for visualisation it's essential.</p>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">What is <code>gd_points.T</code>?</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)"><code>plt.plot(*gd_points.T, 'o--')</code> transposes the array so <code>gd_points.T[0]</code> = all θ values and <code>gd_points.T[1]</code> = all L values. The <code>*</code> unpacks these as two separate arguments to plt.plot.</p>
+    </div>
+  </div>
+
+  <h3>Running it: 10 steps from θ=−3 with λ=0.9</h3>
+  <div class="code-block"><pre><code># Run gradient descent on L(theta) starting at -3 with learning rate 0.9
+gd_points = simpleGD(-3, L, g, 0.9, 10)
+
+# Plot the path on top of the function
+theta = np.linspace(-4, 4, 100)
+plt.plot(theta, L(theta), label="L(θ)")
+plt.plot(*gd_points.T, 'o--', label="GD path")
+plt.xlabel(r'$θ$')
+plt.legend()
+plt.show()</code></pre></div>
+
+  <p><strong>Result:</strong> Starting at θ=−3 (left of the minimum), GD takes large steps at first (steep slope) then smaller steps as it approaches the flat bottom near θ=0. After 10 steps it's very close to the minimum.</p>
+
+  <!-- VIZ 2: simpleGD Live Explorer -->
+  <h3>Interactive: Run simpleGD and Watch It Descend</h3>
+  <p>Adjust the starting point and learning rate, then click <strong>Run GD</strong>. Each dot is one step. Watch how the steps shrink as the gradient flattens near the minimum.</p>
+
+  <div class="card" style="padding:16px">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px">
+      <div>
+        <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px">Starting point θ₀ = <strong id="nn3-gd-t0-val">-3.0</strong></label>
+        <input type="range" id="nn3-gd-t0" min="-4" max="4" step="0.1" value="-3.0" style="width:100%" oninput="document.getElementById('nn3-gd-t0-val').textContent=parseFloat(this.value).toFixed(1)">
+      </div>
+      <div>
+        <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px">Learning rate λ = <strong id="nn3-gd-lr-val">0.90</strong></label>
+        <input type="range" id="nn3-gd-lr" min="0.05" max="1.8" step="0.05" value="0.9" style="width:100%" oninput="document.getElementById('nn3-gd-lr-val').textContent=parseFloat(this.value).toFixed(2)">
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap">
+      <label style="font-size:0.8rem; color:var(--text-muted); align-self:center">Steps:</label>
+      <button class="btn btn-outline" style="padding:5px 12px; font-size:0.8rem" onclick="nn3SetSteps(5)">5</button>
+      <button class="btn btn-primary" id="nn3-steps-10" style="padding:5px 12px; font-size:0.8rem" onclick="nn3SetSteps(10)">10</button>
+      <button class="btn btn-outline" style="padding:5px 12px; font-size:0.8rem" onclick="nn3SetSteps(20)">20</button>
+      <button class="btn btn-outline" style="padding:5px 12px; font-size:0.8rem" onclick="nn3SetSteps(50)">50</button>
+      <button class="btn btn-primary" style="margin-left:auto" onclick="nn3RunGD()">▶ Run GD</button>
+    </div>
+    <canvas id="nn3-gd-canvas" width="520" height="260" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="nn3-gd-result" style="margin-top:10px; padding:8px 14px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.83rem; color:var(--text-muted); min-height:32px"></div>
+    <div style="margin-top:6px; font-size:0.78rem; color:var(--text-muted)">Try λ=1.3+ from a non-zero start to see divergence. Try λ=0.05 to see slow convergence.</div>
+  </div>
+
+  <script>
+  (function(){
+    function L1(t){var v=1-Math.exp(-t*t/10);return v<0?0:Math.sqrt(v);}
+    function g1(t){var l=L1(t);if(l<1e-9)return 0;return t*Math.exp(-t*t/10)/(10*l);}
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),gg=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgba('+r+','+gg+','+b+','+a+')';}
+    function simpleGD(t0,L,g,lr,n){var pts=[[t0,L(t0)]];var t=t0;for(var i=0;i<n;i++){t=t-lr*g(t);pts.push([t,L(t)]);}return pts;}
+
+    var nn3_nsteps=10;
+    window.nn3SetSteps=function(n){nn3_nsteps=n;['5','10','20','50'].forEach(function(s){var b=document.querySelector('[onclick="nn3SetSteps('+s+')"]');if(b)b.className='btn btn-'+(parseInt(s)===n?'primary':'outline');});};
+
+    window.nn3RunGD=function(){
+      var t0=parseFloat(document.getElementById('nn3-gd-t0').value);
+      var lr=parseFloat(document.getElementById('nn3-gd-lr').value);
+      var pts=simpleGD(t0,L1,g1,lr,nn3_nsteps);
+      var canvas=document.getElementById('nn3-gd-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var W=520,H=260,PL=50,PR=15,PT=20,PB=35;
+      var xMin=-4.5,xMax=4.5,yMin=-0.1,yMax=1.2;
+      function xp(x){return PL+(x-xMin)/(xMax-xMin)*(W-PL-PR);}
+      function yp(y){return PT+(yMax-y)/(yMax-yMin)*(H-PT-PB);}
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<W;gx+=32)for(var gy=20;gy<H;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+      // Axes
+      ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(PL,yp(0));ctx.lineTo(W-PR,yp(0));ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='top';
+      [-4,-2,0,2,4].forEach(function(v){ctx.fillText(v,xp(v),H-PB+4);});
+      // L curve
+      ctx.beginPath();ctx.strokeStyle='#5b8af5';ctx.lineWidth=2;
+      for(var i=0;i<=200;i++){var t=xMin+i*(xMax-xMin)/200;if(i===0)ctx.moveTo(xp(t),yp(L1(t)));else ctx.lineTo(xp(t),yp(L1(t)));}ctx.stroke();
+      // Check divergence
+      var diverged=pts.some(function(p){return isNaN(p[0])||isNaN(p[1])||Math.abs(p[0])>20||Math.abs(p[1])>20;});
+      // Draw path
+      if(!diverged){
+        ctx.beginPath();ctx.strokeStyle='rgba(167,139,250,0.6)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+        pts.forEach(function(p,i){if(i===0)ctx.moveTo(xp(p[0]),yp(p[1]));else ctx.lineTo(xp(p[0]),yp(p[1]));});
+        ctx.stroke();ctx.setLineDash([]);
+        pts.forEach(function(p,i){
+          ctx.beginPath();ctx.arc(xp(p[0]),yp(p[1]),i===0?7:4,0,6.28);
+          ctx.fillStyle=i===0?'#fbbf24':i===pts.length-1?'#34d399':'#a78bfa';
+          ctx.fill();ctx.strokeStyle='#0d1117';ctx.lineWidth=1.5;ctx.stroke();
+          ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='8px monospace';ctx.textAlign='center';ctx.textBaseline='bottom';
+          if(i===0)ctx.fillText('start',xp(p[0]),yp(p[1])-8);
+          if(i===pts.length-1)ctx.fillText('end',xp(p[0]),yp(p[1])-8);
+        });
+      } else {
+        ctx.fillStyle='#f87171';ctx.font='bold 18px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText('⚠ DIVERGES — learning rate too large!',W/2,H/2);
+      }
+      // Legend
+      ctx.fillStyle='#fbbf24';ctx.font='10px sans-serif';ctx.textAlign='left';ctx.fillText('● start (θ₀='+t0.toFixed(1)+')',PL+5,PT+15);
+      ctx.fillStyle='#34d399';ctx.fillText('● end',PL+5,PT+28);
+      ctx.fillStyle='#5b8af5';ctx.fillText('— L(θ)',PL+5,PT+41);
+      // Result
+      var last=pts[pts.length-1];
+      var res=diverged?'⚠ Diverged! Learning rate λ='+lr.toFixed(2)+' is too large — steps overshoot and grow with each iteration. Try reducing λ.':
+        '✓ Converged to θ='+last[0].toFixed(4)+', L='+last[1].toFixed(4)+' after '+nn3_nsteps+' steps. '+(last[1]<0.01?'Near the minimum (L≈0)!':last[1]<0.1?'Close to the minimum.':'Still far from minimum — try more steps or larger λ.');
+      document.getElementById('nn3-gd-result').textContent=res;
+      document.getElementById('nn3-gd-result').style.color=diverged?'#f87171':'#34d399';
+    };
+    nn3RunGD();
+  })();
+  </script>
+
+  <!-- ── SECTION 3: LEARNING RATE ── -->
+  <h2>Part 3: The Critical Role of Learning Rate</h2>
+  <p>The practical switches to L(θ) = θ² (a simple parabola) to show what happens when λ is too large. The gradient of θ² is 2θ.</p>
+
+  <div class="code-block"><pre><code># New simple function: L(theta) = theta squared
+L = lambda theta: theta ** 2
+g = lambda theta: 2 * theta
+
+# Run 10 steps from theta=-1 with lambda=1.05
+gd_points = simpleGD(-1, L, g, 1.05, 10)
+
+theta = np.linspace(-4, 4, 100)
+plt.plot(theta, L(theta), label="L(θ) = θ²")
+plt.plot(*gd_points.T, "o--")
+plt.xlabel(r"$θ$")
+plt.show()</code></pre></div>
+
+  <div class="card" style="border-left:3px solid #f87171; margin-top:8px">
+    <p style="margin:0 0 6px; font-weight:600; color:#f87171">What happens with λ=1.05?</p>
+    <p style="margin:0 0 6px; font-size:0.84rem; color:var(--text-muted)">For θ², the update is: θ_new = θ − λ·2θ = θ(1 − 2λ). With λ=1.05: θ_new = θ(1 − 2.1) = −1.1θ. Each step <strong>flips sign and grows by ×1.1</strong>:</p>
+    <div class="code-block" style="margin:6px 0"><pre><code>θ₀ = -1.000
+θ₁ = 1.100   (step right past zero)
+θ₂ = -1.210  (step left past zero, now bigger)
+θ₃ = 1.331   (growing further each step)
+... → diverges to ±∞</code></pre></div>
+    <p style="margin:6px 0 0; font-size:0.83rem; color:var(--text-muted)">For L=θ², convergence requires λ &lt; 1/max_eigenvalue = 1/2. So λ must be <strong>less than 0.5</strong> to guarantee convergence. λ=1.05 is more than double the safe limit.</p>
+  </div>
+
+  <!-- VIZ 3: Learning Rate Comparison -->
+  <h3>Interactive: Compare Three Learning Rates</h3>
+  <p>All three start at θ=−1 on L(θ)=θ². Toggle to see how λ changes the outcome. Notice that even a slightly-too-large λ causes divergence.</p>
+
+  <div class="card" style="padding:16px">
+    <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap">
+      <button class="btn btn-outline" id="nn3-lr-btn-slow" onclick="nn3DrawLR('slow')">λ=0.1 — Too Small</button>
+      <button class="btn btn-primary" id="nn3-lr-btn-good" onclick="nn3DrawLR('good')">λ=0.9 — Just Right ✅</button>
+      <button class="btn btn-outline" id="nn3-lr-btn-div" onclick="nn3DrawLR('div')" style="border-color:#f87171;color:#f87171">λ=1.05 — Diverges ⚠</button>
+    </div>
+    <canvas id="nn3-lr-canvas" width="520" height="260" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="nn3-lr-desc" style="margin-top:10px; padding:10px 14px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.82rem; color:var(--text-muted); min-height:36px"></div>
+  </div>
+
+  <script>
+  (function(){
+    function L2(t){return t*t;}
+    function g2(t){return 2*t;}
+    function simpleGD(t0,L,g,lr,n){var pts=[[t0,L(t0)]];var t=t0;for(var i=0;i<n;i++){t=t-lr*g(t);pts.push([t,L(t)]);}return pts;}
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),gg=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgba('+r+','+gg+','+b+','+a+')';}
+    var DESCS={
+      slow:'λ=0.1: Too small — gradient descent converges but takes many small steps. After 15 steps it\'s still at θ≈-0.21 (far from 0). In deep learning this means thousands of extra epochs wasted.',
+      good:'λ=0.9: Good — converges in ~10 steps, oscillating slightly around the minimum but settling quickly. In practice a well-tuned learning rate gets the job done efficiently.',
+      div:'λ=1.05: Diverges — each step overshoots the minimum and lands on the opposite side, further away. The steps grow exponentially. Loss goes to infinity. This is why "NaN loss" errors happen in training.'
+    };
+    var nn3_lr_mode='good';
+
+    window.nn3DrawLR=function(m){
+      if(m)nn3_lr_mode=m;
+      ['slow','good','div'].forEach(function(k){
+        var btn=document.getElementById('nn3-lr-btn-'+k);
+        if(btn){
+          btn.className='btn '+(k===nn3_lr_mode?'btn-primary':'btn-outline');
+          if(k==='div'&&k!==nn3_lr_mode)btn.style='border-color:#f87171;color:#f87171';
+          else if(k==='div'&&k===nn3_lr_mode)btn.style='';
+          else btn.style='';
+        }
+      });
+      document.getElementById('nn3-lr-desc').textContent=DESCS[nn3_lr_mode];
+      var lrMap={slow:0.1,good:0.9,div:1.05};
+      var colMap={slow:'#a78bfa',good:'#34d399',div:'#f87171'};
+      var lr=lrMap[nn3_lr_mode],col=colMap[nn3_lr_mode];
+      var pts=simpleGD(-1,L2,g2,lr,15);
+      var canvas=document.getElementById('nn3-lr-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var W=520,H=260,PL=50,PR=15,PT=20,PB=35;
+      var div_pts=pts.some(function(p){return Math.abs(p[0])>6||isNaN(p[0]);});
+      var xMin=-4,xMax=4,yMin=-0.5;
+      var yMax=div_pts?5:5;
+      function xp(x){return PL+(x-xMin)/(xMax-xMin)*(W-PL-PR);}
+      function yp(y){return PT+(yMax-y)/(yMax-yMin)*(H-PT-PB);}
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<W;gx+=32)for(var gy=20;gy<H;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+      // Axes
+      ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(PL,yp(0));ctx.lineTo(W-PR,yp(0));ctx.stroke();
+      ctx.beginPath();ctx.moveTo(xp(0),PT);ctx.lineTo(xp(0),H-PB);ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='top';
+      [-3,-2,-1,0,1,2,3].forEach(function(v){ctx.fillText(v,xp(v),H-PB+4);});
+      // Parabola
+      ctx.beginPath();ctx.strokeStyle='#5b8af5';ctx.lineWidth=2;
+      for(var i=0;i<=200;i++){var t=-4+i*8/200;var lv=t*t;if(lv>yMax+0.5)continue;if(i===0||pts[0][1]>yMax)ctx.moveTo(xp(t),yp(lv));else ctx.lineTo(xp(t),yp(lv));}ctx.stroke();
+      // Minimum marker
+      ctx.beginPath();ctx.arc(xp(0),yp(0),5,0,6.28);ctx.fillStyle='#fbbf24';ctx.fill();
+      ctx.fillStyle='#fbbf24';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText('minimum',xp(0),yp(0)-12);
+      if(div_pts){
+        ctx.fillStyle='#f87171';ctx.font='bold 16px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText('⚠ DIVERGING — steps growing larger each iteration',W/2,H/2-10);
+        // Show first 5 steps before they go off screen
+        pts.slice(0,6).forEach(function(p,i){
+          if(Math.abs(p[0])>4)return;
+          ctx.beginPath();ctx.arc(xp(p[0]),yp(Math.min(p[1],yMax-0.2)),5,0,6.28);
+          ctx.fillStyle='#f87171';ctx.fill();
+          ctx.strokeStyle='#0d1117';ctx.lineWidth=1.5;ctx.stroke();
+          ctx.fillStyle='#f87171';ctx.font='8px monospace';ctx.textAlign='center';ctx.fillText('θ'+i+'='+p[0].toFixed(2),xp(p[0]),yp(Math.min(p[1],yMax-0.2))-10);
+        });
+      } else {
+        ctx.beginPath();ctx.strokeStyle=hexRgba(col,0.5);ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+        pts.forEach(function(p,i){if(i===0)ctx.moveTo(xp(p[0]),yp(p[1]));else ctx.lineTo(xp(p[0]),yp(p[1]));});
+        ctx.stroke();ctx.setLineDash([]);
+        pts.forEach(function(p,i){
+          ctx.beginPath();ctx.arc(xp(p[0]),yp(p[1]),i===0?6:4,0,6.28);
+          ctx.fillStyle=i===0?'#fbbf24':col;ctx.fill();
+          ctx.strokeStyle='#0d1117';ctx.lineWidth=1.5;ctx.stroke();
+        });
+        // Step annotations for first 4
+        pts.slice(0,5).forEach(function(p,i){
+          ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='8px monospace';ctx.textAlign='center';ctx.textBaseline='bottom';
+          ctx.fillText('θ'+i+' ='+p[0].toFixed(2),xp(p[0]),yp(p[1])-8);
+        });
+      }
+      ctx.fillStyle='#5b8af5';ctx.font='10px sans-serif';ctx.textAlign='left';ctx.textBaseline='alphabetic';
+      ctx.fillText('— L(θ)=θ²',PL+5,PT+15);
+      ctx.fillStyle=col;ctx.fillText('• λ='+lr+' path',PL+5,PT+28);
+    };
+    nn3DrawLR('good');
+  })();
+  </script>
+
+  <!-- ── SECTION 4: STARTING POSITION ── -->
+  <h2>Part 4: Starting Position — Local vs Global Minima</h2>
+  <p>The final section uses this more complex polynomial with <strong>two local minima</strong>:</p>
+
+  <div class="code-block"><pre><code># Polynomial with multiple minima
+L = lambda theta: theta**4 - 4*theta**3 - 2*theta**2 + 5*theta + 31
+g = lambda theta: 4*theta**3 - 12*theta**2 - 4*theta + 5
+
+# Run GD from theta=4 (near the right minimum)
+gd_points = simpleGD(4, L, g, 0.01, 10)
+
+theta = np.linspace(2.5, 4.5, 100)
+plt.plot(theta, L(theta))
+plt.plot(*gd_points.T, 'o--')
+plt.xlabel(r"$θ$")
+plt.show()
+
+# Now plot the full function to see both minima
+theta = np.linspace(-2, 5, 100)
+plt.plot(theta, L(theta))
+plt.show()</code></pre></div>
+
+  <div class="alert alert-warn">
+    <strong>The key finding:</strong> GD always converges to the <em>nearest</em> local minimum — not the global one. Starting at θ=4 leads to the minimum near θ≈3.8. Starting at θ=−1.5 leads to a completely different minimum near θ≈−0.5. Both are valid convergence points, but they correspond to different (and possibly very different quality) solutions. <strong>This is exactly why neural networks can get stuck in suboptimal weights.</strong>
+  </div>
+
+  <!-- VIZ 4: Local vs Global Minima -->
+  <h3>Interactive: Starting Position Changes Everything</h3>
+  <p>Click a starting point button and watch where GD ends up on the polynomial. The red diamond marks where it converges — notice the two destinations are completely different.</p>
+
+  <div class="card" style="padding:16px">
+    <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap">
+      <button class="btn btn-primary" id="nn3-start-btn-a" onclick="nn3DrawStart('a')">Start θ = 4 (right side)</button>
+      <button class="btn btn-outline" id="nn3-start-btn-b" onclick="nn3DrawStart('b')">Start θ = −1.5 (left side)</button>
+      <button class="btn btn-outline" id="nn3-start-btn-c" onclick="nn3DrawStart('c')">Start θ = 1.0 (middle)</button>
+    </div>
+    <canvas id="nn3-start-canvas" width="520" height="280" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="nn3-start-desc" style="margin-top:10px; padding:10px 14px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.82rem; color:var(--text-muted); min-height:40px"></div>
+  </div>
+
+  <script>
+  (function(){
+    function L3(t){return Math.pow(t,4)-4*Math.pow(t,3)-2*t*t+5*t+31;}
+    function g3(t){return 4*Math.pow(t,3)-12*t*t-4*t+5;}
+    function simpleGD(t0,L,g,lr,n){var pts=[[t0,L(t0)]];var t=t0;for(var i=0;i<n;i++){t=t-lr*g(t);if(Math.abs(t)>20)break;pts.push([t,L(t)]);}return pts;}
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),gg=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgba('+r+','+gg+','+b+','+a+')';}
+
+    var STARTS={a:{t0:4,col:'#5b8af5'},b:{t0:-1.5,col:'#34d399'},c:{t0:1.0,col:'#a78bfa'}};
+    var nn3_start='a';
+
+    window.nn3DrawStart=function(s){
+      if(s)nn3_start=s;
+      ['a','b','c'].forEach(function(k){
+        var btn=document.getElementById('nn3-start-btn-'+k);
+        if(btn)btn.className='btn '+(k===nn3_start?'btn-primary':'btn-outline');
+      });
+      var cfg=STARTS[nn3_start];
+      var pts=simpleGD(cfg.t0,L3,g3,0.01,100);
+      var canvas=document.getElementById('nn3-start-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var W=520,H=280,PL=50,PR=15,PT=20,PB=35;
+      var xMin=-2,xMax=5,yMin=0,yMax=65;
+      function xp(x){return PL+(x-xMin)/(xMax-xMin)*(W-PL-PR);}
+      function yp(y){return PT+(yMax-y)/(yMax-yMin)*(H-PT-PB);}
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<W;gx+=32)for(var gy=20;gy<H;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+      // Grid
+      ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=0.8;
+      [0,10,20,30,40,50,60].forEach(function(v){
+        ctx.beginPath();ctx.moveTo(PL,yp(v));ctx.lineTo(W-PR,yp(v));ctx.stroke();
+        ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='9px monospace';ctx.textAlign='right';ctx.textBaseline='middle';
+        ctx.fillText(v,PL-4,yp(v));
+      });
+      ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='top';
+      [-2,-1,0,1,2,3,4,5].forEach(function(v){ctx.fillText(v,xp(v),H-PB+4);});
+      // Polynomial curve
+      ctx.beginPath();ctx.strokeStyle='#64748b';ctx.lineWidth=2;
+      for(var i=0;i<=300;i++){var t=xMin+i*(xMax-xMin)/300;var lv=L3(t);if(lv>yMax+2)continue;if(i===0)ctx.moveTo(xp(t),yp(lv));else ctx.lineTo(xp(t),yp(lv));}ctx.stroke();
+      // Mark two minima
+      var mins=[{t:-0.45,label:'Local\nmin'},{t:3.75,label:'Local\nmin'}];
+      mins.forEach(function(m){
+        var lv=L3(m.t);
+        ctx.beginPath();ctx.arc(xp(m.t),yp(lv),6,0,6.28);
+        ctx.fillStyle='rgba(251,191,36,0.2)';ctx.fill();
+        ctx.strokeStyle='#fbbf24';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+        ctx.fillStyle='#fbbf24';ctx.font='8px sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';
+        ctx.fillText(m.label.split('\n')[0],xp(m.t),yp(lv)-8);
+        ctx.fillText(m.label.split('\n')[1],xp(m.t),yp(lv)-0);
+      });
+      // Draw path
+      ctx.beginPath();ctx.strokeStyle=hexRgba(cfg.col,0.55);ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+      pts.forEach(function(p,i){if(i===0)ctx.moveTo(xp(p[0]),yp(Math.min(p[1],yMax)));else ctx.lineTo(xp(p[0]),yp(Math.min(p[1],yMax)));});
+      ctx.stroke();ctx.setLineDash([]);
+      // Draw step dots (sample every 5)
+      pts.filter(function(_,i){return i%5===0||i===pts.length-1;}).forEach(function(p,i){
+        ctx.beginPath();ctx.arc(xp(p[0]),yp(Math.min(p[1],yMax-1)),4,0,6.28);
+        ctx.fillStyle=cfg.col;ctx.fill();ctx.strokeStyle='#0d1117';ctx.lineWidth=1.5;ctx.stroke();
+      });
+      // Start marker
+      ctx.beginPath();ctx.arc(xp(pts[0][0]),yp(pts[0][1]),8,0,6.28);
+      ctx.fillStyle='#fbbf24';ctx.fill();ctx.strokeStyle='#0d1117';ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle='#fbbf24';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';
+      ctx.fillText('START',xp(pts[0][0]),yp(pts[0][1])-10);
+      // End marker (diamond)
+      var ep=pts[pts.length-1];var ex=xp(ep[0]),ey=yp(Math.min(ep[1],yMax-1));
+      ctx.beginPath();ctx.moveTo(ex,ey-10);ctx.lineTo(ex+8,ey);ctx.lineTo(ex,ey+10);ctx.lineTo(ex-8,ey);ctx.closePath();
+      ctx.fillStyle=cfg.col;ctx.fill();ctx.strokeStyle='#0d1117';ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle=cfg.col;ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+      ctx.fillText('ENDS HERE',ex,ey+12);
+      ctx.fillText('θ='+ep[0].toFixed(2)+', L='+ep[1].toFixed(2),ex,ey+23);
+      // Info
+      var startName=nn3_start==='a'?'θ=4':nn3_start==='b'?'θ=-1.5':'θ=1.0';
+      document.getElementById('nn3-start-desc').textContent=
+        'Starting at '+startName+' with λ=0.01, '+pts.length+' steps. '+
+        'Converged to θ≈'+ep[0].toFixed(3)+', L≈'+ep[1].toFixed(2)+'. '+
+        (ep[0]>2?'Landed in the RIGHT local minimum (θ≈3.75). A different start could give a completely different result.':ep[0]<0?'Landed in the LEFT local minimum (θ≈-0.45). Smaller loss, different starting region.':'Landed in a different basin depending on which minimum is closer in the gradient landscape.');
+    };
+    nn3DrawStart('a');
+  })();
+  </script>
+
+  <!-- ── KEY LESSONS ── -->
+  <h2>The 3 Key Lessons from This Practical</h2>
+  <div class="card-grid">
+    <div class="card" style="border-top:3px solid #5b8af5">
+      <div class="badge badge-blue" style="margin-bottom:8px">Lesson 1</div>
+      <p style="margin:0 0 4px; font-weight:600">Gradient = Slope</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">g(θ) tells you the slope of the loss at your current position. Subtracting it moves you downhill. At the minimum, g=0 and you stop. This is the <em>entire</em> mechanism of how neural networks learn.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #f87171">
+      <div class="badge badge-red" style="background:rgba(248,113,113,0.15);color:#f87171;margin-bottom:8px">Lesson 2</div>
+      <p style="margin:0 0 4px; font-weight:600">Learning Rate Must Be Tuned</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Too small → slow convergence (wastes training time). Too large → diverges (loss goes to NaN). The right λ depends on the function's curvature. In practice, use Adam (adaptive lr) and start with lr=0.001.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #fbbf24">
+      <div class="badge" style="background:rgba(251,191,36,0.15);color:#fbbf24;margin-bottom:8px">Lesson 3</div>
+      <p style="margin:0 0 4px; font-weight:600">Starting Point Matters</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">GD converges to the nearest local minimum, not the global one. Neural networks have millions of local minima. Techniques like random restarts, momentum, and good weight initialisation (He/Xavier) help escape bad minima.</p>
+    </div>
+  </div>
+
+  <h2>From 1D to Neural Networks</h2>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">This practical (1D)</th>
+        <th style="padding:9px 14px; color:#5b8af5; text-align:left">Real neural network training</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; color:var(--text-muted)">One parameter θ</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Millions of weights w₁...wₙ (one θ_new = θ_old − λ·g per weight)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; color:var(--text-muted)">Gradient g(θ) computed analytically</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Gradient ∂L/∂w computed by backpropagation (chain rule)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; color:var(--text-muted)">Loss over all data at once</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Mini-batch SGD: loss over a random subset (batch) each step</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; color:var(--text-muted)">Fixed learning rate λ</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Adam adapts the learning rate per-weight automatically</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; color:var(--text-muted)">theta -= lmbda * g(theta)</td>
+        <td style="padding:8px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">loss.backward(); optimizer.step() — same logic, different tools</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-nn3"></div></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('nn3')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('nn2')">← L2: MNIST Practical</button>
+    <button class="btn btn-outline" onclick="nav('nn4')">L4: Classification with GD →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- NEURAL NETWORKS & DEEP LEARNING — L4: Classification with GD (Iris)  -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-nn4">
+  <div class="lesson-header">
+    <div class="breadcrumb">Neural Networks & Deep Learning · L4</div>
+    <h1>🌸 Classification using Gradient Descent</h1>
+    <p class="subtitle">Apply SGD to real classification on the Iris dataset — learn good practice, the impact of centering, constant vs adaptive learning rates, and how to read a confusion matrix</p>
+  </div>
+
+  <h2>What This Practical Covers</h2>
+  <p>In L3 you implemented gradient descent on simple functions from scratch. Here you apply it to a real classification problem using <code>sklearn</code>'s <code>SGDClassifier</code> — a wrapper that lets you run gradient descent with different loss functions and learning rate strategies. The focus is on <strong>good practice</strong> and understanding the effect of your choices.</p>
+
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Topic</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">What you learn</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Iris dataset</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">4 features, 3 flower classes — a classic multi-class benchmark</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Centering</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Why zero-mean features help gradient descent converge better</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">SGDClassifier</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">How <code>loss=</code> selects the model; <code>log_loss</code> → Logistic Regression</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Confusion matrix</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Where the classifier gets confused — which classes it mixes up</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 14px; font-weight:600">Learning curves</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Constant vs adaptive learning rate — which converges faster with more data</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── DATASET ── -->
+  <h2>Step 1: The Iris Dataset</h2>
+  <div class="code-block"><pre><code>from sklearn import datasets
+
+# Load Iris: 150 samples, 4 features, 3 classes
+X, y = datasets.load_iris(return_X_y=True)
+
+# X shape: (150, 4) — 4 flower measurements per sample
+# y shape: (150,)   — class label 0, 1, or 2
+
+# Visualise: plot first 2 features, colour by class
+plt.scatter(X[:, 0], X[:, 1], c=y)
+plt.xlabel("Sepal length (cm)")
+plt.ylabel("Sepal width (cm)")
+plt.show()</code></pre></div>
+
+  <div class="card-grid">
+    <div class="card" style="border-top:3px solid #5b8af5">
+      <div class="badge badge-blue" style="margin-bottom:8px">Class 0 — Setosa</div>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Small sepal length, wide sepal. <strong>Easily separable</strong> from the other two classes in 2D.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #34d399">
+      <div class="badge badge-green" style="margin-bottom:8px">Class 1 — Versicolor</div>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Medium measurements. <strong>Overlaps with Virginica</strong> — the classifier often confuses these two.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #a78bfa">
+      <div class="badge badge-purple" style="margin-bottom:8px">Class 2 — Virginica</div>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Larger sepal length. <strong>Partially overlapping</strong> with Versicolor in sepal width.</p>
+    </div>
+  </div>
+
+  <!-- ── CENTERING ── -->
+  <h2>Step 2: Centering the Data</h2>
+  <div class="code-block"><pre><code># Center: subtract the mean of each feature
+# np.mean(X, axis=0) gives the mean of each column (feature)
+X = X - np.mean(X, axis=0)
+
+# Before:  Sepal length mean ≈ 5.84 cm,  Sepal width mean ≈ 3.05 cm
+# After:   Both means = 0.0 exactly
+
+plt.scatter(X[:, 0], X[:, 1], c=y)
+plt.xlabel("Sepal length (centered)")
+plt.ylabel("Sepal width (centered)")
+plt.show()</code></pre></div>
+
+  <div class="alert alert-info">
+    <strong>Why center the data?</strong> Gradient descent uses the bias parameter <em>b</em> to shift the decision boundary. If data is far from zero (e.g. sepal length ≈ 5–8 cm), the bias must compensate for this offset from the start — it starts far from its optimal value when initialised near 0. Centering moves the data to the origin so the bias starts close to optimal, making the first few gradient steps much more effective.
+  </div>
+
+  <!-- VIZ 1: CENTERING DEMO -->
+  <h3>Interactive: Before and After Centering</h3>
+  <p>Toggle between raw and centered data. Notice how the clusters shift to be symmetric around (0,0) — the decision boundary now passes through the centre of the data space.</p>
+
+  <div class="card" style="padding:16px">
+    <div style="display:flex; gap:8px; margin-bottom:12px">
+      <button class="btn btn-outline" id="nn4-cent-raw" onclick="nn4DrawCent('raw')" style="border-color:#f87171;color:#f87171">Before Centering (raw)</button>
+      <button class="btn btn-primary" id="nn4-cent-cen" onclick="nn4DrawCent('cen')">After Centering ✅</button>
+    </div>
+    <canvas id="nn4-cent-canvas" width="520" height="280" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="nn4-cent-info" style="margin-top:10px; padding:8px 14px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.82rem; color:var(--text-muted); min-height:32px"></div>
+  </div>
+
+  <script>
+  (function(){
+    // Representative Iris points: [sepal_len, sepal_wid, class]
+    var RAW=[
+      [5.1,3.5,0],[4.9,3.0,0],[4.7,3.2,0],[4.6,3.1,0],[5.0,3.6,0],[5.4,3.9,0],[4.6,3.4,0],[5.0,3.4,0],[4.4,2.9,0],[4.9,3.1,0],[5.4,3.7,0],[4.8,3.4,0],[5.8,4.0,0],[5.7,4.4,0],[5.4,3.9,0],
+      [7.0,3.2,1],[6.4,3.2,1],[6.9,3.1,1],[5.5,2.3,1],[6.5,2.8,1],[5.7,2.8,1],[6.3,3.3,1],[4.9,2.4,1],[6.6,2.9,1],[5.2,2.7,1],[5.0,2.0,1],[5.9,3.0,1],[6.0,2.2,1],[6.1,2.9,1],[5.6,2.9,1],
+      [6.3,3.3,2],[5.8,2.7,2],[7.1,3.0,2],[6.3,2.9,2],[6.5,3.0,2],[7.6,3.0,2],[4.9,2.5,2],[7.3,2.9,2],[6.7,2.5,2],[7.2,3.6,2],[6.5,3.2,2],[6.4,2.7,2],[6.8,3.0,2],[5.7,2.5,2],[5.8,2.8,2]
+    ];
+    var MEAN_X=RAW.reduce(function(s,r){return s+r[0];},0)/RAW.length;
+    var MEAN_Y=RAW.reduce(function(s,r){return s+r[1];},0)/RAW.length;
+    var CEN=RAW.map(function(r){return[r[0]-MEAN_X,r[1]-MEAN_Y,r[2]];});
+    var COLS=['#5b8af5','#34d399','#a78bfa'];
+    var DESCS={
+      raw:'Raw data: features are at their natural scale (sepal length 4.5–7.6 cm). The clusters sit in the positive quadrant. The decision boundary and bias parameter must account for this offset from zero.',
+      cen:'After centering (subtract column means: sepal length mean ≈ 5.84, width ≈ 3.06): all clusters are now centred around (0,0). Gradient descent starts closer to the optimal bias value and converges faster.'
+    };
+    var nn4_cent='cen';
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgba('+r+','+g+','+b+','+a+')';}
+
+    window.nn4DrawCent=function(m){
+      if(m)nn4_cent=m;
+      document.getElementById('nn4-cent-raw').className='btn '+(nn4_cent==='raw'?'btn-primary':'btn-outline');
+      document.getElementById('nn4-cent-raw').style=nn4_cent==='raw'?'':'border-color:#f87171;color:#f87171';
+      document.getElementById('nn4-cent-cen').className='btn '+(nn4_cent==='cen'?'btn-primary':'btn-outline');
+      document.getElementById('nn4-cent-info').textContent=DESCS[nn4_cent];
+      var data=nn4_cent==='raw'?RAW:CEN;
+      var canvas=document.getElementById('nn4-cent-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var W=520,H=280,PAD=50;
+      var xs=data.map(function(r){return r[0];}),ys=data.map(function(r){return r[1];});
+      var xMin=Math.min.apply(null,xs)-0.3,xMax=Math.max.apply(null,xs)+0.3;
+      var yMin=Math.min.apply(null,ys)-0.3,yMax=Math.max.apply(null,ys)+0.3;
+      function xp(x){return PAD+(x-xMin)/(xMax-xMin)*(W-2*PAD);}
+      function yp(y){return H-PAD-(y-yMin)/(yMax-yMin)*(H-2*PAD);}
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<W;gx+=32)for(var gy=20;gy<H;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+      // Zero lines for centered
+      if(nn4_cent==='cen'){
+        ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+        ctx.beginPath();ctx.moveTo(xp(0),PAD);ctx.lineTo(xp(0),H-PAD);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(PAD,yp(0));ctx.lineTo(W-PAD,yp(0));ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px monospace';ctx.textAlign='left';ctx.textBaseline='bottom';
+        ctx.fillText('x=0',xp(0)+4,yp(0)-3);
+        ctx.fillText('y=0',xp(0)+4,yp(0)-14);
+      }
+      // Axes tick labels
+      ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='top';
+      [Math.ceil(xMin*2)/2,Math.round(xMax*2)/2].forEach(function(v){ctx.fillText(v.toFixed(1),xp(v),H-PAD+5);});
+      // Scatter points
+      data.forEach(function(r){
+        ctx.beginPath();ctx.arc(xp(r[0]),yp(r[1]),5,0,6.28);
+        ctx.fillStyle=COLS[r[2]];ctx.fill();
+        ctx.strokeStyle='#0d1117';ctx.lineWidth=1.5;ctx.stroke();
+      });
+      // Mean cross-hair for raw
+      if(nn4_cent==='raw'){
+        ctx.strokeStyle='#fbbf24';ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.moveTo(xp(MEAN_X)-10,yp(MEAN_Y));ctx.lineTo(xp(MEAN_X)+10,yp(MEAN_Y));ctx.stroke();
+        ctx.beginPath();ctx.moveTo(xp(MEAN_X),yp(MEAN_Y)-10);ctx.lineTo(xp(MEAN_X),yp(MEAN_Y)+10);ctx.stroke();
+        ctx.fillStyle='#fbbf24';ctx.font='9px monospace';ctx.textAlign='left';
+        ctx.fillText('mean ('+MEAN_X.toFixed(1)+','+MEAN_Y.toFixed(1)+')',xp(MEAN_X)+8,yp(MEAN_Y)-8);
+      }
+      // Legend
+      [['● Setosa','#5b8af5'],['● Versicolor','#34d399'],['● Virginica','#a78bfa']].forEach(function(l,i){
+        ctx.fillStyle=l[1];ctx.font='10px sans-serif';ctx.textAlign='left';ctx.textBaseline='alphabetic';
+        ctx.fillText(l[0],PAD+i*130,H-8);
+      });
+      // Labels
+      ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+      ctx.fillText(nn4_cent==='raw'?'Sepal Length (cm)':'Sepal Length (centered)',W/2,H-PAD+18);
+      ctx.save();ctx.translate(15,H/2);ctx.rotate(-Math.PI/2);
+      ctx.fillText(nn4_cent==='raw'?'Sepal Width (cm)':'Sepal Width (centered)',0,0);ctx.restore();
+    };
+    nn4DrawCent('cen');
+  })();
+  </script>
+
+  <!-- ── TRAIN/TEST SPLIT ── -->
+  <h2>Step 3: Train / Test Split</h2>
+  <div class="code-block"><pre><code>from sklearn.model_selection import train_test_split
+
+# 10% test, 90% train
+# test_size=0.1 → 15 test samples, 135 training samples
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1)
+
+# Random state not set → split is different every run
+# This is intentional: the practical asks you to observe the stochastic behaviour</code></pre></div>
+
+  <p>We use 90% for training because the Iris dataset is small (150 samples). A larger training set means more gradient steps before evaluation. The remaining 15 samples are the <strong>held-out test set</strong> — never seen by the model during training.</p>
+
+  <!-- ── SGDClassifier ── -->
+  <h2>Step 4: The SGDClassifier</h2>
+  <div class="code-block"><pre><code>from sklearn.linear_model import SGDClassifier
+
+# Logistic Regression trained with gradient descent
+clf = SGDClassifier(
+    loss            = 'log_loss',   # → Logistic Regression classifier
+    learning_rate   = 'constant',  # fixed step size throughout training
+    eta0            = 0.01          # the learning rate value
+)
+
+clf.fit(X_train, y_train)</code></pre></div>
+
+  <div class="card" style="border-left:3px solid #fbbf24; margin-top:8px">
+    <p style="margin:0 0 8px; font-weight:600; color:#fbbf24">The <code>loss</code> parameter selects the model</p>
+    <table style="width:100%; font-size:0.82rem; border-collapse:collapse">
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:6px 12px; font-family:monospace; color:var(--text)">loss='log_loss'</td>
+        <td style="padding:6px 12px; color:var(--text-muted)"><strong>Logistic Regression</strong> — optimises cross-entropy loss. Outputs class probabilities. Good default for classification.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:6px 12px; font-family:monospace; color:var(--text)">loss='hinge'</td>
+        <td style="padding:6px 12px; color:var(--text-muted)"><strong>Support Vector Machine (SVM)</strong> — maximises the margin between classes. No probabilities, just hard class predictions.</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 12px; font-family:monospace; color:var(--text)">loss='modified_huber'</td>
+        <td style="padding:6px 12px; color:var(--text-muted)"><strong>Smooth SVM variant</strong> — robust to outliers, still provides probabilities. A practical middle ground.</td>
+      </tr>
+    </table>
+    <p style="margin:10px 0 0; font-size:0.83rem; color:var(--text-muted)">This is an unusual setup — normally you pick a classifier (e.g. <code>LogisticRegression</code>) which internally uses the best optimiser for that model. Here we choose the optimiser first to explore gradient descent behaviour directly.</p>
+  </div>
+
+  <div class="card" style="border-left:3px solid #5b8af5; margin-top:8px">
+    <p style="margin:0 0 8px; font-weight:600; color:#5b8af5">The <code>learning_rate</code> parameter controls annealing</p>
+    <table style="width:100%; font-size:0.82rem; border-collapse:collapse">
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:6px 12px; font-family:monospace; color:var(--text)">learning_rate='constant'</td>
+        <td style="padding:6px 12px; color:var(--text-muted)">Fixed step size = <code>eta0</code> throughout. Simple. The value you set is exactly what gets used every step.</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 12px; font-family:monospace; color:var(--text)">learning_rate='adaptive'</td>
+        <td style="padding:6px 12px; color:var(--text-muted)">Starts at <code>eta0</code>. Each time the loss <em>fails to decrease</em>, the learning rate is divided by 5. Automatically finds a good lr without manual tuning.</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <h2>Step 5: Confusion Matrix</h2>
+  <div class="code-block"><pre><code>from sklearn.metrics import ConfusionMatrixDisplay
+
+ConfusionMatrixDisplay.from_estimator(clf, X_test, y_test)
+plt.show()
+
+# clf.score(X_test, y_test) → typically 0.80–0.93 (varies due to random split)</code></pre></div>
+
+  <h3>Interactive: Confusion Matrix Visualised</h3>
+  <p>A confusion matrix shows <strong>where the classifier gets things right and where it gets confused</strong>. The diagonal = correct predictions. Off-diagonal = mistakes. Hover a cell to understand what it means.</p>
+
+  <div class="card" style="padding:16px">
+    <canvas id="nn4-cm-canvas" width="380" height="320" style="width:100%; max-width:380px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="nn4-cm-info" style="margin-top:10px; padding:8px 14px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.82rem; color:var(--text-muted); min-height:32px">Typical result with SGDClassifier(log_loss, lr=constant, eta0=0.01) on 90/10 Iris split. Results vary on each run due to random train/test split.</div>
+  </div>
+
+  <script>
+  (function(){
+    // Typical confusion matrix for Iris with SGDClassifier
+    // True rows, Predicted cols. 15 test samples split approx 5/5/5
+    var CM=[[5,0,0],[0,4,1],[0,1,4]]; // 13/15 correct = 86.7%
+    var LABELS=['Setosa','Versicolor','Virginica'];
+    var COLS_ROW=['#5b8af5','#34d399','#a78bfa'];
+
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgba('+r+','+g+','+b+','+a+')';}
+
+    var canvas=document.getElementById('nn4-cm-canvas');if(!canvas)return;
+    var ctx=canvas.getContext('2d');
+    var W=380,H=320,OFF=90,CW=(W-OFF-20)/3,CH=(H-OFF-20)/3;
+
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+
+    // Header labels — Predicted
+    ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+    ctx.fillText('Predicted',OFF+(3*CW)/2,18);
+    LABELS.forEach(function(l,j){
+      ctx.fillStyle=COLS_ROW[j];ctx.font='9px sans-serif';ctx.textAlign='center';
+      ctx.fillText(l,OFF+j*CW+CW/2,35);
+    });
+
+    // Side labels — True
+    ctx.save();ctx.translate(14,OFF+(3*CH)/2);ctx.rotate(-Math.PI/2);
+    ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='bold 10px sans-serif';ctx.textAlign='center';
+    ctx.fillText('True',0,0);ctx.restore();
+    LABELS.forEach(function(l,i){
+      ctx.fillStyle=COLS_ROW[i];ctx.font='9px sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
+      ctx.fillText(l,OFF-6,OFF+i*CH+CH/2);
+    });
+
+    // Cells
+    var maxVal=Math.max.apply(null,[].concat.apply([],CM));
+    CM.forEach(function(row,i){
+      row.forEach(function(val,j){
+        var x=OFF+j*CW,y=OFF+i*CH;
+        var isDiag=i===j;
+        var intensity=val/maxVal;
+        // Cell background
+        ctx.fillStyle=isDiag?hexRgba('#34d399',0.15+intensity*0.5):hexRgba('#f87171',val>0?0.1+intensity*0.3:0);
+        ctx.fillRect(x,y,CW,CH);
+        ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;ctx.strokeRect(x,y,CW,CH);
+        // Value
+        ctx.fillStyle=isDiag?'#34d399':'#f87171';
+        ctx.font='bold 22px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(val,x+CW/2,y+CH/2-6);
+        // Percentage
+        var pct=(val/15*100).toFixed(0)+'%';
+        ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='9px monospace';
+        ctx.fillText(pct,x+CW/2,y+CH/2+12);
+      });
+    });
+
+    // Accuracy summary
+    var correct=CM[0][0]+CM[1][1]+CM[2][2];
+    ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='11px sans-serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+    ctx.fillText('Accuracy: '+correct+'/15 = '+(correct/15*100).toFixed(1)+'%',W/2,H-8);
+
+    // Click detection
+    canvas.addEventListener('click',function(e){
+      var rect=canvas.getBoundingClientRect();
+      var mx=(e.clientX-rect.left)*(W/rect.width);
+      var my=(e.clientY-rect.top)*(H/rect.height);
+      var ci=Math.floor((my-OFF)/CH),cj=Math.floor((mx-OFF)/CW);
+      if(ci>=0&&ci<3&&cj>=0&&cj<3){
+        var val=CM[ci][cj];
+        var msg=ci===cj?
+          'Correct: '+val+' '+LABELS[ci]+' flowers correctly classified as '+LABELS[ci]+'.':
+          (val>0?'Mistake: '+val+' '+LABELS[ci]+' flower'+(val>1?'s were':'was')+' misclassified as '+LABELS[cj]+'. This is the most common confusion in Iris — '+LABELS[ci]+' and '+LABELS[cj]+' overlap in sepal measurements.':'No mistakes: no '+LABELS[ci]+' flowers were misclassified as '+LABELS[cj]+'.');
+        document.getElementById('nn4-cm-info').textContent=msg;
+      }
+    });
+  })();
+  </script>
+
+  <div class="alert alert-warn">
+    <strong>Why does accuracy vary each run?</strong> Three sources of randomness: (1) the train/test split is random — some splits are easier than others, (2) SGD processes training examples in a random order, (3) the starting weights are randomly initialised. Run the code multiple times and you'll see accuracy fluctuate between ~80% and ~95%. This is why you always report average accuracy over multiple runs or use cross-validation.
+  </div>
+
+  <!-- ── LEARNING CURVES ── -->
+  <h2>Step 6: Learning Curves — Constant vs Adaptive Learning Rate</h2>
+  <div class="code-block"><pre><code>from sklearn.model_selection import learning_curve
+
+# Constant learning rate
+clf_const = SGDClassifier(loss='log_loss', learning_rate='constant', eta0=0.01)
+sizes_c, train_c, test_c = learning_curve(clf_const, X_train, y_train)
+
+# Adaptive learning rate (divides by 5 when loss stops decreasing)
+clf_adap  = SGDClassifier(loss='log_loss', learning_rate='adaptive', eta0=0.01)
+sizes_a, train_a, test_a = learning_curve(clf_adap, X_train, y_train)
+
+# Plot test scores (note: learning_curve returns scores, NOT loss)
+plt.plot(sizes_c, -test_c.mean(1), 'o-', color='r', label='constant')
+plt.plot(sizes_a, -test_a.mean(1), 'o-', color='b', label='adaptive')
+plt.legend()
+plt.show()</code></pre></div>
+
+  <div class="alert alert-info">
+    <strong>What is a learning curve?</strong> It shows how model performance changes as you give it <em>more training data</em>. X-axis = number of training samples used. Y-axis = cross-validated score. A converging curve (flattening at the right) means the model has learned what it can — more data won't help much. A still-rising curve means more data would still improve the model.
+  </div>
+
+  <!-- VIZ 2: LEARNING CURVES -->
+  <h3>Interactive: Learning Curves Comparison</h3>
+  <p>The chart shows cross-validated test accuracy as more training data is provided. Toggle to see each strategy individually, or view both together.</p>
+
+  <div class="card" style="padding:16px">
+    <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap">
+      <button class="btn btn-primary" id="nn4-lc-btn-both" onclick="nn4DrawLC('both')">Both</button>
+      <button class="btn btn-outline" id="nn4-lc-btn-const" onclick="nn4DrawLC('const')" style="border-color:#f87171;color:#f87171">Constant λ=0.01</button>
+      <button class="btn btn-outline" id="nn4-lc-btn-adapt" onclick="nn4DrawLC('adapt')" style="border-color:#5b8af5;color:#5b8af5">Adaptive λ (starts 0.01)</button>
+    </div>
+    <canvas id="nn4-lc-canvas" width="520" height="270" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="nn4-lc-info" style="margin-top:10px; padding:8px 14px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.82rem; color:var(--text-muted); min-height:36px"></div>
+  </div>
+
+  <script>
+  (function(){
+    // Learning curve: train sizes approx for 135 training samples
+    var SIZES=[14,27,41,54,68,81,94,108,121,135];
+    var CONST_TEST=[0.64,0.70,0.75,0.79,0.82,0.85,0.87,0.88,0.88,0.89];
+    var CONST_TRAIN=[0.95,0.92,0.90,0.89,0.88,0.88,0.87,0.87,0.87,0.87];
+    var ADAPT_TEST=[0.59,0.68,0.74,0.80,0.84,0.87,0.89,0.90,0.91,0.92];
+    var ADAPT_TRAIN=[0.96,0.94,0.92,0.91,0.90,0.89,0.89,0.89,0.89,0.89];
+    var DESCS={
+      both:'Both strategies improve with more data. Adaptive (blue) ultimately reaches higher test accuracy (~92%) because it automatically reduces the learning rate as training progresses — fine-tuning near the optimum rather than overshooting it.',
+      const:'Constant λ=0.01: stable improvement but plateaus at ~89%. The fixed step size is good early on but may overshoot slightly near the optimum, limiting final accuracy.',
+      adapt:'Adaptive λ (starts 0.01, divides by 5 when loss stops improving): slower start but achieves higher final accuracy (~92%). The automatic lr reduction helps it converge more precisely near the minimum.'
+    };
+    var nn4_lc='both';
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgba('+r+','+g+','+b+','+a+')';}
+
+    window.nn4DrawLC=function(m){
+      if(m)nn4_lc=m;
+      ['both','const','adapt'].forEach(function(k){
+        var btn=document.getElementById('nn4-lc-btn-'+k);if(!btn)return;
+        btn.className='btn '+(k===nn4_lc?'btn-primary':'btn-outline');
+        var c={both:'var(--accent)',const:'#f87171',adapt:'#5b8af5'};
+        if(k!==nn4_lc)btn.style='border-color:'+c[k]+';color:'+c[k];
+        else btn.style='';
+      });
+      document.getElementById('nn4-lc-info').textContent=DESCS[nn4_lc];
+      var canvas=document.getElementById('nn4-lc-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var W=520,H=270,PL=55,PR=20,PT=25,PB=40;
+      var yMin=0.5,yMax=1.0;
+      function xp(s){return PL+(s-SIZES[0])/(SIZES[SIZES.length-1]-SIZES[0])*(W-PL-PR);}
+      function yp(v){return PT+(yMax-v)/(yMax-yMin)*(H-PT-PB);}
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<W;gx+=32)for(var gy=20;gy<H;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+      // Grid
+      [0.5,0.6,0.7,0.8,0.9,1.0].forEach(function(v){
+        ctx.beginPath();ctx.moveTo(PL,yp(v));ctx.lineTo(W-PR,yp(v));
+        ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1;ctx.stroke();
+        ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='9px monospace';ctx.textAlign='right';ctx.textBaseline='middle';
+        ctx.fillText((v*100).toFixed(0)+'%',PL-5,yp(v));
+      });
+      SIZES.filter(function(_,i){return i%2===0;}).forEach(function(s){
+        ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='top';
+        ctx.fillText(s,xp(s),H-PB+5);
+      });
+      // Axes
+      ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(PL,PT);ctx.lineTo(PL,H-PB);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(PL,H-PB);ctx.lineTo(W-PR,H-PB);ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font='10px sans-serif';ctx.save();ctx.translate(14,H/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillText('CV Test Accuracy',0,0);ctx.restore();
+      ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('Training Samples Used',W/2,H-PB+20);
+
+      function drawCurve(testD,trainD,col){
+        // Shaded gap
+        ctx.beginPath();
+        testD.forEach(function(v,i){i===0?ctx.moveTo(xp(SIZES[i]),yp(v)):ctx.lineTo(xp(SIZES[i]),yp(v));});
+        for(var i=trainD.length-1;i>=0;i--)ctx.lineTo(xp(SIZES[i]),yp(trainD[i]));
+        ctx.closePath();ctx.fillStyle=hexRgba(col,0.07);ctx.fill();
+        // Train dashed
+        ctx.beginPath();ctx.strokeStyle=hexRgba(col,0.4);ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+        trainD.forEach(function(v,i){i===0?ctx.moveTo(xp(SIZES[i]),yp(v)):ctx.lineTo(xp(SIZES[i]),yp(v));});
+        ctx.stroke();ctx.setLineDash([]);
+        // Test solid
+        ctx.beginPath();ctx.strokeStyle=col;ctx.lineWidth=2.5;
+        testD.forEach(function(v,i){i===0?ctx.moveTo(xp(SIZES[i]),yp(v)):ctx.lineTo(xp(SIZES[i]),yp(v));});
+        ctx.stroke();
+        testD.forEach(function(v,i){
+          ctx.beginPath();ctx.arc(xp(SIZES[i]),yp(v),3.5,0,6.28);
+          ctx.fillStyle=col;ctx.fill();ctx.strokeStyle='#0d1117';ctx.lineWidth=1.5;ctx.stroke();
+        });
+        // End label
+        var lastX=xp(SIZES[SIZES.length-1]),lastY=yp(testD[testD.length-1]);
+        ctx.fillStyle=col;ctx.font='bold 9px monospace';ctx.textAlign='left';ctx.textBaseline='middle';
+        ctx.fillText((testD[testD.length-1]*100).toFixed(0)+'%',lastX+5,lastY);
+      }
+      if(nn4_lc==='both'||nn4_lc==='const')drawCurve(CONST_TEST,CONST_TRAIN,'#f87171');
+      if(nn4_lc==='both'||nn4_lc==='adapt')drawCurve(ADAPT_TEST,ADAPT_TRAIN,'#5b8af5');
+      // Legend
+      if(nn4_lc==='both'){
+        ctx.fillStyle='#f87171';ctx.font='10px sans-serif';ctx.textAlign='left';ctx.fillText('— Constant',PL+5,PT+14);
+        ctx.fillStyle='#5b8af5';ctx.fillText('— Adaptive',PL+5,PT+26);
+        ctx.fillStyle='rgba(255,255,255,0.3)';ctx.globalAlpha=0.5;ctx.fillText('- - Train accuracy',PL+5,PT+38);ctx.globalAlpha=1;
+      }
+    };
+    nn4DrawLC('both');
+  })();
+  </script>
+
+  <!-- ── KEY TAKEAWAYS ── -->
+  <h2>Key Takeaways</h2>
+  <div class="card-grid">
+    <div class="card" style="border-top:3px solid #34d399">
+      <div class="badge badge-green" style="margin-bottom:8px">Good Practice</div>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)"><strong>Always</strong> center your data (zero mean). <strong>Always</strong> split train/test before any other processing. <strong>Never</strong> use test data statistics for normalisation.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #5b8af5">
+      <div class="badge badge-blue" style="margin-bottom:8px">SGDClassifier</div>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">The <code>loss</code> parameter selects the model. <code>log_loss</code> = Logistic Regression. <code>hinge</code> = SVM. Same GD algorithm, different loss surface being minimised.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #fbbf24">
+      <div class="badge" style="background:rgba(251,191,36,0.15);color:#fbbf24;margin-bottom:8px">Adaptive > Constant</div>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Adaptive learning rate typically achieves better final accuracy with no extra tuning. It's equivalent to running a mini learning rate schedule automatically — reducing when the loss plateaus.</p>
+    </div>
+    <div class="card" style="border-top:3px solid #f87171">
+      <div class="badge badge-red" style="background:rgba(248,113,113,0.15);color:#f87171;margin-bottom:8px">Stochasticity</div>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Results vary between runs due to random splits and SGD ordering. Always run multiple times and report averages, or use cross-validation (<code>learning_curve</code> does this automatically).</p>
+    </div>
+  </div>
+
+  <h2>The Bigger Picture</h2>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">This practical (sklearn)</th>
+        <th style="padding:9px 14px; color:#5b8af5; text-align:left">Neural networks (L5)</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; color:var(--text-muted)">4 features (hand-measured flower dimensions)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">784 features (raw pixel values)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; color:var(--text-muted)">Single layer: features → 3 class probabilities</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Multiple layers: features → representations → classes</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; color:var(--text-muted)">Logistic Regression: linear decision boundary</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">MLP: non-linear boundary via ReLU activations</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; color:var(--text-muted)">Same concepts: centering, lr, train/val/test, GD</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Same concepts: + backprop, weight init, regularisation</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-nn4"></div></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('nn4')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('nn3')">← L3: Gradient Descent</button>
+    <button class="btn btn-outline" onclick="nav('nn5')">L5: Training a NN →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- NEURAL NETWORKS & DEEP LEARNING — L5: Training a Neural Network  -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-nn5">
+  <div class="lesson-header">
+    <div class="breadcrumb">Neural Networks & Deep Learning · L5</div>
+    <h1>⚙️ Training a Neural Network</h1>
+    <p class="subtitle">Build every component from scratch — cross-entropy loss, ReLU, Glorot initialisation, L2 regularisation, momentum SGD — then train on MNIST and tune learning rate for best results</p>
+  </div>
+
+  <h2>What This Practical Builds</h2>
+  <p>In L2 (MNIST) you used Keras's built-in loss, activations and initialisers. This practical opens the black box — you implement each component from scratch using TensorFlow's low-level maths, then plug them into a custom model class and train it properly with validation, checkpointing and learning rate tuning.</p>
+
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Component</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">What you build</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Why</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Loss function</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Multi-class cross-entropy from formula</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Understand exactly what you're minimising</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Activation</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">ReLU: max(0, x)</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">See the one line it really takes</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Weight init</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Glorot uniform from formula</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Bad init → training fails completely</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:7px 14px; font-weight:600">Regularisation</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">L2 / weight decay as a class</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Prevent overfitting on small training sets</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 14px; font-weight:600">Model</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Custom MLP class subclassing keras.Model</td>
+        <td style="padding:7px 14px; color:var(--text-muted)">Gives access to advanced Keras features</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── PREPROCESSING ── -->
+  <h2>Step 1: Full Preprocessing Pipeline</h2>
+  <p>We extend the L2 preprocessing with two additions: proper z-score normalisation and a manual train/validation split.</p>
+
+  <div class="code-block"><pre><code># --- Standard preprocessing (same as L2) ---
+images_train = images_train.reshape(60000, 784).astype('float32') / 255
+images_test  = images_test.reshape(10000, 784).astype('float32')  / 255
+
+labels_train = to_categorical(labels_train, 10)
+labels_test  = to_categorical(labels_test,  10)
+
+# --- NEW: Z-score normalisation (mean=0, std=1) ---
+train_mean = np.mean(images_train)   # 0.1307
+train_std  = np.std(images_train)    # 0.3081
+
+print(f'Mean: {train_mean:.4f}')     # → 0.1307
+print(f'Std:  {train_std:.4f}')      # → 0.3081
+
+# Normalise BOTH sets using ONLY train statistics (no data leakage!)
+images_train = (images_train - train_mean) / train_std
+images_test  = (images_test  - train_mean) / train_std
+
+# --- NEW: Manual train / validation split ---
+images_val   = images_train[-1000:]   # last 1000 examples → validation
+labels_val   = labels_train[-1000:]
+
+images_train = images_train[:-45000]  # first 5000 examples → training
+labels_train = labels_train[:-45000]
+
+print(f'Train: {images_train.shape}')      # (5000, 784)
+print(f'Validation: {images_val.shape}')   # (1000, 784)
+print(f'Test: {images_test.shape}')        # (10000, 784)</code></pre></div>
+
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #5b8af5">
+      <p style="margin:0 0 6px; font-weight:600; color:#5b8af5">Why z-score normalise?</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">After /255 the data is in [0,1] but the mean is 0.13, not 0. Z-score shifts it so mean=0 and std=1. This helps gradient descent: the loss surface becomes more symmetric and the same learning rate works well across all features.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">Why only use train stats for test?</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Using test data statistics to normalise would be <strong>data leakage</strong> — the model indirectly "sees" the test set. Always compute mean/std on the training set and apply them to both train and test unchanged.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #fbbf24">
+      <p style="margin:0 0 6px; font-weight:600; color:#fbbf24">Why a separate validation set?</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">We use validation to choose the best model checkpoint and learning rate. Using the test set for this would make the test accuracy overly optimistic. Validation is for tuning; test is the final honest evaluation.</p>
+    </div>
+  </div>
+
+  <!-- ── CROSS-ENTROPY LOSS ── -->
+  <h2>Step 2: Cross-Entropy Loss from Scratch</h2>
+  <p>The formula for multi-class cross-entropy over a mini-batch of N examples and C classes:</p>
+  <div class="card" style="border-left:3px solid var(--accent); margin-bottom:12px">
+    <p style="margin:0 0 4px; font-size:0.92rem; font-family:monospace; color:var(--text)">CE = −(1/N) × Σᵢ Σⱼ y_{i,j} × log(ŷ_{i,j})</p>
+    <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">where y_{i,j} = true label (one-hot, 0 or 1), ŷ_{i,j} = predicted probability from softmax, i = example index, j = class index.</p>
+  </div>
+
+  <div class="code-block"><pre><code>def my_cross_entropy_loss(y_true, y_pred):
+    # y_true: one-hot labels,  shape (batch, 10)
+    # y_pred: softmax probs,   shape (batch, 10)
+
+    # Step 1: element-wise multiply true label × log(predicted prob)
+    #         → only the TRUE class contributes (others are 0 in y_true)
+    per_class = y_true * tf.math.log(y_pred)   # shape: (batch, 10)
+
+    # Step 2: sum across classes (axis=1) for each example
+    per_example = tf.math.reduce_sum(per_class, axis=1)   # shape: (batch,)
+
+    # Step 3: mean across the batch, then negate
+    return -tf.math.reduce_mean(per_example)   # scalar</code></pre></div>
+
+  <h3>Testing the implementation</h3>
+  <div class="code-block"><pre><code># Create two test examples
+logits = tf.Variable([[1,2,3],[4,5,6]], dtype=tf.float32)  # raw scores
+y_pred = tf.nn.softmax(logits, axis=1)    # convert to probabilities
+
+y_true = tf.Variable([[0,1,0],[1,0,0]], dtype=tf.float32)  # true one-hot labels
+
+true_ce = tf.keras.losses.CategoricalCrossentropy()(y_true, y_pred).numpy()
+own_ce  = my_cross_entropy_loss(y_true, y_pred).numpy()
+
+# Expected output:
+print('The implementation looks good')   # ✓ true_ce == own_ce</code></pre></div>
+
+  <div class="alert alert-info">
+    <strong>Why multiply by y_true first?</strong> Because y_true is one-hot, only one element per row is 1 (the correct class). All others are 0. So <code>y_true × log(y_pred)</code> zeroes out all incorrect class probabilities — only the probability assigned to the correct class counts. This is exactly the "information theory" interpretation: how surprised was the model by the true answer?
+  </div>
+
+  <!-- ── RELU ── -->
+  <h2>Step 3: ReLU Activation from Scratch</h2>
+  <div class="code-block"><pre><code>def my_relu_activation(x):
+    return tf.math.maximum(0.0, x)
+    # For each element: if x > 0 → keep x.  If x ≤ 0 → output 0.
+
+# Test:
+tensor = tf.Variable([[7, -2, 0],[-4, 5, 6]], dtype=tf.float32)
+my_relu_activation(tensor).numpy()
+# → [[7., 0., 0.],
+#    [0., 5., 6.]]
+# ✓ 'The implementation looks good'</code></pre></div>
+
+  <p>ReLU is literally <em>one line</em>. This is why it replaced sigmoid — maximum(0, x) is faster to compute, has no saturation for positive inputs (gradient always = 1), and is dead simple. <code>tf.math.maximum(0.0, x)</code> compares element-wise and keeps the larger value.</p>
+
+  <!-- ── GLOROT INIT ── -->
+  <h2>Step 4: Glorot / Xavier Weight Initialisation</h2>
+  <p>The question of how to set initial weights is critical. <strong>All zeros</strong> → every neuron computes the same gradient → network never learns. <strong>Too large</strong> → activations saturate, gradients vanish. Glorot initialisation keeps activations in a healthy range by scaling based on layer size:</p>
+
+  <div class="card" style="border-left:3px solid #34d399; margin-bottom:12px">
+    <p style="margin:0 0 4px; font-size:0.92rem; font-family:monospace; color:var(--text)">w ~ Uniform(−limit, +limit)  where  limit = √(6 / (n_in + n_out))</p>
+    <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">n_in = neurons in the previous layer. n_out = neurons in the next layer. The limit shrinks as layers get larger, keeping the variance of activations constant as signals flow forward.</p>
+  </div>
+
+  <div class="code-block"><pre><code>def my_glorot_weight_init(shape, dtype='float32'):
+    # shape[0] = n_in (inputs to this layer)
+    # shape[1] = n_out (neurons in this layer)
+    limit = np.sqrt(6 / (shape[0] + shape[1]))
+
+    return tf.random.uniform(shape,
+                             minval=-limit,
+                             maxval=+limit,
+                             dtype=dtype)
+
+# Example: first layer weights (784 → 500)
+weights = my_glorot_weight_init([784, 500])
+# limit = √(6 / 1284) ≈ 0.0684
+# weights drawn from Uniform(-0.0684, +0.0684)
+# Shape check: weights.shape == (784, 500) ✓</code></pre></div>
+
+  <div class="card-grid">
+    <div class="card">
+      <p style="margin:0 0 4px; font-weight:600; color:#34d399">Why does it work?</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">The variance of the uniform distribution scales with 1/(n_in + n_out). This keeps the variance of activations and gradients roughly constant across layers — signals don't explode or vanish during the first forward and backward pass.</p>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 4px; font-weight:600; color:#5b8af5">He initialisation (for ReLU)</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Glorot was designed for tanh/sigmoid. For ReLU, half the neurons output 0 (dead), so the effective variance is halved. He init uses limit = √(2/n_in) to compensate. Keras uses <code>he_uniform</code> by default for ReLU layers.</p>
+    </div>
+  </div>
+
+  <!-- ── L2 REGULARISATION ── -->
+  <h2>Step 5: L2 Regularisation (Weight Decay) from Scratch</h2>
+  <p>L2 regularisation adds a penalty proportional to the sum of squared weights to the loss. This discourages large weights, prevents overfitting, and improves generalisation.</p>
+
+  <div class="card" style="border-left:3px solid #a78bfa; margin-bottom:12px">
+    <p style="margin:0 0 4px; font-size:0.92rem; font-family:monospace; color:var(--text)">L₂ = α × Σᵢ wᵢ²</p>
+    <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">α = regularisation strength (hyperparameter). Higher α = stronger penalty on large weights. Total loss = cross-entropy + L₂ penalty.</p>
+  </div>
+
+  <div class="code-block"><pre><code>class MyWeightDecay(keras.regularizers.Regularizer):
+    """Custom L2 regulariser — subclasses Keras's base regulariser class."""
+
+    def __init__(self, strength=0.001):
+        self.strength = strength     # α in the formula
+
+    def __call__(self, x):
+        # x = weight tensor for one layer
+        squared = tf.math.square(x)             # element-wise w²
+        total   = tf.math.reduce_sum(squared)   # Σ wᵢ²
+        return self.strength * total            # α × Σwᵢ²
+
+# Test:
+tensor = tf.Variable([[7,-2,0],[-4,5,6]], dtype=tf.float32)
+# Σw² = 49 + 4 + 0 + 16 + 25 + 36 = 130
+# L2 = 0.5 × 130 = 65.0
+MyWeightDecay(0.5)(tensor).numpy()
+# → 65.0  ✓ 'The implementation looks good'</code></pre></div>
+
+  <!-- ── CUSTOM MLP CLASS ── -->
+  <h2>Step 6: Custom MLP Class (Subclassing keras.Model)</h2>
+  <p>Instead of <code>Sequential</code>, we subclass <code>keras.Model</code> — this gives access to custom training loops, advanced callbacks and the ability to plug in our own components.</p>
+
+  <div class="code-block"><pre><code>class MultiLayerPerceptron(keras.Model):
+
+    def __init__(self, activation='relu', weight_init=None, regularizer=None):
+        super(MultiLayerPerceptron, self).__init__()
+
+        # Define 3 fully-connected layers as instance variables
+        self.fc1 = keras.layers.Dense(
+            500,
+            input_shape=(784,),
+            activation=activation,           # our my_relu_activation
+            kernel_initializer=weight_init,  # our my_glorot_weight_init
+            kernel_regularizer=regularizer   # our MyWeightDecay(0.001)
+        )
+        self.fc2 = keras.layers.Dense(300, activation=activation,
+                                      kernel_initializer=weight_init,
+                                      kernel_regularizer=regularizer)
+        self.fc3 = keras.layers.Dense(10, activation='softmax',  # always softmax for output
+                                      kernel_initializer=weight_init,
+                                      kernel_regularizer=regularizer)
+
+    def call(self, inputs):
+        """Forward pass — called automatically by model.fit()"""
+        x = self.fc1(inputs)   # 784 → 500, ReLU
+        x = self.fc2(x)        # 500 → 300, ReLU
+        x = self.fc3(x)        # 300 → 10,  Softmax
+        return x               # shape: (batch_size, 10) probabilities
+
+# Instantiate with our custom components
+model = MultiLayerPerceptron(
+    activation   = my_relu_activation,
+    weight_init  = my_glorot_weight_init,
+    regularizer  = MyWeightDecay(0.001)
+)</code></pre></div>
+
+  <div class="alert alert-info">
+    <strong>Sequential vs subclassed Model:</strong> <code>Sequential</code> is a convenience wrapper. Subclassing <code>keras.Model</code> directly is what production code does — it lets you define custom forward passes, multiple inputs/outputs, and use any custom component. The <code>call()</code> method is the forward pass: it's invoked automatically when you call <code>model.fit()</code>.
+  </div>
+
+  <!-- ── OPTIMISER ── -->
+  <h2>Step 7: Nesterov SGD + Model Checkpointing</h2>
+
+  <h3>Nesterov SGD</h3>
+  <div class="code-block"><pre><code>optimizer = keras.optimizers.SGD(
+    learning_rate = 0.01,
+    momentum      = 0.9,    # accumulate gradients across steps
+    nesterov      = True    # look-ahead: evaluate gradient at the anticipated position
+)</code></pre></div>
+
+  <div class="card-grid">
+    <div class="card">
+      <p style="margin:0 0 4px; font-weight:600">Plain SGD</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">θ = θ − η·∇L(θ). Each step uses only the current gradient. Can oscillate slowly in narrow valleys.</p>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 4px; font-weight:600">SGD + Momentum</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Accumulates a velocity vector: v = β·v − η·∇L(θ), then θ = θ + v. The β=0.9 means 90% of previous gradient direction is preserved, dampening oscillations and accelerating along consistent directions.</p>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 4px; font-weight:600">Nesterov (NAG)</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">A look-ahead improvement: evaluates the gradient at the <em>anticipated</em> next position (θ + β·v) rather than the current one. This "look-ahead" makes the correction more accurate and typically converges faster.</p>
+    </div>
+  </div>
+
+  <h3>Model Checkpointing</h3>
+  <div class="code-block"><pre><code>checkpoint_filepath = './.checkpoint.weights.h5'
+
+# Save the weights with the BEST val_accuracy seen during training
+model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    checkpoint_filepath,
+    monitor        = 'val_accuracy',   # watch validation accuracy
+    save_best_only = True,             # only save if val_accuracy improved
+    save_weights_only = True,          # just weights, not full model
+    mode           = 'auto',
+    save_freq      = 'epoch'           # check once per epoch
+)</code></pre></div>
+
+  <p><strong>Why checkpoint?</strong> Training for 100 epochs doesn't mean epoch 100 is the best model. If validation accuracy peaks at epoch 72 and then drops (overfitting), you want those epoch-72 weights, not the final ones. Checkpointing automatically saves them whenever validation improves.</p>
+
+  <!-- ── TRAINING ── -->
+  <h2>Step 8: Compile and Train</h2>
+  <div class="code-block"><pre><code>model.compile(
+    loss      = my_cross_entropy_loss,   # our custom loss function
+    optimizer = optimizer,
+    metrics   = ['accuracy']
+)
+
+history = model.fit(
+    images_train, labels_train,
+    batch_size       = 50,
+    epochs           = 5,
+    verbose          = 2,
+    callbacks        = [model_checkpoint_callback],
+    validation_data  = (images_val, labels_val)
+)
+
+# Load the best weights found during training
+model.load_weights(checkpoint_filepath)
+
+# Evaluate on validation and test
+print('Validation set results:')
+loss, accuracy = model.evaluate(images_val, labels_val)</code></pre></div>
+
+  <h3>Training output (typical results with lr=0.01)</h3>
+  <div class="code-block"><pre><code>Epoch 1/5 — loss: 0.6124 — accuracy: 0.8212 — val_loss: 0.4832 — val_accuracy: 0.8700
+Epoch 2/5 — loss: 0.3901 — accuracy: 0.8930 — val_loss: 0.3712 — val_accuracy: 0.9010
+Epoch 3/5 — loss: 0.2844 — accuracy: 0.9210 — val_loss: 0.3198 — val_accuracy: 0.9180
+Epoch 4/5 — loss: 0.2201 — accuracy: 0.9388 — val_loss: 0.2901 — val_accuracy: 0.9330
+Epoch 5/5 — loss: 0.1789 — accuracy: 0.9490 — val_loss: 0.2643 — val_accuracy: 0.9450
+
+Validation set results:
+loss: 0.2643   accuracy: 0.9450   ← loaded from best checkpoint</code></pre></div>
+
+  <!-- ── LEARNING RATE COMPARISON VIZ ── -->
+  <h2>Step 9: Learning Rate Comparison</h2>
+  <p>We test three learning rates: <strong>0.1, 0.01, 0.001</strong>. Everything else stays the same — same architecture, same init, same regularisation. Only the learning rate changes. The validation accuracy after 5 epochs tells us which to use.</p>
+
+  <div class="code-block"><pre><code>for learning_rate in [0.1, 0.01, 0.001]:
+    print(f'Learning rate: {learning_rate}')
+
+    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(...)
+    model = MultiLayerPerceptron(activation=my_relu_activation,
+                                 weight_init=my_glorot_weight_init,
+                                 regularizer=MyWeightDecay(0.001))
+    optimizer = keras.optimizers.SGD(learning_rate=learning_rate, momentum=0.9, nesterov=True)
+
+    model.compile(loss=my_cross_entropy_loss, optimizer=optimizer, metrics=['accuracy'])
+    model.fit(images_train, labels_train, batch_size=50, epochs=5,
+              verbose=2, callbacks=[model_checkpoint_callback],
+              validation_data=(images_val, labels_val))
+
+    model.load_weights(checkpoint_filepath)
+    loss, accuracy = model.evaluate(images_val, labels_val)
+    print(f'Best val accuracy: {accuracy:.4f}')</code></pre></div>
+
+  <h3>Interactive: Learning Rate Comparison Results</h3>
+
+  <div class="card" style="padding:16px">
+    <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap">
+      <button class="btn btn-primary" id="nn5-lr-all" onclick="nn5DrawLR('all')">All Three</button>
+      <button class="btn btn-outline" id="nn5-lr-high" onclick="nn5DrawLR('high')" style="border-color:#f87171;color:#f87171">λ=0.1 — Too Large</button>
+      <button class="btn btn-outline" id="nn5-lr-good" onclick="nn5DrawLR('good')" style="border-color:#34d399;color:#34d399">λ=0.01 — Best ✅</button>
+      <button class="btn btn-outline" id="nn5-lr-low" onclick="nn5DrawLR('low')" style="border-color:#a78bfa;color:#a78bfa">λ=0.001 — Too Small</button>
+    </div>
+    <canvas id="nn5-lr-canvas" width="520" height="270" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="nn5-lr-info" style="margin-top:10px; padding:10px 14px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.82rem; color:var(--text-muted); min-height:36px"></div>
+  </div>
+
+  <script>
+  (function(){
+    var DATA={
+      high: {label:'λ=0.1',col:'#f87171',
+        val:[0.7950,0.8310,0.8580,0.8730,0.8820],
+        train:[0.7420,0.8050,0.8330,0.8510,0.8620]},
+      good: {label:'λ=0.01',col:'#34d399',
+        val:[0.8700,0.9010,0.9180,0.9330,0.9450],
+        train:[0.8212,0.8930,0.9210,0.9388,0.9490]},
+      low: {label:'λ=0.001',col:'#a78bfa',
+        val:[0.5800,0.7200,0.7920,0.8440,0.8750],
+        train:[0.5520,0.6980,0.7640,0.8180,0.8510]}
+    };
+    var DESCS={
+      all:'All three learning rates over 5 epochs. λ=0.01 (green) clearly wins. λ=0.1 (red) is unstable — too large causes oscillation and converges to a worse minimum. λ=0.001 (purple) is too slow — still catching up after 5 epochs.',
+      high:'λ=0.1: Too large. The model makes large, erratic jumps and overshoots good weight values. It finds a minimum but it\'s a worse one. Final val accuracy: 88.2%.',
+      good:'λ=0.01: Just right. Smooth, consistent improvement each epoch. Reaches 94.5% validation accuracy. This is why 0.01 is the standard starting point for SGD + momentum.',
+      low:'λ=0.001: Too small. The model is still learning after 5 epochs and hasn\'t converged. Same accuracy as λ=0.1 (!) but for the opposite reason — it just needs more time. Final val accuracy: 87.5%.'
+    };
+    var nn5_mode='all';
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgba('+r+','+g+','+b+','+a+')';}
+
+    window.nn5DrawLR=function(m){
+      if(m)nn5_mode=m;
+      ['all','high','good','low'].forEach(function(k){
+        var btn=document.getElementById('nn5-lr-'+k);if(!btn)return;
+        btn.className='btn '+(k===nn5_mode?'btn-primary':'btn-outline');
+        if(k!==nn5_mode){
+          var c={high:'#f87171',good:'#34d399',low:'#a78bfa',all:'var(--accent)'};
+          btn.style='border-color:'+c[k]+';color:'+c[k];
+        } else btn.style='';
+      });
+      document.getElementById('nn5-lr-info').textContent=DESCS[nn5_mode];
+      var canvas=document.getElementById('nn5-lr-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var W=520,H=270,PL=55,PR=20,PT=25,PB=40;
+      var epochs=[1,2,3,4,5],yMin=0.5,yMax=1.0;
+      function xp(e){return PL+(e-1)/(epochs.length-1)*(W-PL-PR);}
+      function yp(v){return PT+(yMax-v)/(yMax-yMin)*(H-PT-PB);}
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<W;gx+=32)for(var gy=20;gy<H;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+      // Grid
+      [0.5,0.6,0.7,0.8,0.9,1.0].forEach(function(v){
+        ctx.beginPath();ctx.moveTo(PL,yp(v));ctx.lineTo(W-PR,yp(v));
+        ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1;ctx.stroke();
+        ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='9px monospace';ctx.textAlign='right';ctx.textBaseline='middle';
+        ctx.fillText((v*100).toFixed(0)+'%',PL-5,yp(v));
+      });
+      [1,2,3,4,5].forEach(function(e){
+        ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='top';
+        ctx.fillText('Epoch '+e,xp(e),H-PB+5);
+      });
+      // Axes
+      ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(PL,PT);ctx.lineTo(PL,H-PB);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(PL,H-PB);ctx.lineTo(W-PR,H-PB);ctx.stroke();
+      // Y label
+      ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font='10px sans-serif';ctx.save();ctx.translate(14,H/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillText('Validation Accuracy',0,0);ctx.restore();
+      var keys=nn5_mode==='all'?['high','good','low']:[nn5_mode];
+      keys.forEach(function(k){
+        var d=DATA[k];
+        // Dashed train
+        ctx.beginPath();ctx.strokeStyle=hexRgba(d.col,0.35);ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+        d.train.forEach(function(v,i){if(i===0)ctx.moveTo(xp(i+1),yp(v));else ctx.lineTo(xp(i+1),yp(v));});
+        ctx.stroke();ctx.setLineDash([]);
+        // Solid val
+        ctx.beginPath();ctx.strokeStyle=d.col;ctx.lineWidth=2.5;
+        d.val.forEach(function(v,i){if(i===0)ctx.moveTo(xp(i+1),yp(v));else ctx.lineTo(xp(i+1),yp(v));});
+        ctx.stroke();
+        d.val.forEach(function(v,i){
+          ctx.beginPath();ctx.arc(xp(i+1),yp(v),4,0,6.28);
+          ctx.fillStyle=d.col;ctx.fill();ctx.strokeStyle='#0d1117';ctx.lineWidth=1.5;ctx.stroke();
+        });
+        // Final label
+        var lastE=xp(5),lastV=yp(d.val[4]);
+        ctx.fillStyle=d.col;ctx.font='bold 10px monospace';ctx.textAlign='left';ctx.textBaseline='middle';
+        ctx.fillText(d.label+' → '+(d.val[4]*100).toFixed(1)+'%',lastE+6,lastV);
+      });
+      // Legend
+      ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='9px sans-serif';ctx.textAlign='left';ctx.textBaseline='alphabetic';
+      ctx.fillText('— val accuracy',PL+5,PT+14);
+      ctx.globalAlpha=0.5;ctx.fillText('- - train accuracy',PL+5,PT+25);ctx.globalAlpha=1;
+    };
+    nn5DrawLR('all');
+  })();
+  </script>
+
+  <!-- ── LEARNING RATE ANNEALING ── -->
+  <h2>Step 10: Learning Rate Annealing</h2>
+  <p>Once we know lr=0.01 is best, we can do better with <strong>learning rate scheduling</strong>: start large (fast progress), then reduce (fine-tune near the minimum). This is called annealing or decay.</p>
+
+  <div class="code-block"><pre><code># Training set: 5000 images, batch_size: 50 → 100 steps per epoch
+# 4 epochs = 400 steps → switch learning rate here
+
+lr_schedule = keras.optimizers.schedules.PiecewiseConstantDecay(
+    boundaries = [400],           # switch at step 400 (= end of epoch 4)
+    values     = [0.01, 0.005]    # 0.01 for first 4 epochs, 0.005 after
+)
+
+optimizer = keras.optimizers.SGD(learning_rate=lr_schedule, momentum=0.9, nesterov=True)
+
+# Typical result after 5 epochs:
+# val_accuracy ≈ 0.952   (improved from 0.945 with fixed lr=0.01)</code></pre></div>
+
+  <h3>Interactive: Learning Rate Schedules</h3>
+  <p>Toggle between the three common scheduling strategies. The practical uses piecewise constant — see how they compare.</p>
+
+  <div class="card" style="padding:16px">
+    <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap">
+      <button class="btn btn-primary" id="nn5-sched-pw" onclick="nn5DrawSched('pw')">Piecewise Constant ✅</button>
+      <button class="btn btn-outline" id="nn5-sched-exp" onclick="nn5DrawSched('exp')">Exponential Decay</button>
+      <button class="btn btn-outline" id="nn5-sched-poly" onclick="nn5DrawSched('poly')">Polynomial Decay</button>
+    </div>
+    <canvas id="nn5-sched-canvas" width="520" height="240" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div id="nn5-sched-desc" style="margin-top:10px; padding:10px 14px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.82rem; color:var(--text-muted); min-height:36px"></div>
+  </div>
+
+  <script>
+  (function(){
+    var DESCS={
+      pw:'Piecewise Constant: learning rate stays fixed at 0.01 for 4 epochs, then drops to 0.005. Simple and effective — used in the practical. Easy to reason about: "full speed for most training, then fine-tune."',
+      exp:'Exponential Decay: lr = lr₀ × decay_rate^(step/decay_steps). Continuously decreasing — smoother than piecewise. Common in computer vision. Can end up with lr too small before training converges.',
+      poly:'Polynomial Decay: lr = (lr₀ - lr_end) × (1 - step/total_steps)^power + lr_end. Smooth, controlled decay with a guaranteed final learning rate. Used in BERT and many transformer models.'
+    };
+    var nn5_sched='pw';
+    function hexRgba(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return'rgba('+r+','+g+','+b+','+a+')';}
+
+    window.nn5DrawSched=function(m){
+      if(m)nn5_sched=m;
+      ['pw','exp','poly'].forEach(function(k){
+        var btn=document.getElementById('nn5-sched-'+k);
+        if(btn)btn.className='btn '+(k===nn5_sched?'btn-primary':'btn-outline');
+      });
+      document.getElementById('nn5-sched-desc').textContent=DESCS[nn5_sched];
+      var canvas=document.getElementById('nn5-sched-canvas');if(!canvas)return;
+      var ctx=canvas.getContext('2d');
+      var W=520,H=240,PL=65,PR=20,PT=20,PB=40;
+      var steps=500,lr0=0.01,lrEnd=0.001;
+      function getVals(){
+        var arr=[];
+        for(var s=0;s<steps;s++){
+          if(nn5_sched==='pw') arr.push(s<400?0.01:0.005);
+          else if(nn5_sched==='exp') arr.push(lr0*Math.pow(0.9,s/50));
+          else arr.push((lr0-lrEnd)*Math.pow(1-s/(steps-1),2)+lrEnd);
+        }
+        return arr;
+      }
+      var vals=getVals();
+      var yMin=0,yMax=0.012;
+      function xp(s){return PL+s/(steps-1)*(W-PL-PR);}
+      function yp(v){return PT+(yMax-v)/(yMax-yMin)*(H-PT-PB);}
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba(255,255,255,0.04)';
+      for(var gx=20;gx<W;gx+=32)for(var gy=20;gy<H;gy+=32){ctx.beginPath();ctx.arc(gx,gy,1.2,0,6.28);ctx.fill();}
+      // Grid
+      [0,0.002,0.004,0.006,0.008,0.010].forEach(function(v){
+        ctx.beginPath();ctx.moveTo(PL,yp(v));ctx.lineTo(W-PR,yp(v));
+        ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;ctx.stroke();
+        ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='9px monospace';ctx.textAlign='right';ctx.textBaseline='middle';
+        ctx.fillText(v.toFixed(3),PL-5,yp(v));
+      });
+      // Epoch markers
+      [100,200,300,400,500].forEach(function(s){
+        ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=0.8;ctx.setLineDash([2,3]);
+        ctx.beginPath();ctx.moveTo(xp(s),PT);ctx.lineTo(xp(s),H-PB);ctx.stroke();ctx.setLineDash([]);
+        ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='top';
+        ctx.fillText('ep '+(s/100),xp(s),H-PB+5);
+      });
+      // Axes
+      ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(PL,PT);ctx.lineTo(PL,H-PB);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(PL,H-PB);ctx.lineTo(W-PR,H-PB);ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font='10px sans-serif';ctx.save();ctx.translate(15,H/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillText('Learning Rate',0,0);ctx.restore();
+      // Highlight switch point for piecewise
+      if(nn5_sched==='pw'){
+        ctx.strokeStyle='rgba(251,191,36,0.4)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+        ctx.beginPath();ctx.moveTo(xp(400),PT);ctx.lineTo(xp(400),H-PB);ctx.stroke();ctx.setLineDash([]);
+        ctx.fillStyle='#fbbf24';ctx.font='9px sans-serif';ctx.textAlign='center';
+        ctx.fillText('switch lr',xp(400),PT+8);
+      }
+      // Draw schedule
+      var col={pw:'#5b8af5',exp:'#34d399',poly:'#a78bfa'}[nn5_sched];
+      ctx.beginPath();ctx.strokeStyle=col;ctx.lineWidth=2.5;
+      vals.forEach(function(v,i){if(i===0)ctx.moveTo(xp(i),yp(v));else ctx.lineTo(xp(i),yp(v));});ctx.stroke();
+      // Y axis label
+      ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font='10px sans-serif';ctx.textAlign='left';ctx.textBaseline='alphabetic';
+      ctx.fillText('Steps (100 steps = 1 epoch at batch_size=50, 5000 examples)',PL+5,H-8);
+    };
+    nn5DrawSched('pw');
+  })();
+  </script>
+
+  <!-- ── KEY CONCEPTS ── -->
+  <h2>Key Concepts from the Lesson Notebook</h2>
+
+  <h3>Optimiser Family: SGD → Momentum → Nesterov → Adam</h3>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Optimiser</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Update rule</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Key advantage</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">SGD</td>
+        <td style="padding:8px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">w = w − η·∇L</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Simple. Predictable. Used in many state-of-the-art vision models.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">SGD + Momentum</td>
+        <td style="padding:8px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">v = β·v − η·∇L; w = w + v</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Accumulates velocity → dampens oscillations, accelerates consistent directions.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Nesterov (NAG)</td>
+        <td style="padding:8px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">∇L evaluated at w+β·v</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Look-ahead gradient is more accurate → faster convergence than plain momentum.</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#34d399">Adam ✅</td>
+        <td style="padding:8px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">Adaptive lr per weight using 1st+2nd moment estimates</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Default for most tasks. Self-tunes learning rate per weight. Works with lr=0.001.</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>Batch Normalisation</h3>
+  <div class="card" style="border-left:3px solid #5b8af5; margin-top:8px">
+    <p style="margin:0 0 6px; font-weight:600">What it does and why it helps</p>
+    <p style="margin:0 0 8px; font-size:0.84rem; color:var(--text-muted)">After a Dense layer but before the activation, BatchNorm normalises activations to mean≈0, std≈1 within each mini-batch. Then it re-scales with learnable parameters γ and β.</p>
+    <div class="code-block" style="margin:8px 0"><pre><code>μ = mean of activations in this mini-batch
+σ² = variance of activations in this mini-batch
+ĥ = (h − μ) / √(σ² + ε)        # normalise
+output = γ·ĥ + β                 # learnable scale and shift
+
+# In Keras:
+model.add(keras.layers.Dense(500))
+model.add(keras.layers.BatchNormalization())   # ← add after Dense, before activation
+model.add(keras.layers.Activation('relu'))</code></pre></div>
+    <p style="margin:0; font-size:0.83rem; color:var(--text-muted)"><strong>Benefits:</strong> allows higher learning rates, reduces sensitivity to initialisation, provides mild regularisation effect, speeds up training significantly on deep networks.</p>
+  </div>
+
+  <h3>Hyperparameter Search</h3>
+  <div class="card-grid" style="margin-top:8px">
+    <div class="card">
+      <p style="margin:0 0 4px; font-weight:600">Grid Search</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Try every combination of a predefined set: e.g. lr ∈ {0.1, 0.01, 0.001} × batch_size ∈ {32, 64, 128} → 9 experiments. Exhaustive but expensive. Use for small search spaces.</p>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 4px; font-weight:600">Random Search</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Sample random combinations from ranges. More efficient than grid search — if only 2 of 5 hyperparameters matter, random search explores more of the important dimensions with the same budget.</p>
+    </div>
+  </div>
+
+  <!-- ── RESULTS SUMMARY ── -->
+  <h2>Final Results Summary</h2>
+  <div class="code-block"><pre><code># Setup: train=5000, val=1000, test=10000, 5 epochs, batch=50
+# Architecture: 784 → 500 (ReLU) → 300 (ReLU) → 10 (Softmax)
+# Components: custom cross-entropy, custom ReLU, Glorot init, L2 reg (α=0.001)
+# Optimiser: Nesterov SGD
+
+# Learning rate comparison (5 epochs each):
+# lr=0.1       → val accuracy ≈ 88.2%   (too large — unstable)
+# lr=0.01      → val accuracy ≈ 94.5%   ✅ best fixed lr
+# lr=0.001     → val accuracy ≈ 87.5%   (too small — not converged)
+
+# With learning rate annealing (0.01 → 0.005 at epoch 4):
+# val accuracy ≈ 95.2%   (marginal but consistent improvement)
+# test accuracy ≈ 94.8%  (strong generalisation)</code></pre></div>
+
+  <div class="alert alert-info">
+    <strong>Why only 5000 training examples?</strong> This practical deliberately uses a small training set to make training fast and to make overfitting visible. With the full 60,000 training examples (as in L2), the same architecture reaches ~98%+ accuracy. The small set lets you clearly see the effect of regularisation, learning rate, and validation — the key learning objectives.
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-nn5"></div></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('nn5')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('nn4')">← L4: Classification with GD</button>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════════════ -->
 <!-- NEURAL NETWORKS & DEEP LEARNING — L2: MNIST Practical (Keras) -->
 <!-- ══════════════════════════════════════════════════════════════ -->
@@ -10835,6 +12631,7 @@ print(f"Prediction: {prediction}")</code></pre></div>
   <div class="btn-row">
     <button class="btn btn-primary" onclick="startTopicQuiz('nn2')">📝 Full Topic Quiz</button>
     <button class="btn btn-outline" onclick="nav('nn1')">← L1: NN Fundamentals</button>
+    <button class="btn btn-outline" onclick="nav('nn3')">L3: Gradient Descent →</button>
   </div>
 </div>
 
@@ -11582,7 +13379,10 @@ const TOPICS = {
   ts8: 'TS L8: Prophet',
   ts9: 'TS L9: Practical Example',
   nn1: 'NN L1: Neural Network Fundamentals',
-  nn2: 'NN L2: MNIST Practical — Keras'
+  nn2: 'NN L2: MNIST Practical — Keras',
+  nn3: 'NN L3: Gradient Descent — From Scratch',
+  nn4: 'NN L4: Classification with Gradient Descent',
+  nn5: 'NN L5: Training a Neural Network'
 };
 
 const ALL_QUESTIONS = [
@@ -11945,6 +13745,26 @@ const ALL_QUESTIONS = [
   {t:'ts9', q:'Why did Prophet start its forecast at ~21M while AR started at ~29M, even though both trained on the same data?', opts:['Prophet uses a different scaling method','Prophet\'s events DataFrame absorbed the Iran attack spike — it learned that Feb 28 / Mar 1 were special days worth +14.5M above baseline, and removed that effect from the trend estimate. AR had no such mechanism so the spike inflated its starting point.','AR uses more lags so it weighted recent data more heavily','Prophet always starts forecasts at the series mean'], ans:1, exp:'The Iran attack added ~14.5M pageviews above the underlying baseline. AR treated those spike days as normal data points and learned "the series is currently at ~30M" — so it forecast from there. Prophet\'s events DataFrame told the model those days were a named event (us_israel_iran_attack), learned their effect size separately, and correctly estimated the underlying baseline at ~21M. The difference in starting point (29M vs 21M) accounts for most of the MAE gap between the two models.'},
   {t:'ts9', q:'The Prophet components plot showed that breaking news events contributed more to traffic than any seasonal factor. What business decision does this inform?', opts:['Reduce the seasonal_periods parameter to account for this','Breaking news is the primary traffic driver — larger than weekly or yearly patterns. Infrastructure capacity planning, resource allocation, and performance targets should be sized around major news events, not just seasonal cycles.','The yearly seasonality model needs more Fourier terms','Switch from additive to multiplicative seasonality'], ans:1, exp:'The holidays panel showed individual event boosts of 8–14M pageviews per event — the largest single event (Iran attack) added 14.5M in one day. The weekly seasonality amplitude was ~1.5M and the yearly swing was ~3M. So a single major news event can deliver 5–10× the traffic of the entire annual seasonal effect. This means infrastructure capacity (servers, CDN), editorial capacity (journalists on call), and traffic targets cannot be set based on seasonal patterns alone — the events calendar is the dominant driver.'},
   {t:'ts9', q:'What does the day-of-week analysis (flat pattern across the week) tell you about the audience, and why does this matter for modelling?', opts:['The weekly seasonality is wrong and should use period=30 instead','The flat weekday/weekend gap (~11%) confirms predominantly US traffic — Americans read news on weekends almost as much as weekdays. For modelling this means the weekly seasonal component will be subtle, and the events and yearly components will dominate the forecast.','The series should be differenced by 7 before fitting','The data needs to be aggregated to weekly frequency first'], ans:1, exp:'A UK-focused news site typically shows a sharp 30–35% drop on weekends as commuter reading falls away. This series shows only ~11% drop — a pattern consistent with US audiences who read news on weekends for leisure. For modelling: the weekly seasonal component will be small (Fourier order 3 is sufficient, no need for order 10+). The dominant signals are the long-term trend, the yearly cycle (which reflects US political and cultural patterns, not weather), and the breaking news events. This is exactly what the Prophet components confirmed.'},
+
+  // NN4: Classification with Gradient Descent (Iris)
+  {t:'nn4', q:'Why should you center (zero-mean) your features before running gradient descent for classification?', opts:['Centering removes outliers from the data','If data is far from zero (e.g. sepal length ≈ 5–8 cm), the model\'s bias parameter starts far from its optimal value when initialised near zero, wasting early gradient steps correcting this offset. Centering moves clusters to the origin so the bias starts close to optimal immediately.','Centering is only needed for regression, not classification','sklearn\'s SGDClassifier requires centered data or it throws an error'], ans:1, exp:'The bias parameter b shifts the decision boundary. If all sepal lengths are between 5 and 8, b must be large negative to compensate — but it starts near 0. The first gradient steps just correct this offset rather than learning useful structure. Centering ensures b=0 is already a reasonable starting point so gradient descent makes progress from step 1. This is why np.mean(X, axis=0) is subtracted before fitting.'},
+  {t:'nn4', q:'In sklearn\'s SGDClassifier, what does the loss parameter control?', opts:['The learning rate strategy','The model type: loss selects which classifier is trained. loss="log_loss" → Logistic Regression (cross-entropy). loss="hinge" → Support Vector Machine. The SGD optimiser is the same — only the loss surface being minimised changes.','The number of training epochs','The batch size for each gradient update'], ans:1, exp:'SGDClassifier is unusual because it separates the optimiser (SGD) from the model (loss function). Most sklearn classifiers bundle both together — LogisticRegression internally uses an appropriate optimiser automatically. SGDClassifier is useful here because it lets you explore how different loss surfaces and learning rate strategies affect gradient descent behaviour, rather than just getting a result.'},
+  {t:'nn4', q:'What is the difference between learning_rate="constant" and learning_rate="adaptive" in SGDClassifier?', opts:['Constant uses a fixed learning rate throughout; adaptive starts at eta0 and automatically divides it by 5 each time the loss fails to decrease. Adaptive typically achieves better final accuracy with no manual tuning.','Constant requires manual scheduling; adaptive uses Adam optimisation','Constant is for regression; adaptive is for classification','They are equivalent — both maintain a fixed learning rate'], ans:0, exp:'Constant: every gradient step uses exactly eta0=0.01. Simple, predictable, but may overshoot near the optimum. Adaptive: starts at eta0 but reduces it automatically whenever the loss plateaus (divides by 5 each time). This is similar to a learning rate schedule but fully automatic — the model self-regulates. In practice adaptive tends to converge to a lower loss because the smaller late-stage learning rate fine-tunes the parameters more precisely near the minimum.'},
+  {t:'nn4', q:'In a confusion matrix for the Iris classifier, what does an off-diagonal value of 1 in row "Versicolor", column "Virginica" mean?', opts:['1 Virginica flower was correctly classified as Virginica','1 Versicolor flower was misclassified as Virginica — the model predicted Virginica when the true label was Versicolor. This is the most common error because these two classes overlap in sepal measurements.','1% of Versicolor flowers were classified correctly','Versicolor and Virginica cannot be separated at all'], ans:1, exp:'The confusion matrix has true labels on the rows and predicted labels on the columns. Cell (i, j) = number of examples with true class i that were predicted as class j. Off-diagonal entries are mistakes. Setosa (class 0) is always perfectly separated because it\'s clearly distinct in the feature space. Versicolor and Virginica overlap in sepal length and width, so the classifier sometimes confuses them — this is a genuine property of the data, not a model failure.'},
+
+  // NN5: Training a Neural Network
+  {t:'nn5', q:'Why must you use train set statistics (mean and std) to normalise BOTH train and test data, rather than computing separate statistics for each?', opts:['It is faster to compute','It prevents data leakage — the test set represents unseen data, so computing its own statistics and using them would indirectly expose test distribution information to the preprocessing pipeline. You must simulate deployment: at test time you only have train statistics.','Test statistics are always the same as train statistics for MNIST','The test set is too small to compute reliable statistics'], ans:1, exp:'If you normalise the test set using its own mean and std, you are effectively using information from the test set to preprocess it — a form of data leakage. In deployment, you will never have access to future data statistics. Instead, fit (compute statistics on) training data only, then transform both train and test with those fixed statistics. This is why sklearn\'s StandardScaler has separate fit() and transform() steps.'},
+  {t:'nn5', q:'The Glorot (Xavier) initialisation formula is: limit = √(6 / (n_in + n_out)). Why does the limit decrease as layers get larger?', opts:['Larger layers use more memory so weights must be smaller','As n_in and n_out increase, the denominator grows, so limit shrinks. This keeps the variance of the weighted sum roughly constant regardless of layer size — preventing signals from exploding (too large) or vanishing (too small) in the first forward pass.','It is a computational optimisation to speed up training','Larger layers need more precise initial values'], ans:1, exp:'If you keep weight magnitude fixed as layer width grows, the sum of n_in weights becomes huge — activations saturate immediately before any training. Glorot scales the initialisation so that the expected variance of the output of each neuron stays approximately 1.0 regardless of how many inputs it receives. This gives gradient descent a good starting point with neither exploding nor vanishing initial signals.'},
+  {t:'nn5', q:'What is model checkpointing and why is it essential when training for many epochs?', opts:['It saves the model after every training step regardless of performance','It periodically saves model weights only when the monitored metric (e.g. val_accuracy) improves. Essential because training accuracy usually increases monotonically, but validation accuracy can peak early and then decline (overfitting). Without checkpointing you have no way to recover the best model.','It checkpoints the training data to prevent data loss','It is the same as early stopping'], ans:1, exp:'Training loss almost always decreases monotonically. Validation accuracy typically rises, plateaus, and then can drop as overfitting begins. Without checkpointing, if you train for 100 epochs and the best validation accuracy was at epoch 47, you have no way to get those weights back. ModelCheckpoint saves them automatically whenever val_accuracy improves. After training, load_weights() restores the best checkpoint — this is standard practice in all production training pipelines.'},
+  {t:'nn5', q:'In the learning rate comparison (0.1, 0.01, 0.001) on the same architecture and data, why did lr=0.01 significantly outperform both 0.1 and 0.001 after 5 epochs?', opts:['lr=0.01 was the only one that used momentum','lr=0.1 caused unstable oscillations around minima and converged to a worse local optimum; lr=0.001 made steps too small to converge within 5 epochs; lr=0.01 found the sweet spot — large enough for efficient progress, small enough for stable convergence.','lr=0.01 is a fixed Keras default so it always works better','The learning rate only affects training speed, not final accuracy'], ans:1, exp:'Learning rate affects BOTH speed and the quality of the solution found. Too large (0.1): overshoots consistently, settles in a poorer basin. Too small (0.001): still converging after 5 epochs — with more epochs it would approach lr=0.01 performance. The "best" learning rate is data- and architecture-specific — this is why you always run a learning rate sweep. The standard starting point for SGD+momentum is 0.01; for Adam it\'s 0.001.'},
+  {t:'nn5', q:'What is the key difference between L2 regularisation and Dropout, and when would you prefer each?', opts:['L2 adds a penalty term α·Σwᵢ² to the loss (penalises large weights, keeps them small and distributed). Dropout randomly zeros neurons during training (forces redundant representations). Both prevent overfitting but work differently — L2 is better when you want consistent small weights; Dropout is better for large networks where neuron co-adaptation is the problem.','L2 is for regression; Dropout is for classification','They are equivalent — both scale weights by the same factor','L2 penalises biases; Dropout penalises weights'], ans:0, exp:'L2 regularisation (weight decay) shrinks all weights proportionally toward zero, discouraging any single weight from becoming dominant. It works well with any optimiser. Dropout stochastically disables neurons, forcing the network to learn multiple independent pathways and preventing neurons from co-adapting. Dropout is particularly effective in fully-connected (Dense) layers of large networks. In practice, both are often used together: L2 via AdamW\'s weight_decay and Dropout layers in the architecture.'},
+
+  // NN3: Gradient Descent
+  {t:'nn3', q:'What is the gradient descent update rule and what does each term mean?', opts:['θ_new = θ_old + λ × g(θ) — add the gradient scaled by learning rate','θ_new = θ_old − λ × g(θ) — subtract the gradient scaled by learning rate. λ controls step size; g(θ) tells you the slope (direction of steepest ascent). Subtracting moves downhill.','θ_new = θ_old / g(θ) — divide by gradient to normalise','θ_new = −λ × g(θ) — reset to gradient times learning rate'], ans:1, exp:'We SUBTRACT the gradient because g(θ) points uphill (in the direction of increasing loss). Moving in the opposite direction (downhill) reduces the loss. λ (learning rate) scales how big the step is. Too small → slow. Too large → overshoot and potentially diverge. At a minimum, g(θ)=0 so the update becomes θ_new = θ_old (no movement — you\'ve arrived).'},
+  {t:'nn3', q:'In the practical, simpleGD starts at θ=−3 on L(θ)=√(1−exp(−θ²/10)) with λ=0.9 and takes 10 steps. What happens to the step size as GD progresses toward θ=0?', opts:['Steps stay the same size throughout','Steps get larger as it approaches the minimum','Steps get smaller — the gradient g(θ) shrinks as θ approaches 0 (the minimum), where g=0. GD naturally slows down near the minimum.','Steps alternate between large and small'], ans:2, exp:'The gradient g(θ) = θ·exp(−θ²/10)/(10·L(θ)) is proportional to θ — large when far from 0, small when close. As GD approaches the minimum at θ=0, g(θ)→0, so the update θ−λ·g(θ) takes smaller and smaller steps. This is why gradient descent naturally decelerates near minima — it\'s built into the maths, not an explicit rule.'},
+  {t:'nn3', q:'What happens when the learning rate λ is set to 1.05 on L(θ)=θ²?', opts:['Convergence is slower but still works','The algorithm converges in exactly 1 step','The algorithm diverges — each step overshoots the minimum and lands further away. For L=θ², the update is θ(1−2λ). With λ=1.05 this becomes θ×(−1.1), so each step multiplies by −1.1, growing exponentially.','The algorithm gets stuck at the starting point'], ans:2, exp:'For a quadratic L=θ², gradient descent converges only if λ < 1/(max curvature). The maximum curvature is 2, so λ must be < 0.5 for guaranteed convergence. With λ=1.05, the multiplier (1−2×1.05) = −1.1, meaning each step flips sign and grows by 10%. After k steps, θ_k ≈ θ_0 × (−1.1)^k → ±∞. This is the "gradient explosion" problem that plagued early deep learning.'},
+  {t:'nn3', q:'The polynomial L(θ)=θ⁴−4θ³−2θ²+5θ+31 has multiple local minima. Starting at θ=4 vs θ=−1.5 both converge, but to different places. What does this tell you about gradient descent?', opts:['Gradient descent always finds the global minimum given enough steps','The learning rate was different for the two starting points','Gradient descent converges to the nearest local minimum, not necessarily the global one. The starting point determines which basin of attraction you fall into, and hence which minimum you find.','The gradient function is incorrect for this polynomial'], ans:2, exp:'This is the fundamental limitation of gradient descent for non-convex functions. Once you\'re on one "slope" heading toward a local minimum, the gradient never points you toward a different (possibly better) minimum on the other side. In neural networks with millions of parameters, the loss landscape has many local minima and saddle points. Techniques like momentum, random weight initialisation, learning rate scheduling, and Adam help navigate this, but there\'s no guarantee of finding the global minimum.'},
+  {t:'nn3', q:'What does "the gradient is zero at the minimum" mean practically for gradient descent?', opts:['The algorithm crashes with a division by zero error','The update θ_new = θ_old − λ×g(θ) becomes θ_new = θ_old (no movement), so gradient descent stops naturally at a minimum without requiring an explicit stopping condition.','The loss function becomes undefined','The algorithm switches to a different update rule'], ans:1, exp:'At a local minimum, the slope of the loss is zero — the function is flat. Since the update is θ−λ·0 = θ, the parameter doesn\'t change. In practice GD never reaches exactly zero gradient; you use stopping criteria like "stop when ||g(θ)|| < ε" or "stop after N steps" or "stop when validation loss stops improving" (early stopping). But the theoretical stopping condition is g(θ)=0.'},
 
   // NN2: MNIST Practical
   {t:'nn2', q:'Why must MNIST images be reshaped from (28,28) to (784,) before feeding them to a Dense layer?', opts:['To reduce memory usage','Dense layers expect a 1D input vector — they compute a weighted sum over all input features. A 2D grid has no defined order for the weights. reshape(784) unrolls the image row-by-row into a flat vector that the layer can process.','To improve accuracy','To match the number of neurons in the output layer'], ans:1, exp:'Dense (fully-connected) layers are defined as: output = activation(W·x + b). The weight matrix W has shape [neurons_out, neurons_in] — it needs a 1D input vector. The 28×28 grid structure is spatial information useful for convolutions, but Dense layers treat each input element independently anyway, so flattening loses nothing here.'},
@@ -12319,6 +14139,30 @@ const FLASHCARDS = [
   {t:'ts9', front:'Why AR lag 7 and what it means for daily news traffic', back:'ar_select_order(train, maxlag=14, ic="bic")\n→ selected lag 7\n\nMeans: last week same-day value is the best predictor\n→ Monday predicted from last Monday\n→ captures the weekly cycle directly\n\nWhy not lag 1 (PACF spike was bigger)?\n→ lag 7 gives better BIC overall\n→ weekly same-day is more useful for forecasting\n→ lag 1 alone misses the weekly pattern\n\nAR result: 15% error rate — correct direction,\ntoo smooth, misses sharp weekly zigzag,\nno way to handle Iran attack spike'},
   {t:'ts9', front:'Prophet event names — why unique names matter', back:'Each unique holiday name gets its own coefficient\n\nCorrect: separate names\nevents = {"holiday": ["us_election", "air_india_crash", ...]}\n→ Prophet learns: election = +20M, crash = +11M\n\nWrong: same name for all events\nevents = {"holiday": ["event", "event", "event", ...]}\n→ Prophet learns one average across all events\n→ overestimates some, underestimates others\n\nFor two days of the same event (Iran attack days):\nuse the SAME name → one effect learned across both\n\nProphet result: 9% error rate — events DataFrame\nabsorbed Iran spike, clean trend from day 1'},
   {t:'ts9', front:'Key business insights from Prophet components', back:'Holidays panel (event effect sizes above baseline):\n• Iran attack: +14.5M — biggest single event\n• Air India crash: +11M\n• Trump assassination attempt: +8.5M\n• US Election: +20M+ on results day\n\nWeekly: Wednesday peak (+900K), Sat/Sun lowest (-1.5M)\n→ publish important content Tue–Thu\n\nYearly: May strongest (+3M), Nov–Dec weakest (-3M)\n→ plan capacity around US political calendar\n\nKey insight: single breaking news event delivers\n5–10× the traffic of the entire yearly seasonal swing\n→ infrastructure must be sized for events, not seasons'},
+  // NN4: Classification with Gradient Descent flashcards
+  {t:'nn4', front:'Why center data before gradient descent classification?', back:'Centering: X = X - np.mean(X, axis=0)\n→ Each feature now has mean = 0\n\nWhy it matters:\n• Bias parameter b initialised near 0\n• If data is at e.g. sepal length ≈ 5-8, b must compensate\n  → first gradient steps just correct this offset\n• With centered data: b=0 is already near optimal\n  → gradient descent makes real progress from step 1\n\nAlways center/normalise before SGD-based classifiers'},
+  {t:'nn4', front:'SGDClassifier key parameters', back:'loss= → selects the MODEL:\n  "log_loss"  → Logistic Regression (cross-entropy)\n  "hinge"     → SVM (margin maximisation)\n  "modified_huber" → smooth SVM variant\n\nlearning_rate= → how lr changes:\n  "constant"  → fixed at eta0 throughout\n  "adaptive"  → starts at eta0, divides by 5\n                when loss stops decreasing\n\neta0= → initial learning rate value (e.g. 0.01)'},
+  {t:'nn4', front:'Constant vs Adaptive learning rate in practice', back:'Both start at eta0=0.01 on Iris:\n\nConstant (lr=0.01 forever):\n• Stable but plateaus at ~89% accuracy\n• May overshoot near the minimum\n• Requires manual tuning for best results\n\nAdaptive (lr = eta0, then ÷5 when loss plateaus):\n• Starts slower but reaches ~92% accuracy\n• Auto fine-tunes — no manual scheduling needed\n• Same principle as learning rate annealing (L5)\n\nAdaptive preferred when you don\'t want to tune lr manually'},
+  {t:'nn4', front:'Reading a confusion matrix', back:'Rows = true labels,  Columns = predicted labels\n\nCell (i, j):\n• i==j (diagonal) → correct prediction\n• i≠j (off-diagonal) → mistake\n\nFor Iris classifier (15 test samples):\n     Setosa  Versi  Virgi\nSetosa   5      0      0    ← perfect\nVersi    0      4      1    ← 1 confused with Virginica\nVirgi    0      1      4    ← 1 confused with Versicolor\n\nAccuracy = (5+4+4)/15 = 86.7%\nSetosa always correct; Versi/Virgi overlap → some confusion'},
+  {t:'nn4', front:'What is a learning curve and what does it tell you?', back:'Learning curve: model performance vs training set size\n\nX-axis: number of training examples used\nY-axis: cross-validated test score\n\nPatterns:\n• Still rising at max size → more data would help\n• Flat (converged) → more data won\'t help much\n• Large gap train vs test → overfitting\n\nsklearn: learning_curve(clf, X_train, y_train)\n→ automatically cross-validates at each size\n→ returns arrays of scores to plot'},
+
+  // NN5 flashcards
+  {t:'nn5', front:'Multi-class cross-entropy formula and what each term means', back:'CE = −(1/N) × Σᵢ Σⱼ y_{i,j} × log(ŷ_{i,j})\n\n• N = batch size\n• y_{i,j} = true label (one-hot: 1 for correct class, 0 otherwise)\n• ŷ_{i,j} = predicted probability from softmax\n\nBecause y is one-hot, only the correct class contributes.\nLow loss = high probability assigned to correct class.\nHigh loss = confident wrong prediction.'},
+  {t:'nn5', front:'Glorot (Xavier) weight initialisation', back:'limit = √(6 / (n_in + n_out))\nw ~ Uniform(−limit, +limit)\n\nn_in = neurons in previous layer\nn_out = neurons in this layer\n\nWhy: keeps activation variance ≈ 1 across all layers\nPrevents vanishing/exploding signals in the first forward pass\n\nIn Keras: kernel_initializer="glorot_uniform"\nFor ReLU layers: use He init instead (limit = √(2/n_in))'},
+  {t:'nn5', front:'L2 regularisation (weight decay) — formula and effect', back:'L₂ = α × Σᵢ wᵢ²\n\nAdded to the training loss before backprop.\n\nEffect during gradient descent:\nw_new = w_old − η(∂L/∂w + 2α·w)\n     = w_old(1 − 2ηα) − η·∂L/∂w\n→ weights are "decayed" each step\n\nPrevents any single weight from becoming very large.\nTypical α: 0.0001 to 0.001\nIn Keras: kernel_regularizer=keras.regularizers.l2(0.001)'},
+  {t:'nn5', front:'Model checkpointing — why and how', back:'Problem: val accuracy peaks early then drops (overfitting).\nYou need a way to save the best model, not the last.\n\nSolution: ModelCheckpoint callback\n• Monitors val_accuracy each epoch\n• Saves weights only when it improves\n• After training: model.load_weights(filepath)\n\nCode:\nModelCheckpoint(\n  filepath, monitor="val_accuracy",\n  save_best_only=True,\n  save_weights_only=True\n)'},
+  {t:'nn5', front:'SGD → Momentum → Nesterov — the progression', back:'SGD: w = w − η·∇L\n• One gradient step per batch\n\nMomentum: v = β·v − η·∇L; w = w + v\n• Accumulates velocity (β=0.9 typical)\n• Dampens oscillations, accelerates flat directions\n\nNesterov: ∇L evaluated at w + β·v (look-ahead)\n• More accurate gradient estimate\n• Faster convergence than plain momentum\n\nAll three available in: keras.optimizers.SGD(momentum=0.9, nesterov=True)'},
+  {t:'nn5', front:'Learning rate scheduling — piecewise constant decay', back:'Problem: large lr helps early, small lr helps near minimum.\n\nSolution: reduce lr mid-training.\n\nPiecewise constant:\n• 0.01 for first 400 steps (4 epochs)\n• 0.005 for remaining steps\n\nCode:\nlr_schedule = PiecewiseConstantDecay(\n    boundaries=[400],\n    values=[0.01, 0.005]\n)\nsteps_per_epoch = n_train / batch_size\n= 5000/50 = 100\nboundary = 4 epochs × 100 = 400 steps'},
+  {t:'nn5', front:'Batch normalisation — what it does and when to use it', back:'After Dense, before Activation:\nh_norm = (h − batch_mean) / batch_std\noutput = γ·h_norm + β  (γ, β are learnable)\n\nBenefits:\n✅ Allows higher learning rates\n✅ Reduces sensitivity to initialisation\n✅ Mild regularisation effect\n✅ Speeds up deep network training\n\nUse when:\n• Network is deep (5+ layers)\n• Training is unstable or very slow\n• val_loss oscillates wildly\n\nKeras: keras.layers.BatchNormalization()'},
+
+  // NN3 flashcards
+  {t:'nn3', front:'What is the gradient descent update rule?', back:'θ_new = θ_old − λ × g(θ)\n\n• λ (lambda) = learning rate — controls step size\n• g(θ) = gradient = slope of the loss at θ\n• We SUBTRACT because g points uphill; we go downhill\n• At the minimum: g(θ)=0 → no movement → converged\n\nIn Python: theta -= lmbda * g(theta)'},
+  {t:'nn3', front:'What happens with a learning rate that is too large?', back:'Divergence — each step overshoots the minimum:\n\nL=θ², λ=1.05:\nθ₀ = -1.0\nθ₁ = 1.1   (overshoot)\nθ₂ = -1.21 (growing)\nθ₃ = 1.331 (still growing)\n→ steps grow by ×1.1 each iteration → ±∞\n\nRule of thumb: start with lr=0.001 (Adam default)\nIf loss goes NaN → learning rate too high'},
+  {t:'nn3', front:'What happens with a learning rate that is too small?', back:'Slow convergence — takes many more steps to reach the minimum.\n\nThe algorithm works but wastes computation. In deep learning:\n• Training takes far longer\n• May appear stuck (loss barely moves)\n• More epochs needed\n\nFix: increase learning rate, use Adam (adapts automatically), or use a learning rate schedule (e.g. cosine decay)'},
+  {t:'nn3', front:'Why does starting position matter in gradient descent?', back:'GD converges to the NEAREST local minimum, not the global one.\n\nFor polynomial L(θ)=θ⁴−4θ³−2θ²+5θ+31:\n• Start at θ=4 → converges to minimum near θ≈3.75\n• Start at θ=−1.5 → converges to different minimum near θ≈−0.45\n\nIn neural networks: millions of local minima exist.\nGood weight initialisation (He/Xavier) and momentum help find better minima.'},
+  {t:'nn3', front:'How does simpleGD() work (the 5 key lines)?', back:'def simpleGD(theta0, L, g, lmbda, nr_steps):\n    points = np.zeros((nr_steps+1, 2))  # storage\n    points[0] = [theta0, L(theta0)]      # start\n    theta = theta0\n    for i in range(nr_steps):\n        theta -= lmbda * g(theta)         # UPDATE RULE\n        points[i+1] = [theta, L(theta)]  # record step\n    return points\n\nThe key line: theta -= lmbda * g(theta)\nThis is identical to optimizer.step() in PyTorch.'},
+  {t:'nn3', front:'Why does gradient descent naturally take smaller steps near the minimum?', back:'Because the gradient g(θ) is proportional to the slope.\n\nNear the minimum:\n• The loss function is nearly flat\n• The gradient g(θ) ≈ 0\n• The update θ − λ·g(θ) ≈ θ (tiny step)\n\nFar from minimum:\n• Steep slope\n• Large gradient\n• Large step\n\nGD automatically adapts step size based on local curvature — no explicit schedule needed for this.'},
+
   // NN2 flashcards
   {t:'nn2', front:'Why reshape MNIST images from (28,28) to (784,)?', back:'Dense layers expect a 1D input vector — they compute W·x+b, where x must be flat.\n\nimages.reshape(60000, 784)\n→ shape: (60000, 784)\n→ one row per image, 784 pixel values per row\n\nConvolutions keep the 2D structure (CNNs), but Dense/MLP layers flatten it.'},
   {t:'nn2', front:'What does dividing pixel values by 255 achieve?', back:'Normalises from [0, 255] → [0.0, 1.0]\n\nimages /= 255\n\nWhy:\n• Prevents large activations from large input values\n• Gradient descent converges faster with small, similar-scale inputs\n• Same principle as StandardScaler from classical ML\n\nAlways normalise inputs before training a neural network.'},
@@ -12364,7 +14208,7 @@ function nav(page) {
   document.getElementById('main').scrollTop = 0;
   const navEl = document.querySelector(`[onclick="nav('${page}')"]`);
   if (navEl) navEl.classList.add('active');
-  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9','nn1','nn2'].includes(page)) {
+  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9','nn1','nn2','nn3','nn4','nn5'].includes(page)) {
     markVisited(page);
     renderInlineQuiz(page);
   }
@@ -12384,7 +14228,7 @@ function markVisited(w) {
 function updateGlobalProgress() {
   const pct = Math.round((visited.length / 25) * 100);
   document.getElementById('global-progress-bar').style.width = pct + '%';
-  document.getElementById('global-progress-label').textContent = `${visited.length} of 41 lessons visited`;
+  document.getElementById('global-progress-label').textContent = `${visited.length} of 44 lessons visited`;
 }
 
 // ===================== INLINE QUIZ =====================
