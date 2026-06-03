@@ -284,6 +284,8 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('nn3')" id="nav-nn3"><span class="icon">📉</span> L3: Gradient Descent — From Scratch<span class="check" id="check-nn3"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('nn4')" id="nav-nn4"><span class="icon">🌸</span> L4: Classification with GD<span class="check" id="check-nn4"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('nn5')" id="nav-nn5"><span class="icon">⚙️</span> L5: Training a Neural Network<span class="check" id="check-nn5"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('nn6')" id="nav-nn6"><span class="icon">🖼️</span> L6: Convolutional Neural Networks<span class="check" id="check-nn6"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('nn7')" id="nav-nn7"><span class="icon">🔄</span> L7: Recurrent Neural Networks<span class="check" id="check-nn7"></span></div>
   </div>
 
   <div class="sidebar-section" style="margin-top:10px">Practice</div>
@@ -1315,6 +1317,8 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
           <div class="topic-chip" id="chip-nn3" onclick="toggleChip('nn3')">L3: Gradient Descent</div>
           <div class="topic-chip" id="chip-nn4" onclick="toggleChip('nn4')">L4: Classification GD</div>
           <div class="topic-chip" id="chip-nn5" onclick="toggleChip('nn5')">L5: Training a NN</div>
+          <div class="topic-chip" id="chip-nn6" onclick="toggleChip('nn6')">L6: CNNs</div>
+          <div class="topic-chip" id="chip-nn7" onclick="toggleChip('nn7')">L7: RNNs</div>
         </div>
       </div>
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
@@ -1447,6 +1451,8 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
           <div class="topic-chip" id="fc-chip-nn3" onclick="fcFilter('nn3')">L3: Gradient Descent</div>
           <div class="topic-chip" id="fc-chip-nn4" onclick="fcFilter('nn4')">L4: Classification GD</div>
           <div class="topic-chip" id="fc-chip-nn5" onclick="fcFilter('nn5')">L5: Training a NN</div>
+          <div class="topic-chip" id="fc-chip-nn6" onclick="fcFilter('nn6')">L6: CNNs</div>
+          <div class="topic-chip" id="fc-chip-nn7" onclick="fcFilter('nn7')">L7: RNNs</div>
         </div>
       </div>
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
@@ -11918,6 +11924,1402 @@ model.add(keras.layers.Activation('relu'))</code></pre></div>
   <div class="btn-row">
     <button class="btn btn-primary" onclick="startTopicQuiz('nn5')">📝 Full Topic Quiz</button>
     <button class="btn btn-outline" onclick="nav('nn4')">← L4: Classification with GD</button>
+    <button class="btn btn-outline" onclick="nav('nn6')">L6: CNNs →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- NEURAL NETWORKS & DEEP LEARNING — L6: Convolutional Neural Networks -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-nn6">
+  <div class="lesson-header">
+    <div class="breadcrumb">Neural Networks & Deep Learning · L6</div>
+    <h1>🖼️ Convolutional Neural Networks</h1>
+    <p class="subtitle">From first principles to pretrained models — understand exactly what convolution means, why CNNs outperform regular networks on images, how to train and evaluate them, and when to use transfer learning</p>
+  </div>
+
+  <!-- ── PART 1: WHY CNNs ── -->
+  <h2>Part 1: The Problem with Fully-Connected Networks on Images</h2>
+  <p>In L2 you flattened a 28×28 MNIST image into a 784-element vector and fed it into Dense layers. This works, but it has three fundamental problems that CNNs are designed to fix.</p>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Problem</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">What it means</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Example</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Parameter explosion</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Every pixel connects to every neuron. 224×224 image × 512 neurons = <strong>25 million weights in one layer</strong></td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Slow training, severe overfitting on small datasets</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">No spatial awareness</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Flattening destroys the 2D grid — pixel (0,0) has no special relationship with its neighbour (0,1)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Network can't learn "edge = two adjacent pixels differ"</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Translation sensitivity</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">A '3' shifted one pixel right looks completely different after flattening</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Would need to memorise every shifted version separately</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="key-concept">
+    <div class="label">The Key Insight CNNs Are Built On</div>
+    <p><strong>Pixels near each other are more related than pixels far apart.</strong> A cat's eye is defined by its local neighbourhood — the relationship between adjacent pixels — not its relationship to pixels on the other side of the image. CNNs exploit this by using small <em>local filters</em> that slide across the image. The same filter looks for the same feature everywhere.</p>
+  </div>
+
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">Fully-Connected Layer</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">Input (784 pixels)
+● ─┬─ ● Neuron 1
+● ─┼─ ● Neuron 2
+● ─┼─ ● Neuron 3
+● ─┘   ...
+
+Every pixel → every neuron
+784 × 512 = 401,408 weights
+(per layer, for 28×28 images)</pre></div>
+    </div>
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">Convolutional Layer</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">Image patch (3×3)    Filter (3×3)
+┌───────────┐    ┌───────────┐
+│ 80 100 80 │  × │ -1 -1 -1 │
+│100 200 100│    │  0  0  0 │  = one number
+│ 80 100 80 │    │ +1 +1 +1 │
+└───────────┘    └───────────┘
+
+Only 9 weights — shared everywhere
+Same filter scans the whole image</pre></div>
+    </div>
+  </div>
+
+  <!-- ── PART 2: CONVOLUTION ── -->
+  <h2>Part 2: What is Convolution?</h2>
+
+  <h3>The Intuition</h3>
+  <p>Imagine sliding a small magnifying lens (the <strong>kernel</strong> or <strong>filter</strong>) across an image. At each position, you ask: <em>"Does this patch of the image look like what my filter is looking for?"</em> The answer is a single number — the dot product of the filter weights with the pixel values underneath. A high response means "yes, this feature is here"; near-zero means "no".</p>
+
+  <h3>The Mathematics</h3>
+  <p>For a 2D image <em>I</em> and a filter <em>K</em> of size H×W, the output at position (i, j) is:</p>
+  <div class="card" style="border-left:3px solid var(--accent); margin-bottom:12px">
+    <p style="margin:0 0 4px; font-size:0.95rem; font-family:monospace; color:var(--text)">O(i,j) = Σₕ Σ_w  I(i+h, j+w) × K(h, w)</p>
+    <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">In words: <strong>element-wise multiply the filter with the patch directly beneath it, then sum everything up.</strong> Repeat at every position in the image.</p>
+  </div>
+
+  <h3>Step by Step — A Single Convolution Output</h3>
+  <div class="code-block"><pre><code># A 5×5 image patch and a 3×3 filter
+image_patch = np.array([
+    [10,  20,  30,  20, 10],
+    [20,  80, 100,  80, 20],
+    [30, 100, 200, 100, 30],    # bright centre
+    [20,  80, 100,  80, 20],
+    [10,  20,  30,  20, 10]
+])
+
+# Horizontal edge-detection filter (Prewitt)
+filter_matrix = np.array([
+    [-1, -1, -1],  # negative weights above
+    [ 0,  0,  0],  # zero in the middle
+    [+1, +1, +1]   # positive weights below
+])
+
+# At position (1,1): extract the 3×3 patch underneath the filter
+patch_under_filter = image_patch[1:4, 1:4]
+# = [[80, 100, 80],
+#    [100, 200, 100],
+#    [80, 100, 80]]
+
+# Element-wise multiply, then sum
+result = np.sum(patch_under_filter * filter_matrix)
+# = (80×-1 + 100×-1 + 80×-1)  ← top row
+# + (100×0  + 200×0  + 100×0)  ← middle row
+# + (80×+1  + 100×+1 + 80×+1)  ← bottom row
+# = -260 + 0 + 260 = 0
+# → No horizontal edge here (patch is symmetric top-to-bottom)</code></pre></div>
+
+  <h3>Output Size Formula</h3>
+  <div class="card" style="border-left:3px solid #fbbf24; margin-bottom:16px">
+    <p style="margin:0 0 4px; font-size:0.92rem; font-family:monospace; color:var(--text)">Output size = Input size − Filter size + 1</p>
+    <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">A 3×3 filter on a 28×28 image → 26×26 output. A 5×5 filter → 24×24. Without padding, the image shrinks with every layer.</p>
+  </div>
+
+  <h3>Colour Images: Multi-Channel Convolution</h3>
+  <p>A colour image has shape <code>(H, W, 3)</code> — one channel each for Red, Green, Blue. The filter must also have 3 channels: one set of weights per colour channel. The outputs for each channel are summed to produce a single output value.</p>
+
+  <div class="code-block"><pre><code># Colour image shape: (H, W, 3)
+# A 3×3 colour filter: shape (3, 3, 3) — 3 channels of 3×3 weights
+# = 27 values total (still just 27 weights no matter how big the image)
+
+# A "brown detector" filter:
+brown_filter = np.array([
+    [[+0.14, +0.17, +0.13],   # Red channel:   high positive → responds to red pixels
+     [+0.16, +0.20, +0.15],
+     [+0.14, +0.16, +0.12]],
+
+    [[+0.04, +0.05, +0.03],   # Green channel: small positive → slight green response
+     [+0.05, +0.07, +0.03],
+     [+0.04, +0.05, +0.02]],
+
+    [[-0.16, -0.17, -0.17],   # Blue channel:  negative → suppressed when pixels are blue
+     [-0.17, -0.18, -0.19],
+     [-0.15, -0.17, -0.17]]
+])
+# High output = pixel is red + some green + not blue = brown ✓</code></pre></div>
+
+  <!-- ── PART 3: FILTERS ── -->
+  <h2>Part 3: Filters — What Do They Detect?</h2>
+
+  <p>The choice of filter weights determines what feature is detected. CNNs learn these weights automatically during training, but it helps to understand what manually designed filters look like:</p>
+
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.82rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Filter weights</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">What it detects</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Why</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">[-1,-1,-1]<br>[0,0,0]<br>[+1,+1,+1]</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Horizontal edges (bottom brighter)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Negative top row, positive bottom row → fires when pixel values increase top to bottom</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">[-1,0,+1]<br>[-1,0,+1]<br>[-1,0,+1]</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Vertical edges (right brighter)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Negative left column, positive right column → fires when pixel values increase left to right</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">[1/9, 1/9, 1/9]<br>[1/9, 1/9, 1/9]<br>[1/9, 1/9, 1/9]</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Blur (averaging filter)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">All equal positive weights → averages the neighbourhood → smooths sharp changes</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">[0,-1,0]<br>[-1,+5,-1]<br>[0,-1,0]</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Sharpen (enhances centre vs neighbours)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">High centre weight, negative surroundings → fires when centre is brighter than its neighbours</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="alert alert-info" style="margin-top:14px">
+    <strong>In a CNN, filter weights are NOT hand-crafted.</strong> They are learned from the training data via backpropagation — the same algorithm used for Dense layers. Early layers learn simple detectors (edges, colour gradients). Later layers combine those to detect textures, shapes, and eventually complex objects.
+  </div>
+
+  <h3>The Feature Hierarchy</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #5b8af5">
+      <p style="margin:0 0 6px; font-weight:600; color:#5b8af5">Layer 1 — Low-level</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Edges, colour gradients, simple orientations. These look almost identical to the hand-crafted filters above — the network independently reinvents them.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #a78bfa">
+      <p style="margin:0 0 6px; font-weight:600; color:#a78bfa">Layer 2–3 — Mid-level</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Textures, curves, corners, repeating patterns. Combinations of layer-1 features that span slightly larger regions.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">Layer 4+ — High-level</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Object parts, faces, wheels, eyes, paws. Abstract combinations that only make sense as a whole. Directly useful for classification.</p>
+    </div>
+  </div>
+
+  <!-- ── PART 4: CNN ARCHITECTURE ── -->
+  <h2>Part 4: The Full CNN Architecture</h2>
+
+  <p>A CNN is a sequence of layers. The first half is a <strong>feature extractor</strong>; the second half is a <strong>classifier</strong>.</p>
+
+  <div class="code-block"><pre><code>Input Image  (28×28×1)
+     ↓
+Conv2D(32, 3×3) + ReLU    → 28×28×32   ← 32 filters each look for a different feature
+MaxPooling2D(2×2)          → 14×14×32   ← halves spatial size, keeps the 32 channels
+Dropout(0.25)              → 14×14×32   ← randomly zero 25% of neurons (prevents overfitting)
+     ↓
+Conv2D(64, 3×3) + ReLU    → 14×14×64   ← 64 filters combine layer-1 features
+MaxPooling2D(2×2)          →  7×7×64    ← halves again
+Dropout(0.25)              →  7×7×64
+     ↓
+Flatten                    →  3136      ← reshape 3D volume to 1D vector (7×7×64 = 3136)
+Dense(128, ReLU)           →  128       ← fully-connected: learn abstract combinations
+Dropout(0.5)               →  128
+Dense(10, Softmax)         →   10       ← one probability per class</code></pre></div>
+
+  <h3>Why Each Component Exists</h3>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.82rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent)">Layer</th>
+        <th style="padding:9px 14px; color:var(--text-muted)">Purpose</th>
+        <th style="padding:9px 14px; color:var(--text-muted)">Key parameter</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Conv2D(N, k×k)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Apply N filters of size k×k. Each filter scans the entire input and produces one output channel (feature map).</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">N = number of features to detect. More N → richer representation but more computation.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">ReLU</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">max(0, x) — keeps positive activations ("feature IS here"), zeros out negatives ("feature is NOT here"). Introduces non-linearity.</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Gradient = 1 for positive inputs (no vanishing gradient). Fast to compute.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">MaxPooling2D(2×2)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Take the maximum in each 2×2 window. Halves width and height. Makes detection insensitive to small shifts (translation invariance).</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">If a feature shifts 1 pixel, the max value is still captured. Reduces computation for deeper layers.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Dropout(p)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">During training, randomly zero out p fraction of neurons each forward pass. Forces the network to learn redundant, distributed representations.</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">p=0.25 for conv layers, p=0.5 for dense layers is a common default. Disabled at test time.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Flatten</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Reshape the 3D feature volume (H×W×C) into a 1D vector. Required before Dense layers.</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">7×7×64 = 3,136 — this is what the Dense layer sees.</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">Softmax (output)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Converts 10 raw scores to 10 probabilities summing to 1. Enables cross-entropy loss and argmax prediction.</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">One neuron per class. argmax of output = predicted class.</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>Padding and Stride</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #5b8af5">
+      <p style="margin:0 0 6px; font-weight:600; color:#5b8af5">Padding — preserving spatial size</p>
+      <p style="margin:0 0 8px; font-size:0.83rem; color:var(--text-muted)">Without padding, each convolution shrinks the image. <code>padding='same'</code> adds zeros around the border so the output matches the input size. This is the default for deep networks.</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">No padding:   5×5 input, 3×3 filter → 3×3 output
+Same padding: 5×5 input, 3×3 filter → 5×5 output (1 zero added each side)</pre></div>
+    </div>
+    <div class="card" style="border-left:3px solid #a78bfa">
+      <p style="margin:0 0 6px; font-weight:600; color:#a78bfa">Stride — skipping positions</p>
+      <p style="margin:0 0 8px; font-size:0.83rem; color:var(--text-muted)">Stride controls how many pixels the filter moves per step. Default is 1. Stride 2 halves the output size — an alternative to MaxPooling for downsampling.</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">Output size = ⌊(Input − Filter) / Stride⌋ + 1
+Stride=1: (28 - 3) / 1 + 1 = 26
+Stride=2: (28 - 3) / 2 + 1 = 13  (≈ halved)</pre></div>
+    </div>
+  </div>
+
+  <!-- ── PART 5: PREPROCESSING ── -->
+  <h2>Part 5: Image Preprocessing</h2>
+
+  <p>Raw image data must be prepared before the CNN can learn from it. This step is critical — poor preprocessing is one of the most common causes of bad model performance.</p>
+
+  <h3>Step 1: Normalisation</h3>
+  <p>Pixel values are integers in [0, 255]. Divide by 255 to get floats in [0, 1]. Neural networks need small inputs — large values cause large activations and unstable gradients.</p>
+  <div class="code-block"><pre><code>X_train = X_train.astype('float32') / 255.0
+X_test  = X_test.astype('float32')  / 255.0
+# Before: [[0, 128, 255, ...]]   ← integers 0–255
+# After:  [[0.0, 0.502, 1.0, ...]]  ← floats 0–1</code></pre></div>
+
+  <h3>Step 2: Reshape to 4D Tensor</h3>
+  <p>Conv2D expects input shape <code>(samples, height, width, channels)</code>. MNIST images are 28×28 grayscale, so the channel dimension is 1.</p>
+  <div class="code-block"><pre><code># Original MNIST shape: (60000, 28, 28) — no channel dim
+X_train = X_train.reshape(-1, 28, 28, 1)   # -1 = keep original sample count
+# New shape: (60000, 28, 28, 1)
+#             ^       ^   ^  ^
+#           samples  H   W  channels (grayscale=1, RGB=3)
+
+# For colour images you would use:
+# X_train.reshape(-1, height, width, 3)</code></pre></div>
+
+  <h3>Step 3: One-Hot Encode Labels</h3>
+  <p>The output layer has 10 neurons (one per digit). Cross-entropy loss requires labels as probability vectors, not integers.</p>
+  <div class="code-block"><pre><code>from keras.utils import to_categorical
+
+Y_train = to_categorical(y_train, 10)
+# y_train[0] = 5  (integer)
+# Y_train[0] = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0]  (one-hot vector)
+#                                ↑ only position 5 is 1</code></pre></div>
+
+  <h3>Step 4: Data Augmentation</h3>
+  <p>With a limited training set, the model can overfit — it memorises the training images rather than learning general patterns. <strong>Data augmentation</strong> artificially expands the training set by applying random transformations. The network sees a slightly different version of each image every epoch.</p>
+
+  <div class="code-block"><pre><code>from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+datagen = ImageDataGenerator(
+    rotation_range=10,        # randomly rotate by up to 10 degrees
+    width_shift_range=0.1,    # randomly shift horizontally by 10%
+    height_shift_range=0.1,   # randomly shift vertically by 10%
+    horizontal_flip=False,    # ← DO NOT flip for MNIST!
+    vertical_flip=False       # ← DO NOT flip for MNIST!
+)
+# horizontal_flip=False because '6' flipped looks like '9' — wrong label!
+
+datagen.fit(X_train)
+# Use datagen.flow() instead of passing X_train directly to model.fit()</code></pre></div>
+
+  <div class="alert alert-warn">
+    <strong>Always think about whether an augmentation preserves semantic meaning.</strong> Flipping a '6' creates a '9'. Flipping a medical X-ray may invert left/right anatomy. Rotating a text character by 180° may create a different letter. Choose augmentations that a real-world deployment scenario could also encounter.
+  </div>
+
+  <!-- ── PART 6: BUILDING AND TRAINING ── -->
+  <h2>Part 6: Building and Training a CNN in Keras</h2>
+
+  <h3>The Loss Function: Categorical Cross-Entropy</h3>
+  <p>For multi-class classification with one-hot labels, use <code>categorical_crossentropy</code>:</p>
+  <div class="card" style="border-left:3px solid var(--accent); margin-bottom:12px">
+    <p style="margin:0 0 4px; font-size:0.92rem; font-family:monospace; color:var(--text)">CE = −Σⱼ  y_j × log(ŷ_j)</p>
+    <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">y_j = true label (one-hot: 1 for true class, 0 for all others). ŷ_j = predicted probability from softmax. Only the true class term survives the sum. High predicted probability for the true class → low loss. Confident wrong prediction → very high loss.</p>
+  </div>
+
+  <h3>The Optimiser: Adam</h3>
+  <p>Adam (Adaptive Moment Estimation) is the default choice. It adjusts the learning rate per-parameter automatically. Default learning rate 0.001 works well for most CNN problems — no manual tuning needed.</p>
+
+  <h3>Full Keras CNN — MNIST</h3>
+  <div class="code-block"><pre><code>from tensorflow import keras
+from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from keras.utils import to_categorical
+
+# ── 1. Load and preprocess ──────────────────────────────────────────────────
+(X_train, y_train), (X_test, y_test) = keras.datasets.mnist.load_data()
+
+X_train = X_train.astype('float32').reshape(-1, 28, 28, 1) / 255.0
+X_test  = X_test.astype('float32').reshape(-1, 28, 28, 1)  / 255.0
+
+Y_train = to_categorical(y_train, 10)
+Y_test  = to_categorical(y_test,  10)
+
+# ── 2. Build the model ──────────────────────────────────────────────────────
+model = Sequential([
+    # Feature extraction block 1: detect low-level features (edges, curves)
+    Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=(28, 28, 1)),
+    MaxPooling2D((2, 2)),
+    Dropout(0.25),
+
+    # Feature extraction block 2: detect higher-level features (digit parts)
+    Conv2D(64, (3, 3), activation='relu', padding='same'),
+    MaxPooling2D((2, 2)),
+    Dropout(0.25),
+
+    # Classifier head
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dropout(0.5),
+    Dense(10, activation='softmax')   # 10 classes
+])
+
+# ── 3. Compile ──────────────────────────────────────────────────────────────
+model.compile(
+    optimizer='adam',
+    loss='categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+model.summary()
+# Total params: ~93,000  ← vs 401,408 for a single Dense layer on a larger image!
+
+# ── 4. Train ────────────────────────────────────────────────────────────────
+history = model.fit(
+    X_train, Y_train,
+    batch_size=128,
+    epochs=10,
+    validation_data=(X_test, Y_test)   # watch val_loss to detect overfitting
+)
+
+# ── 5. Evaluate ─────────────────────────────────────────────────────────────
+test_loss, test_acc = model.evaluate(X_test, Y_test)
+print(f'Test accuracy: {test_acc:.4f}')   # typically ~99.1% with this architecture</code></pre></div>
+
+  <!-- ── PART 7: TRAINING CURVES ── -->
+  <h2>Part 7: Reading Training Curves</h2>
+
+  <p>The training history is your primary diagnostic tool. Always plot two things over epochs: <strong>loss</strong> and <strong>accuracy</strong>, for both training and validation sets.</p>
+
+  <div class="code-block"><pre><code>import matplotlib.pyplot as plt
+
+history_dict = history.history
+epochs = range(1, len(history_dict['loss']) + 1)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+
+# Loss plot
+ax1.plot(epochs, history_dict['loss'],     label='Training loss')
+ax1.plot(epochs, history_dict['val_loss'], label='Validation loss', linestyle='--')
+ax1.set_title('Loss over epochs')
+ax1.set_xlabel('Epoch')
+ax1.set_ylabel('Loss')
+ax1.legend()
+
+# Accuracy plot
+ax2.plot(epochs, history_dict['accuracy'],     label='Training accuracy')
+ax2.plot(epochs, history_dict['val_accuracy'], label='Validation accuracy', linestyle='--')
+ax2.set_title('Accuracy over epochs')
+ax2.set_xlabel('Epoch')
+ax2.set_ylabel('Accuracy')
+ax2.legend()</pre></div>
+
+  <h3>Diagnosing from the Curves</h3>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.82rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent)">Pattern</th>
+        <th style="padding:9px 14px; color:var(--text-muted)">Diagnosis</th>
+        <th style="padding:9px 14px; color:var(--text-muted)">Fix</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border); background:rgba(52,211,153,0.04)">
+        <td style="padding:8px 14px; font-weight:600; color:#34d399">Both losses decrease together, small gap</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Good fit — model is generalising</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Nothing (or train longer, or try a deeper model)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border); background:rgba(248,113,113,0.04)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Train loss ↓, val loss ↑ (diverging)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Overfitting — memorising training data</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">More Dropout, data augmentation, L2 regularisation, early stopping, less model capacity</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#fbbf24">Both losses stay high (barely decrease)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Underfitting — model too simple or training broken</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Deeper/wider model, train longer, check preprocessing, increase learning rate</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#a78bfa">Very noisy val loss (large spikes)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Unstable training or very small validation set</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Reduce learning rate, increase batch size, larger validation set</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="key-concept">
+    <div class="label">Early Stopping</div>
+    <p>Stop training when val_loss stops improving — don't just run for a fixed number of epochs. The <code>EarlyStopping</code> callback does this automatically: <code>EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)</code>. <code>patience=5</code> means "stop if val_loss hasn't improved for 5 epochs and restore the best weights found".</p>
+  </div>
+
+  <!-- ── PART 8: ACCURACY METRICS ── -->
+  <h2>Part 8: Accuracy Metrics — Beyond Just "Accuracy"</h2>
+
+  <p>Raw accuracy (fraction of correct predictions) is easy to compute, but can be dangerously misleading. Consider a fraud detection system: if 99% of transactions are legitimate, predicting "not fraud" for everything achieves 99% accuracy — but catches zero fraud cases.</p>
+
+  <h3>The Confusion Matrix</h3>
+  <p>An N×N matrix where entry (i, j) = number of times <strong>true class i</strong> was predicted as <strong>class j</strong>. The diagonal contains all correct predictions.</p>
+
+  <div class="code-block"><pre><code>from sklearn.metrics import confusion_matrix, classification_report
+import seaborn as sns   # optional but makes nicer heatmaps
+
+# Get predictions
+y_pred_probs = model.predict(X_test)          # shape (10000, 10) — probabilities
+y_pred       = np.argmax(y_pred_probs, axis=1)  # predicted class (0–9)
+y_true       = y_test                           # actual labels
+
+# Build confusion matrix
+cm = confusion_matrix(y_true, y_pred)
+# cm[3, 5] = number of '3's that were predicted as '5'
+# cm[i, i] = number of correctly classified examples of class i
+
+# Plot
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+            xticklabels=range(10), yticklabels=range(10))
+plt.xlabel('Predicted digit')
+plt.ylabel('True digit')
+plt.title('Confusion Matrix')</code></pre></div>
+
+  <h3>Precision, Recall, and F1</h3>
+  <p>For each class, from the confusion matrix you can compute:</p>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent)">Metric</th>
+        <th style="padding:9px 14px; color:var(--text-muted)">Formula</th>
+        <th style="padding:9px 14px; color:var(--text-muted)">Meaning</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">True Positives (TP)</td>
+        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">cm[i, i]</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Predicted class i and it actually is class i</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">False Positives (FP)</td>
+        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">sum(cm[:, i]) − cm[i, i]</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Predicted class i but actually a different class</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">False Negatives (FN)</td>
+        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">sum(cm[i, :]) − cm[i, i]</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Predicted something else but it was actually class i</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#5b8af5">Precision</td>
+        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">TP / (TP + FP)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Of all predicted class i: what fraction were actually class i? (Avoids false alarms)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#34d399">Recall</td>
+        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">TP / (TP + FN)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Of all real class i examples: what fraction did we catch? (Avoids misses)</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#a78bfa">F1 Score</td>
+        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">2 × (P × R) / (P + R)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Harmonic mean of precision and recall. Use when you want a single balanced metric.</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="code-block"><pre><code># sklearn's classification_report gives all metrics at once
+print(classification_report(y_true, y_pred, target_names=[str(i) for i in range(10)]))
+
+#               precision    recall  f1-score   support
+#            0       0.99      1.00      0.99       980
+#            1       0.99      1.00      0.99      1135
+#            2       0.99      0.99      0.99      1032
+#            ...
+#            9       0.99      0.99      0.99      1009
+#
+#     accuracy                           0.99     10000
+#    macro avg       0.99      0.99      0.99     10000
+# weighted avg       0.99      0.99      0.99     10000
+
+# Look for classes with lower recall — those are the digits the model struggles with most</code></pre></div>
+
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #fbbf24">
+      <p style="margin:0 0 6px; font-weight:600; color:#fbbf24">High precision, low recall</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Model is conservative: only predicts class X when very confident. Catches few X's (many misses) but rarely wrong when it does predict X. Example: only flags obvious fraud → misses subtle cases.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">Low precision, high recall</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Model is aggressive: predicts X liberally to avoid any misses. Catches nearly all X's but with many false alarms. Example: flags most transactions as fraud → overwhelms analysts.</p>
+    </div>
+  </div>
+
+  <!-- ── PART 9: OVERFITTING AND REGULARISATION ── -->
+  <h2>Part 9: Overfitting and How to Fight It</h2>
+
+  <p>Overfitting is when your model memorises the training data — it learns the noise and irrelevant details of specific training images rather than the general patterns that distinguish a '3' from a '5'. Symptoms:</p>
+  <ul style="margin:8px 0 16px; color:var(--text-muted); font-size:0.88rem; line-height:2">
+    <li>Training accuracy ≈ 99%, validation accuracy ≈ 92% → large generalisation gap</li>
+    <li>Training loss keeps falling after epoch 5; validation loss starts rising</li>
+  </ul>
+
+  <h3>The Three Main Tools</h3>
+
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #5b8af5">
+      <p style="margin:0 0 6px; font-weight:600; color:#5b8af5">1. Dropout</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Randomly zero out neurons each training step. No single path can be relied on → distributed, robust representations. Disabled at test time (all neurons active, outputs scaled).</p>
+      <div class="code-block" style="margin-top:8px; margin-bottom:0"><pre style="font-size:0.75rem">Dropout(0.5)  # 50% zeroed at train
+               # 100% active at test (scaled)</pre></div>
+    </div>
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">2. Data Augmentation</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Show the model more variety by randomly transforming training images. If the training set is small, this is often the single most effective tool against overfitting.</p>
+      <div class="code-block" style="margin-top:8px; margin-bottom:0"><pre style="font-size:0.75rem">rotation_range=10
+width_shift_range=0.1
+height_shift_range=0.1</pre></div>
+    </div>
+  </div>
+
+  <div class="card" style="border-left:3px solid #a78bfa; margin-bottom:16px">
+    <p style="margin:0 0 6px; font-weight:600; color:#a78bfa">3. Early Stopping</p>
+    <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Stop training when the validation loss stops improving. Add a patience parameter so training stops only after N consecutive epochs without improvement — avoids stopping too early on a temporary plateau.</p>
+    <div class="code-block" style="margin-top:8px; margin-bottom:0"><pre><code>from keras.callbacks import EarlyStopping
+
+early_stop = EarlyStopping(
+    monitor='val_loss',       # watch validation loss
+    patience=5,               # stop after 5 epochs without improvement
+    restore_best_weights=True # load the best weights, not the last ones
+)
+
+model.fit(..., callbacks=[early_stop])</code></pre></div>
+  </div>
+
+  <!-- ── PART 10: PRETRAINED NETWORKS ── -->
+  <h2>Part 10: Pretrained Networks and Transfer Learning</h2>
+
+  <p>Training VGG16 from scratch on ImageNet (1.2 million images, 1,000 categories) takes <strong>2–3 weeks on 4 GPUs</strong>. Transfer learning lets you skip this entirely by reusing what's already been learned.</p>
+
+  <div class="key-concept">
+    <div class="label">The Core Idea</div>
+    <p>Features learned for one task are useful for others. A network trained to distinguish 1,000 ImageNet categories has already learned to detect edges, textures, shapes, and objects. These are useful for almost any image task — medical imaging, satellite photos, plant disease detection, anything.</p>
+  </div>
+
+  <h3>VGG16 — A Landmark Architecture (2014)</h3>
+  <p>VGG16 won the ImageNet challenge with 93% accuracy (humans ≈ 95%). It uses only 3×3 convolutions — 13 conv layers + 3 dense layers, 138 million parameters total. Its simplicity made it easy to understand and widely adopted.</p>
+
+  <div class="code-block"><pre><code># VGG16 Architecture (showing spatial dimensions for a 224×224 input)
+Input:   224×224×3
+
+Block 1: Conv64 → Conv64 → Pool     → 112×112×64
+Block 2: Conv128 → Conv128 → Pool   →  56×56×128
+Block 3: Conv256×3 → Pool           →  28×28×256
+Block 4: Conv512×3 → Pool           →  14×14×512
+Block 5: Conv512×3 → Pool           →   7×7×512
+
+Flatten:                             →  25,088
+Dense(4096, ReLU) → Dropout(0.5)
+Dense(4096, ReLU) → Dropout(0.5)
+Dense(1000, Softmax)                 → 1,000 class probabilities
+
+Notice: spatial size halves at each pool; depth (channels) doubles. Trading resolution for richer descriptions.</code></pre></div>
+
+  <h3>How to Use a Pretrained Network</h3>
+
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #5b8af5">
+      <p style="margin:0 0 6px; font-weight:600; color:#5b8af5">Feature Extraction (faster)</p>
+      <p style="margin:0 0 8px; font-size:0.83rem; color:var(--text-muted)">Freeze all pretrained weights. Only train a new classification head. Best when your dataset is small (&lt;5k images) and similar to ImageNet.</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">base = VGG16(weights='imagenet',
+             include_top=False)
+base.trainable = False   # freeze everything
+# Add your own head on top</pre></div>
+    </div>
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">Fine-Tuning (better accuracy)</p>
+      <p style="margin:0 0 8px; font-size:0.83rem; color:var(--text-muted)">Unfreeze the last few conv blocks and train with a very small learning rate. Best when you have more data or a domain very different from ImageNet.</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">for layer in base.layers[:-4]:
+    layer.trainable = False
+# Only last 4 layers fine-tuned
+# Use lr=1e-5 (10× smaller than default)</pre></div>
+    </div>
+  </div>
+
+  <div class="code-block"><pre><code># Complete transfer learning example
+from tensorflow.keras.applications import VGG16
+from keras.layers import GlobalAveragePooling2D
+
+# 1. Load pretrained VGG16 WITHOUT the top (classification) layers
+base_model = VGG16(
+    weights='imagenet',     # weights from ImageNet training
+    include_top=False,      # remove the 3 Dense layers at the end
+    input_shape=(224, 224, 3)
+)
+base_model.trainable = False   # freeze: only your new head will be trained
+
+# 2. Build your model on top
+model = Sequential([
+    base_model,                             # all VGG16 conv blocks
+    GlobalAveragePooling2D(),               # collapse 7×7×512 to 512
+    Dense(256, activation='relu'),
+    Dropout(0.5),
+    Dense(num_classes, activation='softmax')  # your task's classes
+])
+
+# 3. Compile and train — only the new head has trainable weights
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.fit(X_train, Y_train, epochs=20, validation_data=(X_val, Y_val))
+
+# 4. Optional: fine-tune the last block
+base_model.trainable = True
+for layer in base_model.layers[:-4]:
+    layer.trainable = False   # still freeze everything except last 4 layers
+
+model.compile(optimizer=keras.optimizers.Adam(1e-5), ...)  # SMALL lr!
+model.fit(X_train, Y_train, epochs=10, ...)   # fine-tune with tiny lr</code></pre></div>
+
+  <h3>Preprocessing for Pretrained Networks</h3>
+  <p>Pretrained networks were trained with a specific normalisation. You must apply the <strong>same normalisation at inference time</strong> or predictions will be garbage:</p>
+  <div class="code-block"><pre><code># VGG16 was trained with zero-centering (not /255 alone):
+def preprocess_for_vgg16(image):
+    image = np.copy(image).astype(np.float32)
+    image[:, :, 0] -= 103.939   # subtract mean Red
+    image[:, :, 1] -= 116.779   # subtract mean Green
+    image[:, :, 2] -= 123.68    # subtract mean Blue
+    return image
+
+# Or use the built-in preprocess function:
+from tensorflow.keras.applications.vgg16 import preprocess_input
+image_preprocessed = preprocess_input(image)  # does the same thing</code></pre></div>
+
+  <!-- ── PART 11: WHEN TO USE CNNs ── -->
+  <h2>Part 11: When to Use CNNs</h2>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.82rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent)">Use Case</th>
+        <th style="padding:9px 14px; color:var(--text-muted)">Why CNNs work</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Image classification</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Cat vs dog, medical imaging, satellite photos — local patterns (fur, edges) define classes</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Object detection (YOLO, Faster R-CNN)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">The sliding-window idea of convolution generalises naturally to locating objects</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Image segmentation</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">U-Net style CNNs predict a class label per pixel — used in medical imaging, autonomous driving</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Face recognition</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Spatial feature hierarchy captures face geometry at multiple scales</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Audio (spectrogram)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Mel-spectrograms are 2D images — CNN speech recognition works well</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">1D sequences (text/signals)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">1D Conv is excellent for short-range pattern detection in text or time series</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="alert alert-warn">
+    <strong>When NOT to use a CNN:</strong> tabular data → use XGBoost or a simple MLP. Long-range sequential dependencies → use LSTM or Transformer. Very small image datasets (&lt;200 samples) without transfer learning → will likely overfit completely. The 2024 landscape: Vision Transformers (ViT) now surpass CNNs on large datasets, but CNNs remain dominant for edge devices, medical imaging, and real-time applications due to their efficiency.
+  </div>
+
+  <!-- ── SUMMARY ── -->
+  <h2>Summary</h2>
+
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #5b8af5">
+      <p style="margin:0 0 6px; font-weight:600; color:#5b8af5">What is convolution?</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Sliding a small filter across an image. At each position: element-wise multiply filter × patch, sum = one output pixel. Weights are shared — same 9 values scan the entire image. Output size = Input − Filter + 1.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">Why CNNs?</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Parameter efficiency (9 weights vs millions), spatial awareness (nearby pixels processed together), translation invariance (same filter finds a feature anywhere), feature hierarchy (edges → shapes → objects).</p>
+    </div>
+    <div class="card" style="border-left:3px solid #a78bfa">
+      <p style="margin:0 0 6px; font-weight:600; color:#a78bfa">Preprocessing checklist</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">① Normalise /255 to [0,1]. ② Reshape to (N,H,W,C). ③ One-hot encode labels. ④ Augment with semantically valid transforms. ⑤ Use train statistics for test normalisation.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #fbbf24">
+      <p style="margin:0 0 6px; font-weight:600; color:#fbbf24">Evaluation checklist</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">① Plot train + val loss curves. ② Plot train + val accuracy curves. ③ Confusion matrix for systematic errors. ④ Per-class precision, recall, F1. ⑤ Inspect the worst predictions — are they genuinely ambiguous?</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <p style="margin:0 0 8px; font-weight:600; color:var(--accent)">Transfer Learning Rule of Thumb</p>
+    <div class="code-block" style="margin:0"><pre>Dataset size    Similarity to ImageNet    Approach
+─────────────────────────────────────────────────────────────────────
+Small (&lt;1k)    Similar                   Feature extraction only (freeze all)
+Small (&lt;1k)    Different                 Fine-tune last 1–2 blocks (tiny lr)
+Large (&gt;10k)   Similar                   Fine-tune more blocks
+Large (&gt;10k)   Very different            Train from scratch OR fine-tune all</pre></div>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-nn6"></div></div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('nn6')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('nn5')">← L5: Training a NN</button>
+    <button class="btn btn-outline" onclick="nav('nn7')">L7: RNNs →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- NEURAL NETWORKS & DEEP LEARNING — L7: Recurrent Neural Networks -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-nn7">
+  <div class="lesson-header">
+    <div class="breadcrumb">Neural Networks &amp; Deep Learning · L7</div>
+    <h1>🔄 Recurrent Neural Networks</h1>
+    <p class="subtitle">Understand how RNNs maintain memory over sequences, why LSTMs solve the vanishing gradient problem, how to build LSTM models in Keras for time series regression, and when autoregressive prediction breaks down</p>
+  </div>
+
+  <!-- ── PART 1: WHY RNNs ── -->
+  <h2>Part 1: The Problem with Stateless Networks on Sequences</h2>
+  <p>Every network you've built so far is <strong>stateless</strong>: feed in input x, get output y. The network has no memory of previous inputs. For images that's fine — each image is independent. But many real-world problems are <strong>sequential</strong>: the correct answer depends on what came before.</p>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Problem Type</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Why Order Matters</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Stateless Network Failure</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Stock / Crypto Price</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Today's price depends on yesterday's trend and last week's momentum</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Treats each day independently — no trend awareness</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Natural Language</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">"The bank by the river" — meaning of "bank" set by surrounding words</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Bag-of-words ignores word order entirely</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Speech Recognition</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Each sound frame depends on adjacent phonemes</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Each frame treated independently — misses coarticulation</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Anomaly Detection</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">An anomaly is a value that doesn't fit the recent pattern</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">No concept of "recent pattern" — no temporal context</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="key-concept">
+    <div class="label">The Key Insight RNNs Are Built On</div>
+    <p><strong>A sequence is not a collection of independent points — each step provides context for the next.</strong> RNNs introduce a <em>hidden state</em> h that carries a compressed summary of all previous inputs. At each timestep the network reads both the current input <em>and</em> the current hidden state, then produces an updated hidden state. This creates an implicit memory that persists through the sequence.</p>
+  </div>
+
+  <!-- ── PART 2: RNN ARCHITECTURE ── -->
+  <h2>Part 2: How an RNN Works — The Hidden State</h2>
+
+  <h3>The Core Equation</h3>
+  <p>At each timestep <em>t</em>, an RNN receives the current input <strong>x<sub>t</sub></strong> and the previous hidden state <strong>h<sub>t-1</sub></strong>. It produces an updated hidden state <strong>h<sub>t</sub></strong>:</p>
+
+  <div class="card" style="border-left:3px solid var(--accent); margin-bottom:12px">
+    <p style="margin:0 0 6px; font-size:0.95rem; font-family:monospace; color:var(--text)">h<sub>t</sub> = tanh( W<sub>h</sub> · h<sub>t-1</sub> &nbsp;+&nbsp; W<sub>x</sub> · x<sub>t</sub> &nbsp;+&nbsp; b )</p>
+    <p style="margin:0; font-size:0.83rem; color:var(--text-muted)"><strong>W<sub>h</sub></strong>: weight matrix for the previous hidden state (captures temporal dependency) &nbsp;|&nbsp; <strong>W<sub>x</sub></strong>: weight matrix for the current input &nbsp;|&nbsp; <strong>tanh</strong>: squashes output to [−1, +1]</p>
+  </div>
+
+  <h3>Unrolled Through Time</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">Folded (Compact) View</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">          x_t
+           │
+h_{t-1} ──►[ RNN Cell ]──► h_t
+                │
+               y_t
+
+Same W_h and W_x at every step</pre></div>
+    </div>
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">Unrolled Through Time</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">x_1   x_2   x_3   x_4   x_5
+ │     │     │     │     │
+[A]──►[A]──►[A]──►[A]──►[A]
+ │     │     │     │     │
+y_1   y_2   y_3   y_4   y_5
+
+Cell A reused at every timestep.
+Hidden state h flows left → right.</pre></div>
+    </div>
+  </div>
+
+  <div class="alert-box" style="margin-top:12px">
+    <strong>Weight sharing in time:</strong> Just as a CNN uses the same filter at every spatial position, an RNN uses the same W<sub>h</sub> and W<sub>x</sub> at every timestep. This gives RNNs the ability to handle sequences of any length — and is also the root cause of vanishing gradients.
+  </div>
+
+  <h3>The Vanishing Gradient Problem</h3>
+  <p>RNNs are trained via <strong>Backpropagation Through Time (BPTT)</strong>. Gradients flow backwards from the loss at step T all the way to step 1, multiplying by W<sub>h</sub> at each step. If |W<sub>h</sub>| &lt; 1, gradients shrink exponentially — early timesteps receive near-zero gradient and the network fails to learn long-range dependencies.</p>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Issue</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Cause</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Symptom &amp; Fix</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Vanishing gradient</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">|W<sub>h</sub>| &lt; 1 applied T times → gradient ≈ 0</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Forgets events &gt;~10 steps ago → <strong>use LSTM</strong></td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Exploding gradient</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">|W<sub>h</sub>| &gt; 1 applied T times → gradient → ∞</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">NaN loss → fix with <strong>gradient clipping</strong> (clipnorm=1.0)</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── PART 3: LSTM ── -->
+  <h2>Part 3: LSTM — Long Short-Term Memory</h2>
+  <p>The LSTM was designed specifically to fix the vanishing gradient problem. It adds a second pathway alongside the hidden state: the <strong>cell state C<sub>t</sub></strong>, which acts as a gradient highway across many timesteps.</p>
+
+  <h3>Two Pathways</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #60a5fa">
+      <p style="margin:0 0 6px; font-weight:600; color:#60a5fa">Cell State C<sub>t</sub> — Long-Term Memory</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Runs along the top of the cell. Information is selectively added or removed by gates. Gradients flow through <em>additions</em> rather than repeated multiplications — they don't vanish. Think of it as the "memory tape."</p>
+    </div>
+    <div class="card" style="border-left:3px solid #a78bfa">
+      <p style="margin:0 0 6px; font-weight:600; color:#a78bfa">Hidden State h<sub>t</sub> — Short-Term Output</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Passed to the next timestep and used as the layer output. A filtered read of the cell state — only currently relevant parts are exposed. Stacked LSTMs communicate through h<sub>t</sub>.</p>
+    </div>
+  </div>
+
+  <h3>The Three Gates</h3>
+  <p>Gates are sigmoid-activated layers (output 0–1) that control what flows through the cell state.</p>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Gate</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">What it controls</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Ethereum price example</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px"><span style="font-weight:600; color:#f87171">Forget Gate f<sub>t</sub></span><br><small style="color:var(--text-muted)">σ(W<sub>f</sub>·[h<sub>t-1</sub>, x<sub>t</sub>] + b<sub>f</sub>)</small></td>
+        <td style="padding:8px 14px; color:var(--text-muted)">What to erase from cell state. 0 = forget completely, 1 = keep unchanged</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Detect Oct-2017 difficulty drop → reset "normal difficulty regime" from memory</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px"><span style="font-weight:600; color:#34d399">Input Gate i<sub>t</sub></span><br><small style="color:var(--text-muted)">σ(W<sub>i</sub>·[h<sub>t-1</sub>, x<sub>t</sub>] + b<sub>i</sub>)</small></td>
+        <td style="padding:8px 14px; color:var(--text-muted)">What new information to write (gated with candidate Ĉ<sub>t</sub> = tanh(…))</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Write "new difficulty regime" and "recent price spike" into memory</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px"><span style="font-weight:600; color:#fbbf24">Output Gate o<sub>t</sub></span><br><small style="color:var(--text-muted)">σ(W<sub>o</sub>·[h<sub>t-1</sub>, x<sub>t</sub>] + b<sub>o</sub>)</small></td>
+        <td style="padding:8px 14px; color:var(--text-muted)">What part of cell state to expose as h<sub>t</sub></td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Expose current trend and volume — not historical date context</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <p style="margin:0 0 6px; font-weight:600; color:var(--accent)">LSTM Cell — Data Flow</p>
+    <div class="code-block" style="margin:0"><pre style="font-size:0.72rem"> C_{t-1} ──( × forget )──────────────( + i_t × Ĉ_t )──────────────► C_t
+                │                           │                           │
+          Forget Gate                 Input Gate × Ĉ_t            tanh(C_t)
+                │                           │                           │
+x_t ────┐       └──────────────────────────┘                     Output Gate o_t
+        ├──► [compute f_t, i_t, Ĉ_t, o_t from x_t and h_{t-1}]        │
+h_{t-1}─┘                                                    h_t = o_t × tanh(C_t)</pre></div>
+    <p style="margin:8px 0 0; font-size:0.8rem; color:var(--text-muted)">Cell state update: C_t = f_t × C_{t-1} + i_t × Ĉ_t (addition, not multiplication). Gradients flow through the addition without shrinking — this is why LSTMs can remember events from hundreds of timesteps ago.</p>
+  </div>
+
+  <!-- ── PART 4: THE 3D TENSOR ── -->
+  <h2>Part 4: Data Structure for Sequences — The 3D Tensor</h2>
+  <p>RNNs require a specific 3D input shape. Almost every practical bug when using LSTMs comes from incorrect tensor dimensions.</p>
+
+  <div class="card" style="border-left:3px solid var(--accent); margin-bottom:16px">
+    <p style="margin:0 0 6px; font-weight:700; font-size:0.95rem">Input shape: <code>(samples, timesteps, features)</code></p>
+    <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">samples   = number of independent sequences (batch size)
+timesteps = number of consecutive time steps per sequence
+features  = number of variables at each timestep (17 for Ethereum)</pre></div>
+    <p style="margin:8px 0 0; font-size:0.83rem; color:var(--text-muted)">Ethereum: 830 daily rows × 17 features, reshaped into non-overlapping 30-day windows → <strong>(27, 30, 17)</strong>. 27 batches × 30 days × 17 features.</p>
+  </div>
+
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">Raw Time Series — 2D (wrong shape for LSTM)</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">X.shape = (830, 17)
+
+Day 1:  [price, tx, difficulty, ...]
+Day 2:  [price, tx, difficulty, ...]
+...
+Day 830:[price, tx, difficulty, ...]</pre></div>
+    </div>
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">Batched Sequences — 3D (correct for LSTM)</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">X_batch.shape = (27, 30, 17)
+
+Batch  0: Days  1– 30 (30-step window)
+Batch  1: Days 31– 60 (30-step window)
+...
+Batch 26: Days 781–810 (30-step window)</pre></div>
+    </div>
+  </div>
+
+  <div class="alert-box" style="margin-top:12px">
+    <strong>Variable-length sequences:</strong> Use <code>Input(shape=(None, features))</code> to accept any sequence length at runtime. The <code>None</code> means "timesteps unknown until inference." This is how the autoregressive generator runs on a growing sequence during future prediction.
+  </div>
+
+  <!-- ── PART 5: PREPROCESSING ── -->
+  <h2>Part 5: Preprocessing for Time Series</h2>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Step</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Images (CNN L6)</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Time Series (RNN L7)</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Why Different?</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Normalisation</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><code>X /= 255</code> → [0, 1]</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><code>StandardScaler()</code> → mean=0, std=1</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Pixel range is always 0–255; time series features have arbitrary units</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Train/Test Split</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Random shuffle, then split</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Sequential — last 15% becomes test</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Shuffling leaks future data into training</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Target y</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Class label from dataset</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><code>y = X[1:, price_col]</code> (next day)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Supervised forecasting: predict tomorrow given today</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">Missing values</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Rarely present</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Domain reasoning (ENS didn't exist pre-2017 → fill 0)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">The feature literally didn't exist — 0 is correct, not the mean</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>Complete Preprocessing Pipeline</h3>
+  <div class="code-block"><pre><span class="cm"># 1. Handle NaNs with domain reasoning</span>
+eth.loc[eth["eth_ens_register"].isnull(), "eth_ens_register"] = 0
+<span class="cm"># ENS didn't exist before May 2017 — fill with 0, not mean/median</span>
+
+<span class="cm"># 2. StandardScaler — mean=0, std=1 (not /255)</span>
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+<span class="kw">from</span> sklearn.pipeline <span class="kw">import</span> Pipeline
+pipeline = Pipeline([(<span class="str">'scaling'</span>, StandardScaler())])
+X = pipeline.fit_transform(eth.values)   <span class="cm"># (830, 17)</span>
+
+<span class="cm"># 3. Create supervised target: tomorrow's price</span>
+id_price = 1
+y = np.expand_dims(X[1:, id_price], -1)              <span class="cm"># (829, 1)</span>
+X_ = X[0:-1, np.arange(X.shape[1]) != id_price]      <span class="cm"># exclude price from input</span>
+
+<span class="cm"># 4. Sequential split — NEVER shuffle time series</span>
+<span class="kw">def</span> train_test_split_ts(X, y, test_ratio=0.15):
+    split = int(X.shape[0] * (1 - test_ratio))
+    return X[:split], y[:split], X[split:], y[split:]
+
+XTrain, yTrain, XTest, yTest = train_test_split_ts(X_, y)
+
+<span class="cm"># 5. Reshape to 3D: (N//30, 30, 16)</span>
+BATCH_SIZE = 30
+XTrain_b = reshape_to_batches(XTrain, BATCH_SIZE)
+yTrain_b = reshape_to_batches(yTrain, BATCH_SIZE)</pre></div>
+
+  <div class="key-concept">
+    <div class="label">Why Never Shuffle Time Series?</div>
+    <p>If you shuffle rows before splitting 80/20, rows from 2018 appear in your training set while rows from 2016 appear in the test set. Your model "sees the future" during training — a problem that doesn't exist in deployment. Always split sequentially: <strong>first T days → train, last N days → test.</strong></p>
+  </div>
+
+  <!-- ── PART 6: BUILDING THE MODEL ── -->
+  <h2>Part 6: Building an LSTM in Keras — Functional API</h2>
+
+  <h3>Sequential API vs Functional API</h3>
+  <p>The CNN practical used <code>Sequential()</code> — you just <code>.add()</code> layers in a stack. The RNN practical uses the <strong>Functional API</strong>: you create explicit tensor connections by calling each layer on the previous layer's output. This enables variable-length inputs and more complex architectures.</p>
+
+  <div class="code-block"><pre><span class="kw">from</span> keras.layers <span class="kw">import</span> Input, Dense, LSTM, TimeDistributed
+<span class="kw">from</span> keras.models <span class="kw">import</span> Model
+
+<span class="cm"># 1. Input: None timesteps = variable length at runtime</span>
+inputs = Input(shape=(<span class="kw">None</span>, 16))
+
+<span class="cm"># 2. LSTM — return_sequences=True outputs h at EVERY timestep</span>
+lstm_out = LSTM(
+    64,
+    activation=<span class="str">'tanh'</span>,
+    return_sequences=<span class="kw">True</span>   <span class="cm"># required for TimeDistributed below</span>
+)(inputs)
+
+<span class="cm"># 3. One scalar prediction per timestep — linear activation for regression</span>
+predictions = TimeDistributed(
+    Dense(1, activation=<span class="str">'linear'</span>)
+)(lstm_out)
+
+<span class="cm"># 4. Assemble model</span>
+model = Model(inputs=inputs, outputs=predictions)
+
+<span class="cm"># 5. Compile: MSE loss + rmsprop optimizer</span>
+model.compile(optimizer=<span class="str">'rmsprop'</span>, loss=<span class="str">'mean_squared_error'</span>)
+
+<span class="cm"># 6. Train</span>
+model.fit(XTrain_b, yTrain_b, epochs=100)</pre></div>
+
+  <h3>return_sequences — True vs False</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">return_sequences=False (default)</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">Input: [x1, x2, x3, x4, x5]
+          ↓   ↓   ↓   ↓   ↓
+LSTM:  [h1, h2, h3, h4, h5]
+                         ↓
+Output:            only h5
+
+Use for: classification
+(one label per full sequence)</pre></div>
+    </div>
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">return_sequences=True</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">Input: [x1, x2, x3, x4, x5]
+          ↓   ↓   ↓   ↓   ↓
+LSTM:  [h1, h2, h3, h4, h5]
+         ↓   ↓   ↓   ↓   ↓
+Output: all 5 hidden states
+
+Use for: regression per timestep,
+TimeDistributed, stacked LSTMs</pre></div>
+    </div>
+  </div>
+
+  <div class="alert-box" style="margin-top:8px">
+    <strong>Stacked LSTMs need return_sequences=True on all but the last LSTM.</strong> The second LSTM needs a 3D sequence as input. Without this flag the first LSTM returns only the last hidden state (2D) — Keras raises a shape error.
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <p style="margin:0 0 6px; font-weight:600; color:var(--accent)">TimeDistributed — same Dense layer applied independently at every timestep</p>
+    <p style="margin:0; font-size:0.83rem; color:var(--text-muted)"><code>TimeDistributed(Dense(1))</code> applies one Dense layer to each element of the time dimension. The Dense weights are shared across all timestep positions — one prediction per day. Without TimeDistributed, Dense would flatten the entire 3D tensor and produce only one output.</p>
+  </div>
+
+  <!-- ── PART 7: REGRESSION vs CLASSIFICATION ── -->
+  <h2>Part 7: Regression vs Classification — Key Differences</h2>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Aspect</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Classification (CNN L6)</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Regression (RNN L7)</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Loss function</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><code>categorical_crossentropy</code></td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><code>mean_squared_error</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Output activation</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><code>softmax</code> → probabilities sum to 1</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><code>linear</code> → any real-valued number</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Output neurons</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">N (one per class)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">1 scalar, or D for multi-dimensional output</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Primary metrics</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Accuracy, F1, Precision, Recall</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">MAE, RMSE, R²</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">Target labels</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Integer class indices / one-hot vectors</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Continuous floats (e.g. tomorrow's Ethereum price)</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── PART 8: EVALUATION ── -->
+  <h2>Part 8: Evaluating Time Series Predictions</h2>
+
+  <div class="card-grid">
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600; color:var(--accent)">MAE — Mean Absolute Error</p>
+      <div class="code-block" style="margin:0 0 6px"><pre style="font-size:0.78rem">MAE = (1/n) × Σ | y_true − y_pred |</pre></div>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Average magnitude of errors in the same units as y. Robust to outliers. Interprets as "on average my prediction is off by X units."</p>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600; color:var(--accent)">MSE — Mean Squared Error</p>
+      <div class="code-block" style="margin:0 0 6px"><pre style="font-size:0.78rem">MSE = (1/n) × Σ (y_true − y_pred)²</pre></div>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Penalises large errors heavily (squaring). Used as training loss. Units are squared — take √MSE = RMSE for same-unit interpretation.</p>
+    </div>
+  </div>
+
+  <div class="alert-box" style="margin-top:8px">
+    <strong>Interpreting normalised errors:</strong> After StandardScaler all values are in standard deviation units. MAE = 0.3 looks small but a standard deviation of Ethereum price might be $200+. Always <code>pipeline.inverse_transform()</code> before reporting to stakeholders.
+  </div>
+
+  <div class="code-block" style="margin-top:12px"><pre><span class="cm"># Evaluate</span>
+y_pred = model.predict(XTest_b)
+y_pred_flat = convert_3d_to_2d(y_pred)[:len(yTest)]
+
+print("MAE: {:.2f}".format(mean_absolute_error(yTest, y_pred_flat)))
+print("MSE: {:.2f}".format(mean_squared_error(yTest,  y_pred_flat)))
+
+<span class="cm"># Scatter plot: predicted vs measured — perfect model = points on diagonal</span>
+plt.scatter(yTest, y_pred_flat)
+plt.plot([y.min(), y.max()], [y.min(), y.max()], <span class="str">'k--'</span>, lw=2)
+plt.xlabel(<span class="str">'Measured'</span>); plt.ylabel(<span class="str">'Predicted'</span>)
+
+<span class="cm"># Temporal plot: how predictions track reality over time</span>
+plt.plot(y_pred_flat, label=<span class="str">'predicted'</span>)
+plt.plot(yTest, label=<span class="str">'actual'</span>)
+plt.legend()</pre></div>
+
+  <div class="card" style="margin-top:12px">
+    <p style="margin:0 0 6px; font-weight:600; color:var(--accent)">Reading the Scatter Plot</p>
+    <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">Perfect:              Points on the 45° diagonal
+Systematic bias:      All points above/below diagonal (over/under-predicts)
+High variance:        Points scattered far from diagonal (inconsistent)
+Heteroscedasticity:   Errors grow for large values — model fails on spikes</pre></div>
+  </div>
+
+  <!-- ── PART 9: ARCHITECTURE COMPARISON ── -->
+  <h2>Part 9: Architecture Experiments</h2>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Architecture</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Key change</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Effect / risk</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#60a5fa">LSTM-64</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Baseline: 1 LSTM, 64 units, no regularisation, 100 epochs</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Fast to train; may underfit complex patterns</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#a78bfa">LSTM-256</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">4× hidden units</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">More capacity; captures richer patterns; higher overfitting risk</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#34d399">Stacked + Dropout</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Two LSTM-64 layers, dropout=0.3, recurrent_dropout=0.04, L2 regularisation, 500 epochs</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Hierarchical temporal features; regularisation fights overfitting on ~700 training rows</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#fbbf24">Generator (LSTM-512)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Output all 17 features; trained on full dataset, 500 epochs</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Learns joint distribution; enables autoregressive future generation</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>Stacked LSTM Code</h3>
+  <div class="code-block"><pre>inputs = Input(shape=(<span class="kw">None</span>, 16))
+
+<span class="cm"># First LSTM: return_sequences=True required for second LSTM to get a sequence</span>
+x = LSTM(64,
+         return_sequences=<span class="kw">True</span>,
+         dropout=0.3,                            <span class="cm"># regularise input connections</span>
+         recurrent_dropout=0.04,                <span class="cm"># regularise recurrent connections</span>
+         kernel_regularizer=regularizers.l2(0.001),
+         recurrent_regularizer=regularizers.l2(0.001)
+        )(inputs)
+
+<span class="cm"># Second LSTM: also return_sequences=True (predict at every timestep)</span>
+x = LSTM(64,
+         return_sequences=<span class="kw">True</span>,
+         dropout=0.3, recurrent_dropout=0.04,
+         kernel_regularizer=regularizers.l2(0.001),
+         recurrent_regularizer=regularizers.l2(0.001)
+        )(x)
+
+x = TimeDistributed(Dense(64, activation=<span class="str">'sigmoid'</span>))(x)
+predictions = TimeDistributed(Dense(1, activation=<span class="str">'linear'</span>))(x)
+
+model = Model(inputs=inputs, outputs=predictions)
+model.compile(optimizer=<span class="str">'rmsprop'</span>, loss=<span class="str">'mean_squared_error'</span>)</pre></div>
+
+  <div class="alert-box" style="margin-top:8px">
+    <strong>Dropout vs Recurrent Dropout:</strong> <code>dropout</code> regularises input→cell connections. <code>recurrent_dropout</code> regularises the recurrent h<sub>t-1</sub>→cell connections. Use small recurrent dropout values (0.02–0.1) — aggressive values damage the memory pathway.
+  </div>
+
+  <!-- ── PART 10: AUTOREGRESSIVE PREDICTION ── -->
+  <h2>Part 10: Generating Future Predictions — Autoregressive Mode</h2>
+  <p>Once a model predicts all 17 features simultaneously, you can ask "what happens next month?" The technique: feed the model's output back as the next input.</p>
+
+  <div class="code-block"><pre><span class="cm"># Start from full history: shape (1, 830, 17)</span>
+X_batch = history_3d
+
+days_ahead = 90
+<span class="kw">for</span> day <span class="kw">in</span> range(days_ahead):
+    y_pred = model.predict(X_batch)
+    next_step = y_pred[0, -1, :]             <span class="cm"># latest prediction, shape (17,)</span>
+    next_step = reshape_for_concat(next_step)
+    X_batch = np.concatenate([X_batch, next_step], axis=1)  <span class="cm"># append and repeat</span></pre></div>
+
+  <div class="card" style="margin-top:12px">
+    <p style="margin:0 0 8px; font-weight:600; color:var(--accent)">Insight: The Model Learned Joint Probability</p>
+    <p style="margin:0 0 6px; font-size:0.83rem; color:var(--text-muted)">When generating far into the future, the model repeatedly predicted <em>October 2017</em> dates — even when forecasting months ahead. It had learned that a price of ~$285–300 with certain difficulty/volume values was typically seen in October — so it generated October to match. The LSTM learned <strong>the joint distribution P(date, price, tx, difficulty, …)</strong>, not chronological succession.</p>
+    <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">This is correct behaviour for a generative model — and an important reminder that sequence models learn patterns in the training data, not the laws of physics.</p>
+  </div>
+
+  <div class="alert-box" style="margin-top:12px">
+    <strong>Why autoregressive forecasting is hard:</strong> Each prediction has error ε. That error is fed back as input; the next prediction compounds it. After 30 steps, the model's input is far from its training distribution. This is why even complex LSTMs can lose to classical ARIMA models on short-horizon forecasting — especially when the training dataset is small (~830 rows).
+  </div>
+
+  <!-- ── PART 11: WHEN TO USE RNNs ── -->
+  <h2>Part 11: When to Use RNNs</h2>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Use RNNs / LSTMs when…</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Don't use RNNs when…</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; color:var(--text-muted)">✓ Input is a <strong>sequence</strong> where order matters (time series, audio, text)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">✗ Independent tabular features → gradient-boosted trees or MLP</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; color:var(--text-muted)">✓ Variable-length inputs are needed (different sentence/recording lengths)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">✗ Spatial/image data → CNNs</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; color:var(--text-muted)">✓ Long-range temporal dependencies matter (trend from 30 days ago)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">✗ Large NLP dataset → Transformers (faster, better, parallel training)</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; color:var(--text-muted)">✓ Anomaly detection in streaming temporal data</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">✗ Tiny dataset (&lt;1,000 sequences) — LSTMs need substantial data to generalise</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600; color:var(--accent)">RNNs excel at:</p>
+      <ul style="margin:0; padding-left:16px; font-size:0.83rem; color:var(--text-muted)">
+        <li>Time series forecasting (prices, weather, energy)</li>
+        <li>Streaming anomaly detection</li>
+        <li>Sequence-to-sequence (translation, summarisation)</li>
+        <li>Music, text, and handwriting generation</li>
+        <li>Speech recognition</li>
+      </ul>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">Common pitfalls:</p>
+      <ul style="margin:0; padding-left:16px; font-size:0.83rem; color:var(--text-muted)">
+        <li>Shuffling time series (future leaks into training)</li>
+        <li>Missing return_sequences=True for stacked layers</li>
+        <li>Reporting normalised MAE as real-world error</li>
+        <li>Expecting autoregressive generation to stay on-distribution</li>
+        <li>Using LSTMs on datasets too small to train them well</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <h2>Summary</h2>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Concept</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Key Point</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">RNN Hidden State</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">h_t = tanh(W_h·h_{t-1} + W_x·x_t + b) — same weights every timestep; carries memory forward</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">LSTM Advantage</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Cell state C_t is a gradient highway; 3 gates (forget/input/output) selectively read, write, and erase memory</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">3D Input Shape</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">(samples, timesteps, features) — reshape raw time series into sequential batches before feeding LSTM</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Temporal Split</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">NEVER shuffle time series — split sequentially so training is strictly before test</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Regression Setup</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">MSE loss + linear output activation + MAE/RMSE metrics — not categorical_crossentropy + softmax + accuracy</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">return_sequences</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">True → h at every step (stacking, TimeDistributed, regression). False → only final h (classification)</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">Autoregressive Limits</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Errors compound; model drifts off-distribution; complex LSTMs can underperform ARIMA on small datasets</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-nn7"></div></div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('nn7')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('nn6')">← L6: CNNs</button>
   </div>
 </div>
 
@@ -13382,7 +14784,9 @@ const TOPICS = {
   nn2: 'NN L2: MNIST Practical — Keras',
   nn3: 'NN L3: Gradient Descent — From Scratch',
   nn4: 'NN L4: Classification with Gradient Descent',
-  nn5: 'NN L5: Training a Neural Network'
+  nn5: 'NN L5: Training a Neural Network',
+  nn6: 'NN L6: Convolutional Neural Networks',
+  nn7: 'NN L7: Recurrent Neural Networks'
 };
 
 const ALL_QUESTIONS = [
@@ -13758,6 +15162,24 @@ const ALL_QUESTIONS = [
   {t:'nn5', q:'What is model checkpointing and why is it essential when training for many epochs?', opts:['It saves the model after every training step regardless of performance','It periodically saves model weights only when the monitored metric (e.g. val_accuracy) improves. Essential because training accuracy usually increases monotonically, but validation accuracy can peak early and then decline (overfitting). Without checkpointing you have no way to recover the best model.','It checkpoints the training data to prevent data loss','It is the same as early stopping'], ans:1, exp:'Training loss almost always decreases monotonically. Validation accuracy typically rises, plateaus, and then can drop as overfitting begins. Without checkpointing, if you train for 100 epochs and the best validation accuracy was at epoch 47, you have no way to get those weights back. ModelCheckpoint saves them automatically whenever val_accuracy improves. After training, load_weights() restores the best checkpoint — this is standard practice in all production training pipelines.'},
   {t:'nn5', q:'In the learning rate comparison (0.1, 0.01, 0.001) on the same architecture and data, why did lr=0.01 significantly outperform both 0.1 and 0.001 after 5 epochs?', opts:['lr=0.01 was the only one that used momentum','lr=0.1 caused unstable oscillations around minima and converged to a worse local optimum; lr=0.001 made steps too small to converge within 5 epochs; lr=0.01 found the sweet spot — large enough for efficient progress, small enough for stable convergence.','lr=0.01 is a fixed Keras default so it always works better','The learning rate only affects training speed, not final accuracy'], ans:1, exp:'Learning rate affects BOTH speed and the quality of the solution found. Too large (0.1): overshoots consistently, settles in a poorer basin. Too small (0.001): still converging after 5 epochs — with more epochs it would approach lr=0.01 performance. The "best" learning rate is data- and architecture-specific — this is why you always run a learning rate sweep. The standard starting point for SGD+momentum is 0.01; for Adam it\'s 0.001.'},
   {t:'nn5', q:'What is the key difference between L2 regularisation and Dropout, and when would you prefer each?', opts:['L2 adds a penalty term α·Σwᵢ² to the loss (penalises large weights, keeps them small and distributed). Dropout randomly zeros neurons during training (forces redundant representations). Both prevent overfitting but work differently — L2 is better when you want consistent small weights; Dropout is better for large networks where neuron co-adaptation is the problem.','L2 is for regression; Dropout is for classification','They are equivalent — both scale weights by the same factor','L2 penalises biases; Dropout penalises weights'], ans:0, exp:'L2 regularisation (weight decay) shrinks all weights proportionally toward zero, discouraging any single weight from becoming dominant. It works well with any optimiser. Dropout stochastically disables neurons, forcing the network to learn multiple independent pathways and preventing neurons from co-adapting. Dropout is particularly effective in fully-connected (Dense) layers of large networks. In practice, both are often used together: L2 via AdamW\'s weight_decay and Dropout layers in the architecture.'},
+
+  // NN6: Convolutional Neural Networks
+  {t:'nn6', q:'A fully-connected (Dense) layer applied to a flattened 224×224 RGB image and 512 neurons has 224×224×3×512 = 77 million weights in ONE layer. What is the equivalent number of weights in a single Conv2D(512, 3×3) layer applied to the same input?', opts:['Same — 77 million weights','512 × 3 × 3 × 3 = 13,824 weights total — the 3×3×3 filter has 27 values per output channel, × 512 output channels. These 13,824 weights are SHARED across every spatial position in the image — the same filter scans the whole 224×224 grid.','512 × 224 × 224 weights (one weight per output position)','3 × 3 = 9 weights (one filter, ignoring channels and depth)'], ans:1, exp:'Parameter sharing is the key efficiency of convolution. Instead of connecting every input pixel to every neuron, a single 3×3×3 filter slides across the image. The same 27 weights are reused at every (i,j) position. With 512 such filters you get 512 different feature detectors, but still only 13,824 total parameters — roughly 5,600× fewer than the Dense equivalent. This is why CNNs can handle high-resolution images without running out of memory.'},
+  {t:'nn6', q:'What does the output size formula (Input − Filter + 1) tell you, and what is the output size of a 5×5 filter applied to a 32×32 image without padding?', opts:['Output = 32×32 — the size is always preserved','Output = 28×28. The formula counts how many positions the filter can be placed without going outside the image boundary. With a 5×5 filter on a 32×32 image: 32 − 5 + 1 = 28 positions per row/column.','Output = 32+5−1 = 36×36 — padding always increases size','Output = 5×5 — the filter size determines the output'], ans:1, exp:'The filter centre starts at position (2,2) and can move to position (29,29) before it would fall off the edge — that is 28 positions in each dimension. 32 − 5 + 1 = 28. Without padding, every convolutional layer shrinks the spatial dimensions slightly. With same padding (zeros added to the border) the output stays 32×32. Deep networks therefore use same padding by default to avoid losing spatial resolution too quickly through the network.'},
+  {t:'nn6', q:'A MaxPooling2D(2×2) layer receives the following 4×4 feature map: [[1,3,2,4],[5,6,1,2],[3,2,7,8],[1,4,6,9]]. What is the output?', opts:['The full 4×4 map — pooling does not change size','[[6,4],[4,9]] — taking the maximum of each non-overlapping 2×2 window: top-left max(1,3,5,6)=6; top-right max(2,4,1,2)=4; bottom-left max(3,2,1,4)=4; bottom-right max(7,8,6,9)=9. Output is 2×2.','[[3.75, 2.25],[2.5, 7.5]] — MaxPooling takes the average, not maximum','[[1,4],[1,9]] — taking corners only'], ans:1, exp:'MaxPooling divides the input into non-overlapping windows and takes the maximum in each. With a 2×2 window over a 4×4 input: 4 windows → 2×2 output (spatial dimensions halved). The maximum preserves the strongest activation — "this feature was detected here." This achieves a degree of translation invariance: if a detected feature shifts by 1 pixel within its pool window, the maximum output is unchanged. That is why pooling makes CNNs robust to small shifts.'},
+  {t:'nn6', q:'When training a CNN on MNIST, you should set horizontal_flip=False in your ImageDataGenerator. Why?', opts:['Horizontal flipping is computationally expensive','Flipping images horizontally would change the semantic meaning of some digits — a "6" flipped looks like a "9", and a "2" or "7" look different flipped. Augmentations that create new, valid-looking examples of the WRONG class introduce incorrect labels and hurt model performance.','Horizontal flipping only works on RGB images, not grayscale','ImageDataGenerator does not support horizontal_flip for MNIST'], ans:1, exp:'Data augmentation must preserve the true label. For natural images (cats, dogs) horizontal flipping is perfectly valid — a horizontally flipped cat is still a cat. For digit recognition, flipping is problematic: 6↔9, and many other digits (2, 3, 7) become unrecognisable or resemble different digits. Rotation is safer — a slightly rotated 3 is still a 3. Always ask: "If a human saw this transformed image, would they still give it the same label?"'},
+  {t:'nn6', q:'The training accuracy of your CNN reaches 99.5% but validation accuracy plateaus at 93%. The training loss keeps falling while validation loss starts rising after epoch 8. What is happening and what is the best fix?', opts:['The model is underfitting — add more layers','The model is overfitting — it has memorised the training data. The growing gap between train and val performance, combined with rising val loss, is the classic signature. Best fixes: add Dropout layers, use data augmentation, or apply early stopping to recover the epoch-8 weights.','The learning rate is too high — reduce it by 10×','The batch size is too small — increase to 512'], ans:1, exp:'This is textbook overfitting: training performance improves while validation performance degrades. The model has moved past the generalisation sweet spot and started memorising training-specific details (noise, irrelevant patterns). Reducing the learning rate would slow training but would not address the fundamental problem. The correct treatments reduce the model\'s ability to memorise: Dropout randomly deactivates neurons (prevents co-adaptation), augmentation artificially increases training variety, and early stopping stops training before the generalisation gap grows too large. In this case, restoring weights from epoch 8 would likely give the best val accuracy.'},
+  {t:'nn6', q:'What is the difference between precision and recall, and in what situation would you prioritise recall over precision?', opts:['Precision and recall are the same metric computed differently','Precision = TP/(TP+FP): of all predictions for class X, what fraction were actually X? Recall = TP/(TP+FN): of all true X examples, what fraction did the model catch? Prioritise recall when missing a true positive is very costly — e.g. medical diagnosis (missing cancer is worse than a false alarm), fraud detection, or security screening.','Precision measures training accuracy; recall measures test accuracy','Recall is only used for binary classification; precision works for multi-class'], ans:1, exp:'The precision-recall tradeoff: you can always improve recall by predicting positive more liberally (you catch more true cases), but this also increases false positives and reduces precision. For medical diagnosis (cancer detection), a missed case (false negative) is far more serious than a false alarm that leads to further testing — so you optimise for high recall even if precision is lower. For spam filtering, you might prioritise precision — having important emails mislabelled as spam (false positive) is worse than receiving some spam. F1 score is the harmonic mean of both and is useful when you want a single balanced metric.'},
+  {t:'nn6', q:'In transfer learning with VGG16, you freeze all base layers and only train a new Dense head. After initial training, you unfreeze the last 4 layers for fine-tuning. Why must you use a much smaller learning rate (e.g. 1e-5 instead of 1e-3) for fine-tuning?', opts:['Smaller learning rate is only needed when training from scratch','The pretrained weights already contain high-quality, finely tuned representations. A large learning rate would destroy these representations with aggressive weight updates before the network adapts to the new task. A tiny learning rate makes small, careful adjustments that preserve most of the pretrained structure while adapting the last layers to your specific domain.','A smaller learning rate prevents the GPU from overheating','Keras requires learning rate below 1e-4 when base_model.trainable=True'], ans:1, exp:'This is the core intuition of fine-tuning: the pretrained weights are not random — they encode years of learning and represent the culmination of training on 1.2 million images. Large gradient steps would wipe this out. With lr=1e-5, each parameter update moves only a tiny amount — enough to shift the model toward your specific task while preserving the general feature detectors in earlier layers. Using the same lr=1e-3 as the initial head training would cause "catastrophic forgetting" — the fine-tuned layers would quickly forget what they learned on ImageNet and start learning from scratch, defeating the purpose of transfer learning.'},
+
+  // NN7: Recurrent Neural Networks
+  {t:'nn7', q:'What is the fundamental structural difference between a feedforward network and an RNN?', opts:['RNNs use convolutional filters instead of dense weights','RNNs maintain a hidden state h_t that is passed from one timestep to the next. Each output depends on both the current input and the previous hidden state, creating an implicit memory of past inputs. Feedforward networks are stateless — each input is processed independently.','RNNs can only process fixed-length inputs','RNNs use a different activation function (tanh instead of relu)'], ans:1, exp:'The hidden state is the defining feature of an RNN. At each step t, h_t = tanh(W_h · h_{t-1} + W_x · x_t + b). The same weight matrices W_h and W_x are reused at every timestep (weight sharing in time). This is analogous to how a CNN reuses the same filter weights at every spatial position. The hidden state carries a compressed summary of all previous inputs, enabling the network to use context from earlier in the sequence.'},
+  {t:'nn7', q:'Why does the vanishing gradient problem occur in vanilla RNNs, and what does LSTM do to solve it?', opts:['Vanishing gradients are caused by too many layers — LSTM solves this by using fewer layers','During backpropagation through time, gradients are multiplied by W_h at each step. If |W_h| < 1, the gradient shrinks exponentially over long sequences — early timesteps get near-zero gradient and the network can\'t learn long-range dependencies. LSTM solves this by introducing a cell state C_t updated via addition (not multiplication), providing a highway for gradients to flow through many steps without shrinking.','Vanishing gradients only occur with sigmoid activations — LSTM uses relu instead','LSTM uses a larger learning rate to compensate for vanishing gradients'], ans:1, exp:'The key insight is additive vs multiplicative updates. In a vanilla RNN, every backward step multiplies the gradient by W_h. If all eigenvalues of W_h are < 1, the gradient vanishes after ~10 steps. If > 1, it explodes. In an LSTM, the cell state update is: C_t = f_t × C_{t-1} + i_t × Ĉ_t. The addition term means gradients can flow through C without being repeatedly multiplied by a small number. The forget gate f_t can also learn to be close to 1 (keep memory intact), which further stabilises the gradient path.'},
+  {t:'nn7', q:'An Ethereum dataset has 830 daily rows and 17 features. You call reshape_to_batches(X, batch_size=30). What is the output shape, and what does each axis represent?', opts:['(830, 17) — the shape is unchanged','(27, 30, 17) — 27 non-overlapping 30-day windows (830//30 = 27), each containing 30 timesteps × 17 features. The 10 leftover rows are dropped. This 3D tensor is the required LSTM input shape: (samples, timesteps, features).','(30, 830, 17) — 30 batches of the full history','(1, 830, 17) — one batch containing the full sequence'], ans:1, exp:'LSTM requires 3D input: (samples, timesteps, features). The raw 2D array (830, 17) is split into non-overlapping windows of 30 consecutive days each. 830 // 30 = 27 complete windows; the remaining 10 rows are discarded. The result (27, 30, 17) means: 27 independent 30-day sequences, each with 17 feature values per day. The batch_size=30 controls the sequence length, not the gradient descent batch size — this is a common point of confusion.'},
+  {t:'nn7', q:'You are building a stacked LSTM (two LSTM layers). Your code raises a shape error on the second LSTM layer. What is most likely the cause and fix?', opts:['The second LSTM has too many units — reduce to match the first','The first LSTM layer is missing return_sequences=True. By default, LSTM only returns the final hidden state (a 2D tensor). The second LSTM layer expects a 3D sequence of hidden states as input. Setting return_sequences=True on the first LSTM makes it output h at every timestep, giving the second LSTM the 3D input it needs.','You must use the Sequential API for stacked LSTMs — the Functional API does not support stacking','The LSTM layers need matching activation functions'], ans:1, exp:'return_sequences controls what an LSTM outputs. False (default): output shape is (batch, units) — only the last hidden state. True: output shape is (batch, timesteps, units) — h at every step. The second LSTM needs (batch, timesteps, units) as input. Without return_sequences=True on the first layer, you pass a 2D tensor to a layer expecting 3D — Keras raises a shape error. Rule: all LSTM layers in a stack except the last need return_sequences=True.'},
+  {t:'nn7', q:'You split an Ethereum time series by shuffling all rows and taking a random 80/20 train/test split. Why is this wrong, and what should you do instead?', opts:['Shuffling is fine — it prevents the model from memorising the order of training examples','Shuffling creates data leakage: rows from 2018 appear in training while rows from 2016 appear in the test set. The model "sees the future" during training — an unrealistically easy problem that does not reflect deployment conditions. Always split sequentially: training uses the first T rows, test uses the last N rows.','Shuffling only matters for classification problems, not regression','The 80/20 ratio is wrong for time series — you should use 99/1'], ans:1, exp:'In deployment you only ever have past data available. A sequential split simulates this correctly: train on everything up to date D, test on everything after D. A random split allows future observations to appear in training — the model can learn patterns from 2018 that then appear in "test" rows from 2016, making it look like the model is predicting well when it is actually just memorising future events. This is the definition of data leakage. The practical uses test_ratio=0.15 and a strictly sequential split.'},
+  {t:'nn7', q:'Which combination is correct for a time series regression task (predicting tomorrow\'s Ethereum price)?', opts:['loss="categorical_crossentropy", output activation="softmax", metric="accuracy"','loss="mean_squared_error", output activation="linear", metric="MAE" — MSE penalises large errors during training; linear activation allows the output to be any real number (price); MAE gives interpretable error in the same units as the target.','loss="mean_squared_error", output activation="sigmoid", metric="accuracy"','loss="binary_crossentropy", output activation="relu", metric="RMSE"'], ans:1, exp:'Regression predicts a continuous real-valued output. Softmax forces probabilities summing to 1 — meaningless for price prediction. ReLU would clip negative predictions (prices can go negative in standardised space). Linear activation places no constraint on the output, which is what you want. MSE is the standard regression loss — squaring errors means large mispredictions are penalised more heavily, encouraging the model to avoid big misses. MAE (mean absolute error) is then reported as a metric because it is in the same units as the standardised price and easy to interpret.'},
+  {t:'nn7', q:'After training an LSTM-512 to predict all 17 Ethereum features, the autoregressive generator repeatedly predicted October 2017 dates when forecasting 90 days into the future. What does this reveal about what the model learned?', opts:['The model has a bug in the date preprocessing step','The LSTM learned the joint probability distribution P(date, price, tx, difficulty, …). It associated a specific price level and difficulty combination with October 2017 conditions seen in training. When generating those feature values, it predicted October as the corresponding date — not because it understands time, but because it learned that those feature combinations co-occurred with October in the training data.','The model correctly predicted that Ethereum prices would return to October 2017 levels','The model forgot to normalise the date feature'], ans:1, exp:'This is a profound insight about what sequence models learn. The LSTM did not learn "what day comes after today" — it learned the statistical relationships between all 17 features simultaneously. When the generated price/difficulty/volume values matched the October 2017 regime from the training set, the model predicted October dates because that is what co-occurred in training. The model is a density estimator of the joint distribution, not a time-aware predictor. This is why autoregressive generation eventually collapses back toward the training distribution — and why time series forecasting remains an open problem.'},
 
   // NN3: Gradient Descent
   {t:'nn3', q:'What is the gradient descent update rule and what does each term mean?', opts:['θ_new = θ_old + λ × g(θ) — add the gradient scaled by learning rate','θ_new = θ_old − λ × g(θ) — subtract the gradient scaled by learning rate. λ controls step size; g(θ) tells you the slope (direction of steepest ascent). Subtracting moves downhill.','θ_new = θ_old / g(θ) — divide by gradient to normalise','θ_new = −λ × g(θ) — reset to gradient times learning rate'], ans:1, exp:'We SUBTRACT the gradient because g(θ) points uphill (in the direction of increasing loss). Moving in the opposite direction (downhill) reduces the loss. λ (learning rate) scales how big the step is. Too small → slow. Too large → overshoot and potentially diverge. At a minimum, g(θ)=0 so the update becomes θ_new = θ_old (no movement — you\'ve arrived).'},
@@ -14139,6 +15561,25 @@ const FLASHCARDS = [
   {t:'ts9', front:'Why AR lag 7 and what it means for daily news traffic', back:'ar_select_order(train, maxlag=14, ic="bic")\n→ selected lag 7\n\nMeans: last week same-day value is the best predictor\n→ Monday predicted from last Monday\n→ captures the weekly cycle directly\n\nWhy not lag 1 (PACF spike was bigger)?\n→ lag 7 gives better BIC overall\n→ weekly same-day is more useful for forecasting\n→ lag 1 alone misses the weekly pattern\n\nAR result: 15% error rate — correct direction,\ntoo smooth, misses sharp weekly zigzag,\nno way to handle Iran attack spike'},
   {t:'ts9', front:'Prophet event names — why unique names matter', back:'Each unique holiday name gets its own coefficient\n\nCorrect: separate names\nevents = {"holiday": ["us_election", "air_india_crash", ...]}\n→ Prophet learns: election = +20M, crash = +11M\n\nWrong: same name for all events\nevents = {"holiday": ["event", "event", "event", ...]}\n→ Prophet learns one average across all events\n→ overestimates some, underestimates others\n\nFor two days of the same event (Iran attack days):\nuse the SAME name → one effect learned across both\n\nProphet result: 9% error rate — events DataFrame\nabsorbed Iran spike, clean trend from day 1'},
   {t:'ts9', front:'Key business insights from Prophet components', back:'Holidays panel (event effect sizes above baseline):\n• Iran attack: +14.5M — biggest single event\n• Air India crash: +11M\n• Trump assassination attempt: +8.5M\n• US Election: +20M+ on results day\n\nWeekly: Wednesday peak (+900K), Sat/Sun lowest (-1.5M)\n→ publish important content Tue–Thu\n\nYearly: May strongest (+3M), Nov–Dec weakest (-3M)\n→ plan capacity around US political calendar\n\nKey insight: single breaking news event delivers\n5–10× the traffic of the entire yearly seasonal swing\n→ infrastructure must be sized for events, not seasons'},
+  // NN6: Convolutional Neural Networks flashcards
+  {t:'nn6', front:'What is convolution in the context of CNNs?', back:'Sliding a small filter (kernel) across an image.\nAt each position: element-wise multiply filter × patch, sum = one output value.\n\nFormula: O(i,j) = Σₕ Σ_w  I(i+h, j+w) × K(h,w)\n\nKey properties:\n• Same filter weights reused at every position (weight sharing)\n• Output size = Input − Filter + 1 (without padding)\n• High output = filter pattern detected here\n• Near zero = pattern not present\n\n9 weights scan a 1000×1000 image — same 9 weights everywhere'},
+  {t:'nn6', front:'Why are CNNs better than Dense layers for images?', back:'Three fundamental reasons:\n\n1. Parameter efficiency\n   Dense: 224×224×3 × 512 = 77M weights per layer\n   Conv:  3×3×3 × 512 = 13,824 weights (shared everywhere)\n\n2. Spatial awareness\n   Convolution keeps the 2D grid intact.\n   Dense flattening destroys neighbourhood relationships.\n\n3. Translation invariance\n   Same filter finds a feature anywhere in the image.\n   Dense would need to re-learn every shifted version.'},
+  {t:'nn6', front:'What does MaxPooling2D(2×2) do?', back:'Takes the maximum value in each non-overlapping 2×2 window.\n\nEffect:\n• Halves spatial dimensions (28×28 → 14×14)\n• Keeps the strongest activation ("feature IS here")\n• Achieves translation invariance:\n  if a feature shifts 1 pixel, the max is still captured\n\nWhy not just stride=2?\nPooling is max (keeps strongest signal).\nStride=2 just skips positions.\n\nAlt: AveragePooling takes mean instead of max.'},
+  {t:'nn6', front:'The full CNN preprocessing checklist', back:'1. Normalise\n   X /= 255.0\n   → floats in [0, 1]\n\n2. Reshape to 4D tensor\n   X = X.reshape(-1, H, W, C)\n   → (samples, height, width, channels)\n\n3. One-hot encode labels\n   Y = to_categorical(y, num_classes)\n   → 7 becomes [0,0,0,0,0,0,0,1,0,0]\n\n4. Augment (train set only)\n   rotation_range, shift, flip\n   Only if semantically valid!\n\n5. Always use TRAIN statistics for test normalisation\n   → no data leakage'},
+  {t:'nn6', front:'How to read training curves — overfitting vs underfitting', back:'Plot train loss + val loss over epochs.\nPlot train acc + val acc over epochs.\n\nGood fit:\n  Both losses decrease together, small gap\n  → keep training or done\n\nOverfitting:\n  Train loss ↓, val loss ↑ (diverging)\n  Train acc >> val acc\n  → Dropout, augmentation, early stopping\n\nUnderfitting:\n  Both losses stay high, barely decrease\n  → deeper model, longer training, fix preprocessing\n\nEarly stopping:\n  EarlyStopping(monitor="val_loss", patience=5,\n                restore_best_weights=True)'},
+  {t:'nn6', front:'Precision vs Recall — formulas and when to use each', back:'Precision = TP / (TP + FP)\n  "Of my predictions for class X, how many were right?"\n  Optimise when false alarms are costly (spam filter)\n\nRecall = TP / (TP + FN)\n  "Of all real class X examples, how many did I catch?"\n  Optimise when misses are costly (cancer detection)\n\nF1 = 2 × (P × R) / (P + R)\n  Harmonic mean — use when you want one balanced metric\n\nHigh P, low R: conservative — catches few, rarely wrong\nLow P, high R: aggressive — catches all, many false alarms\n\nsklearn: classification_report(y_true, y_pred)'},
+  {t:'nn6', front:'Transfer learning — feature extraction vs fine-tuning', back:'Feature extraction (faster, less data needed):\n  base_model.trainable = False\n  → freeze all pretrained weights\n  → only new head is trained\n  Best when: small dataset, similar to ImageNet\n\nFine-tuning (better accuracy, more data needed):\n  Unfreeze last few blocks\n  Use TINY learning rate (1e-5, not 1e-3)\n  → small adjustments preserve pretrained features\n  "catastrophic forgetting" if lr too large\n\nRule of thumb:\n  Small dataset + similar domain → feature extraction\n  Large dataset + different domain → fine-tune all\n  In between → fine-tune last few blocks'},
+
+  // NN7: Recurrent Neural Networks flashcards
+  {t:'nn7', front:'RNN hidden state — the core equation', back:'h_t = tanh( W_h · h_{t-1}  +  W_x · x_t  +  b )\n\nW_h  = weight matrix for previous hidden state\nW_x  = weight matrix for current input\nb    = bias\ntanh = squash to [−1, +1]\n\nKey properties:\n• Same W_h and W_x reused at every timestep\n  (weight sharing in time)\n• h_t carries memory of all previous inputs\n• Initial h_0 is usually all zeros\n\nProblem: multiply by W_h at every step\n→ |W_h| < 1: vanishing gradient\n→ |W_h| > 1: exploding gradient\nSolution: LSTM'},
+  {t:'nn7', front:'LSTM — two pathways and three gates', back:'Two pathways:\n  C_t  = cell state  (long-term memory highway)\n  h_t  = hidden state (short-term output)\n\nCell state update:\n  C_t = f_t × C_{t-1}  +  i_t × Ĉ_t\n  (addition → gradients don\'t vanish)\n\nThree gates (all sigmoid → output 0–1):\n  Forget gate f_t: what to erase from C\n    → 0 = forget, 1 = keep\n  Input gate  i_t: what new info to write to C\n    (combined with Ĉ_t = tanh(...))\n  Output gate o_t: what part of C to expose\n    h_t = o_t × tanh(C_t)\n\nWhy it works: additive update to C prevents\ngradient from shrinking over long sequences'},
+  {t:'nn7', front:'3D tensor shape for LSTM — (samples, timesteps, features)', back:'RNN/LSTM input must be 3D:\n  (samples, timesteps, features)\n\nEthereum example:\n  Raw: (830, 17) — 830 daily rows, 17 features\n  Batched: (27, 30, 17)\n    27 = 830 // 30  (non-overlapping windows)\n    30 = window size (consecutive days)\n    17 = features per day\n\nVariable-length: Input(shape=(None, 17))\n  → None means "any timestep count at runtime"\n  → Enables autoregressive generation on\n    a growing sequence\n\nCommon bug: passing 2D array to LSTM\n→ must reshape_to_batches first'},
+  {t:'nn7', front:'Time series preprocessing checklist', back:'1. Handle NaNs with domain reasoning\n   eth_ens_register NaN → fill 0\n   (feature didn\'t exist pre-May 2017)\n\n2. Scale with StandardScaler — NOT /255\n   pipeline = Pipeline([(\'scaling\', StandardScaler())])\n   X = pipeline.fit_transform(eth.values)\n\n3. Create supervised target\n   y = X[1:, price_col]  # tomorrow\'s price\n   X_ = X[:-1, other_cols]\n\n4. Sequential train/test split — NEVER SHUFFLE\n   first 85% → train\n   last  15% → test\n\n5. Reshape to 3D batches\n   X_b = reshape_to_batches(X_, batch_size=30)\n   → (N//30, 30, features)'},
+  {t:'nn7', front:'return_sequences=True vs False — when and why', back:'return_sequences=False (default):\n  LSTM outputs only the LAST hidden state\n  Output shape: (batch, units)\n  → Use for classification (one label per sequence)\n  → Use for the last LSTM in a stack\n\nreturn_sequences=True:\n  LSTM outputs h at EVERY timestep\n  Output shape: (batch, timesteps, units)\n  → Use for regression (one prediction per step)\n  → Use for TimeDistributed layers\n  → REQUIRED for all LSTMs except the last\n    when stacking multiple LSTM layers\n\nCommon error:\n  Stack two LSTMs, forget return_sequences=True\n  on the first → Keras shape error\n  (2D tensor fed to layer expecting 3D)'},
+  {t:'nn7', front:'Regression vs Classification — quick reference', back:'Classification (CNN L6):\n  loss = categorical_crossentropy\n  output activation = softmax\n  metrics = accuracy, F1, precision, recall\n  target y = integer class / one-hot vector\n\nRegression (RNN L7):\n  loss = mean_squared_error\n  output activation = linear\n  metrics = MAE, RMSE, R²\n  target y = continuous float (e.g. price)\n\nFormulas:\n  MAE  = (1/n) Σ |y_true − y_pred|\n  MSE  = (1/n) Σ (y_true − y_pred)²\n  RMSE = √MSE  (same units as y)\n\nWARNING: interpret MAE in normalised space\n  MAE = 0.3 std_devs ≠ 0.3 dollars\n  Always inverse_transform before reporting'},
+  {t:'nn7', front:'Autoregressive generation — process and limits', back:'Process:\n  1. Start with full history as 3D tensor\n  2. Predict next step with model.predict()\n  3. Append prediction to the input sequence\n  4. Repeat steps 2–3 for N days ahead\n\nPython:\n  for day in range(90):\n    y_pred = model.predict(X_batch)\n    next_step = y_pred[0, -1, :]  # last timestep\n    X_batch = concat([X_batch, next_step])\n\nWhy it breaks down:\n  Each prediction has error ε\n  ε is fed back as input → next error is worse\n  After 30 steps: far from training distribution\n\nKey insight — the model learned JOINT probability:\n  P(date, price, tx, difficulty, …)\n  Not time succession — correlations between features\n  → "hallucinating" October dates when price matches\n     October 2017 training conditions'},
+  {t:'nn7', front:'When to use RNNs vs alternatives', back:'Use RNNs / LSTMs when:\n  ✓ Sequence where order matters (time series, audio)\n  ✓ Variable-length inputs needed\n  ✓ Long-range temporal dependencies\n  ✓ Streaming anomaly detection\n\nUse CNNs instead when:\n  ✗ Input is spatial / image data\n\nUse Gradient Boosted Trees instead when:\n  ✗ Independent tabular features (no time order)\n\nUse Transformers instead when:\n  ✗ Large NLP dataset (faster, parallel, better)\n\nUse classical stats (ARIMA, Prophet) when:\n  ✗ Short horizon, small dataset — often outperforms\n    LSTMs in practice with <1000 training points\n\nRNN pitfall checklist:\n  • Never shuffle time series\n  • return_sequences=True for stacking\n  • inverse_transform before reporting errors\n  • Autoregressive errors compound — set expectations'},
+
   // NN4: Classification with Gradient Descent flashcards
   {t:'nn4', front:'Why center data before gradient descent classification?', back:'Centering: X = X - np.mean(X, axis=0)\n→ Each feature now has mean = 0\n\nWhy it matters:\n• Bias parameter b initialised near 0\n• If data is at e.g. sepal length ≈ 5-8, b must compensate\n  → first gradient steps just correct this offset\n• With centered data: b=0 is already near optimal\n  → gradient descent makes real progress from step 1\n\nAlways center/normalise before SGD-based classifiers'},
   {t:'nn4', front:'SGDClassifier key parameters', back:'loss= → selects the MODEL:\n  "log_loss"  → Logistic Regression (cross-entropy)\n  "hinge"     → SVM (margin maximisation)\n  "modified_huber" → smooth SVM variant\n\nlearning_rate= → how lr changes:\n  "constant"  → fixed at eta0 throughout\n  "adaptive"  → starts at eta0, divides by 5\n                when loss stops decreasing\n\neta0= → initial learning rate value (e.g. 0.01)'},
@@ -14208,7 +15649,7 @@ function nav(page) {
   document.getElementById('main').scrollTop = 0;
   const navEl = document.querySelector(`[onclick="nav('${page}')"]`);
   if (navEl) navEl.classList.add('active');
-  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9','nn1','nn2','nn3','nn4','nn5'].includes(page)) {
+  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9','nn1','nn2','nn3','nn4','nn5','nn6','nn7'].includes(page)) {
     markVisited(page);
     renderInlineQuiz(page);
   }
