@@ -81,12 +81,13 @@ ul li, ol li { color: var(--text-muted); font-size: 0.88rem; line-height: 1.8; }
 /* CODE */
 .code-block { background: var(--code-bg); border: 1px solid #2d3561; border-radius: 8px; padding: 16px; margin: 14px 0; overflow-x: auto; }
 .code-block pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8rem; color: #c9d1d9; line-height: 1.6; white-space: pre; }
+code { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.79rem; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; color: #c9d1d9; border: 1px solid rgba(45,53,97,0.4); }
 .kw { color: #ff7b72; } .fn { color: #d2a8ff; } .st { color: #a5d6ff; } .cm { color: #8b949e; } .nu { color: #79c0ff; }
 
 /* TABLE */
 table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.83rem; }
 th { background: var(--card-bg); padding: 10px 14px; text-align: left; color: var(--accent); border-bottom: 1px solid var(--card-border); font-weight: 600; }
-td { padding: 9px 14px; border-bottom: 1px solid rgba(45,53,97,0.5); color: var(--text-muted); }
+td { padding: 8px 12px; border-bottom: 1px solid rgba(45,53,97,0.5); color: var(--text-muted); line-height: 1.4; }
 tr:hover td { background: rgba(91,138,245,0.04); }
 
 /* BADGES */
@@ -225,21 +226,23 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
 
   <div class="nav-item nav-item-chapter" onclick="toggleChapter('classification')"><span class="icon">📚</span> Supervised Classification<span class="chapter-arrow" id="arrow-classification">▾</span></div>
   <div class="nav-chapter-items" id="chapter-classification">
-    <div class="nav-item nav-item-sub" onclick="nav('w9')"  id="nav-w9" ><span class="icon">🎯</span> L9: Intro to Classification<span class="check" id="check-w9"></span></div>
-    <div class="nav-item nav-item-sub" onclick="nav('nb')"  id="nav-nb" ><span class="icon">🎲</span> L9b: Naive Bayes<span class="check" id="check-nb"></span></div>
-    <div class="nav-item nav-item-sub" onclick="nav('w10')" id="nav-w10"><span class="icon">📈</span> L10: Logistic Regression<span class="check" id="check-w10"></span></div>
-    <div class="nav-item nav-item-sub" onclick="nav('w11')" id="nav-w11"><span class="icon">📊</span> L11: Evaluation Metrics<span class="check" id="check-w11"></span></div>
-    <div class="nav-item nav-item-sub" onclick="nav('w12')" id="nav-w12"><span class="icon">🌳</span> L12: Decision Trees<span class="check" id="check-w12"></span></div>
-    <div class="nav-item nav-item-sub" onclick="nav('w13')" id="nav-w13"><span class="icon">🌲</span> L13: Random Forests<span class="check" id="check-w13"></span></div>
-    <div class="nav-item nav-item-sub" onclick="nav('w14')" id="nav-w14"><span class="icon">📍</span> L14: KNN<span class="check" id="check-w14"></span></div>
-    <div class="nav-item nav-item-sub" onclick="nav('w15')" id="nav-w15"><span class="icon">↔️</span> L15: SVM<span class="check" id="check-w15"></span></div>
-    <div class="nav-item nav-item-sub" onclick="nav('w16')" id="nav-w16"><span class="icon">🔄</span> L16: Full Pipeline<span class="check" id="check-w16"></span></div>
-    <div class="nav-item nav-item-sub" onclick="nav('mc')"  id="nav-mc" ><span class="icon">🎯</span> L17: Multiclass<span class="check" id="check-mc"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('cov')"><span class="icon">🏠</span> Overview</div>
+    <div class="nav-item nav-item-sub" onclick="nav('w9')"  id="nav-w9" ><span class="icon">🎯</span> L1: Intro to Classification<span class="check" id="check-w9"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('nb')"  id="nav-nb" ><span class="icon">🎲</span> L2: Naive Bayes<span class="check" id="check-nb"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('w10')" id="nav-w10"><span class="icon">📈</span> L3: Logistic Regression<span class="check" id="check-w10"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('w11')" id="nav-w11"><span class="icon">📊</span> L4: Evaluation Metrics<span class="check" id="check-w11"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('w12')" id="nav-w12"><span class="icon">🌳</span> L5: Decision Trees<span class="check" id="check-w12"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('w13')" id="nav-w13"><span class="icon">🌲</span> L6: Random Forests<span class="check" id="check-w13"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('w14')" id="nav-w14"><span class="icon">📍</span> L7: KNN<span class="check" id="check-w14"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('w15')" id="nav-w15"><span class="icon">↔️</span> L8: SVM<span class="check" id="check-w15"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('w16')" id="nav-w16"><span class="icon">🔄</span> L9: Full Pipeline<span class="check" id="check-w16"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('mc')"  id="nav-mc" ><span class="icon">🎯</span> L10: Multiclass<span class="check" id="check-mc"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('csheet')" id="nav-csheet"><span class="icon">📋</span> Classification Cheat Sheet</div>
   </div>
 
   <div class="nav-item nav-item-chapter" onclick="toggleChapter('ensemble')"><span class="icon">📚</span> Ensemble Methods<span class="chapter-arrow" id="arrow-ensemble">▾</span></div>
   <div class="nav-chapter-items" id="chapter-ensemble">
+    <div class="nav-item nav-item-sub" onclick="nav('enov')"><span class="icon">🏠</span> Overview</div>
     <div class="nav-item nav-item-sub" onclick="nav('en1')" id="nav-en1"><span class="icon">🧩</span> L1: Intro to Ensembles<span class="check" id="check-en1"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('en2')" id="nav-en2"><span class="icon">⚡</span> L2: Boosting & AdaBoost<span class="check" id="check-en2"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('en3')" id="nav-en3"><span class="icon">🔀</span> L3: Stacking<span class="check" id="check-en3"></span></div>
@@ -248,6 +251,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
 
   <div class="nav-item nav-item-chapter" onclick="toggleChapter('prageval')"><span class="icon">📚</span> Pragmatic Model Evaluation<span class="chapter-arrow" id="arrow-prageval">▾</span></div>
   <div class="nav-chapter-items" id="chapter-prageval">
+    <div class="nav-item nav-item-sub" onclick="nav('peov')"><span class="icon">🏠</span> Overview</div>
     <div class="nav-item nav-item-sub" onclick="nav('pe1')" id="nav-pe1"><span class="icon">🏗️</span> L1: Hierarchical Validation<span class="check" id="check-pe1"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('pe2')" id="nav-pe2"><span class="icon">🔧</span> L2: Pipelines & Preprocessing<span class="check" id="check-pe2"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('pe3')" id="nav-pe3"><span class="icon">🎯</span> L3: Feature Selection<span class="check" id="check-pe3"></span></div>
@@ -257,6 +261,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
 
   <div class="nav-item nav-item-chapter" onclick="toggleChapter('unsupervised')"><span class="icon">📚</span> Unsupervised Learning<span class="chapter-arrow" id="arrow-unsupervised">▾</span></div>
   <div class="nav-chapter-items" id="chapter-unsupervised">
+    <div class="nav-item nav-item-sub" onclick="nav('ulov')"><span class="icon">🏠</span> Overview</div>
     <div class="nav-item nav-item-sub" onclick="nav('ul1')" id="nav-ul1"><span class="icon">🌐</span> L1: Fundamentals<span class="check" id="check-ul1"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ul2')" id="nav-ul2"><span class="icon">🔵</span> L2: K-Means Clustering<span class="check" id="check-ul2"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ul3')" id="nav-ul3"><span class="icon">🌳</span> L3: Hierarchical Clustering<span class="check" id="check-ul3"></span></div>
@@ -266,6 +271,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
 
   <div class="nav-item nav-item-chapter" onclick="toggleChapter('timeseries')"><span class="icon">📚</span> Time Series Analysis<span class="chapter-arrow" id="arrow-timeseries">▾</span></div>
   <div class="nav-chapter-items" id="chapter-timeseries">
+    <div class="nav-item nav-item-sub" onclick="nav('tsov')"><span class="icon">🏠</span> Overview</div>
     <div class="nav-item nav-item-sub" onclick="nav('ts1')" id="nav-ts1"><span class="icon">📈</span> L1: Introduction to Time Series<span class="check" id="check-ts1"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ts2')" id="nav-ts2"><span class="icon">🧹</span> L2: Preprocessing for Time Series<span class="check" id="check-ts2"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ts3')" id="nav-ts3"><span class="icon">🔬</span> L3: Preprocessing Practical<span class="check" id="check-ts3"></span></div>
@@ -279,6 +285,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
 
   <div class="nav-item nav-item-chapter" onclick="toggleChapter('neural')"><span class="icon">📚</span> Neural Networks & Deep Learning<span class="chapter-arrow" id="arrow-neural">▾</span></div>
   <div class="nav-chapter-items" id="chapter-neural">
+    <div class="nav-item nav-item-sub" onclick="nav('nnov')"><span class="icon">🏠</span> Overview</div>
     <div class="nav-item nav-item-sub" onclick="nav('nn1')" id="nav-nn1"><span class="icon">🧠</span> L1: Neural Network Fundamentals<span class="check" id="check-nn1"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('nn2')" id="nav-nn2"><span class="icon">🔢</span> L2: MNIST Practical — Keras<span class="check" id="check-nn2"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('nn3')" id="nav-nn3"><span class="icon">📉</span> L3: Gradient Descent — From Scratch<span class="check" id="check-nn3"></span></div>
@@ -291,6 +298,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
 
   <div class="nav-item nav-item-chapter" onclick="toggleChapter('explainability')"><span class="icon">📚</span> Model Explainability<span class="chapter-arrow" id="arrow-explainability">▾</span></div>
   <div class="nav-chapter-items" id="chapter-explainability">
+    <div class="nav-item nav-item-sub" onclick="nav('exov')"><span class="icon">🏠</span> Overview</div>
     <div class="nav-item nav-item-sub" onclick="nav('ex1')" id="nav-ex1"><span class="icon">🧭</span> L1: Introduction to Explainability<span class="check" id="check-ex1"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ex2')" id="nav-ex2"><span class="icon">🔎</span> L2: Local Explanations<span class="check" id="check-ex2"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ex3')" id="nav-ex3"><span class="icon">🌍</span> L3: Global Explanations<span class="check" id="check-ex3"></span></div>
@@ -1532,6 +1540,86 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
 </div>
 
 <!-- LESSON 9 -->
+<!-- SUPERVISED CLASSIFICATION OVERVIEW -->
+<div class="page" id="page-cov">
+  <h2>Supervised Classification</h2>
+  <p class="subtitle">From binary classifiers to full pipelines — learn nine algorithms, choose the right metric, and evaluate honestly using cross-validation.</p>
+
+  <div class="card">
+    <h3 style="margin-top:0">📚 Module Structure</h3>
+    <p>This chapter covers the core algorithms for predicting categories. Starting from the fundamentals of classification, you'll build intuition for linear, tree-based, distance-based, and kernel methods — and learn how to evaluate, tune, and deploy them correctly. Each lesson introduces a new model and progressively builds toward a complete ML pipeline.</p>
+  </div>
+
+  <div class="topic-grid">
+    <div class="topic-card" onclick="nav('w9')">
+      <div class="week-num">Lesson 1</div>
+      <h4>🎯 Intro to Classification</h4>
+      <p>Discriminative vs generative models, decision boundaries, probability outputs</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Binary</span><span class="badge badge-purple">Multiclass</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('nb')">
+      <div class="week-num">Lesson 2</div>
+      <h4>🎲 Naive Bayes</h4>
+      <p>Bayes' Rule, likelihood estimation, log-probability, independence assumption</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Generative</span><span class="badge badge-purple">Probabilistic</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('w10')">
+      <div class="week-num">Lesson 3</div>
+      <h4>📈 Logistic Regression</h4>
+      <p>Sigmoid function, binary cross-entropy, linear decision boundary</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Sigmoid</span><span class="badge badge-purple">Log-odds</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('w11')">
+      <div class="week-num">Lesson 4</div>
+      <h4>📊 Evaluation Metrics</h4>
+      <p>Precision, recall, F1, ROC-AUC, confusion matrix, class imbalance</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Precision</span><span class="badge badge-purple">Recall</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('w12')">
+      <div class="week-num">Lesson 5</div>
+      <h4>🌳 Decision Trees</h4>
+      <p>Information gain, Gini impurity, pruning, max depth</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Gini</span><span class="badge badge-purple">Entropy</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('w13')">
+      <div class="week-num">Lesson 6</div>
+      <h4>🌲 Random Forests</h4>
+      <p>Bagging, bootstrap sampling, feature subsets, out-of-bag error</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Bagging</span><span class="badge badge-purple">Feature importance</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('w14')">
+      <div class="week-num">Lesson 7</div>
+      <h4>📍 K-Nearest Neighbours</h4>
+      <p>Distance metrics, k selection, lazy learning, curse of dimensionality</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Euclidean</span><span class="badge badge-purple">Non-parametric</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('w15')">
+      <div class="week-num">Lesson 8</div>
+      <h4>↔️ Support Vector Machines</h4>
+      <p>Maximum margin, support vectors, kernel trick, RBF kernel</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Margin</span><span class="badge badge-purple">Kernel trick</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('w16')">
+      <div class="week-num">Lesson 9</div>
+      <h4>🔄 Model Validation</h4>
+      <p>Cross-validation, GridSearchCV, Pipelines, data leakage prevention</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">k-fold CV</span><span class="badge badge-purple">Pipeline</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('mc')">
+      <div class="week-num">Lesson 10</div>
+      <h4>🎯 Multiclass Classification</h4>
+      <p>One-vs-Rest, One-vs-One, softmax, multiclass metrics</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">OvR</span><span class="badge badge-purple">Softmax</span></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="nav('quiz')">📝 Start Quiz</button>
+    <button class="btn btn-outline" onclick="nav('csheet')">📋 Cheat Sheet</button>
+    <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
+  </div>
+</div>
+
 <div class="page" id="page-w9">
   <h2>🎯 Introduction to Classification</h2>
   <p class="subtitle">Predicting categories, not numbers — the other half of supervised learning.</p>
@@ -3303,6 +3391,49 @@ ovo.<span class="fn">fit</span>(X_train, y_train)
 </div>
 
 <!-- ENSEMBLE METHODS — LESSON 2 -->
+<!-- ENSEMBLE METHODS OVERVIEW -->
+<div class="page" id="page-enov">
+  <h2>Ensemble Methods</h2>
+  <p class="subtitle">Combine many weak learners into one strong model — understand bagging, boosting, stacking, and gradient boosting from first principles to production practice.</p>
+
+  <div class="card">
+    <h3 style="margin-top:0">📚 Module Structure</h3>
+    <p>This chapter explores how combining multiple models consistently outperforms any single model. Starting from the core theory of why ensembles work, you'll implement AdaBoost, build stacking pipelines with meta-learners, and master gradient boosting — the algorithm behind XGBoost and LightGBM, winners of countless competitions and used widely in industry.</p>
+  </div>
+
+  <div class="topic-grid">
+    <div class="topic-card" onclick="nav('en1')">
+      <div class="week-num">Lesson 1</div>
+      <h4>🧩 Intro to Ensembles</h4>
+      <p>Wisdom of crowds, variance reduction, bagging vs boosting vs stacking</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Bagging</span><span class="badge badge-purple">Diversity</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('en2')">
+      <div class="week-num">Lesson 2</div>
+      <h4>⚡ Boosting & AdaBoost</h4>
+      <p>Sequential weak learners, sample weights, weighted voting, error rate α</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Sequential</span><span class="badge badge-purple">Weighted vote</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('en3')">
+      <div class="week-num">Lesson 3</div>
+      <h4>🔀 Stacking</h4>
+      <p>Level-0 base learners, meta-learner blending, cross-validated predictions</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Meta-learner</span><span class="badge badge-purple">Blending</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('en4')">
+      <div class="week-num">Lesson 4</div>
+      <h4>📉 Gradient Boosting</h4>
+      <p>Residual fitting, gradient descent in function space, XGBoost, LightGBM</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Residuals</span><span class="badge badge-purple">XGBoost</span></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="nav('quiz')">📝 Start Quiz</button>
+    <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
+  </div>
+</div>
+
 <div class="page" id="page-en2">
   <h2>⚡ Boosting &amp; AdaBoost</h2>
   <p class="subtitle">Train weak learners sequentially — each one fixing what the previous got wrong. Bias melts away, round by round.</p>
@@ -4407,6 +4538,55 @@ tuning.<span class="fn">fit</span>(X_train, y_train)
 </div>
 
 <!-- PRAGMATIC MODEL EVALUATION — LESSON 1 -->
+<!-- PRAGMATIC MODEL EVALUATION OVERVIEW -->
+<div class="page" id="page-peov">
+  <h2>Pragmatic Model Evaluation</h2>
+  <p class="subtitle">Build honest, leak-free, production-ready ML pipelines — hierarchical validation, feature selection, hyperparameter tuning, and principled model selection.</p>
+
+  <div class="card">
+    <h3 style="margin-top:0">📚 Module Structure</h3>
+    <p>This chapter closes the gap between a model that works on a laptop and one that works in production. You'll learn how to handle data that violates the i.i.d. assumption, build fully encapsulated Pipelines, select features that generalise, optimise hyperparameters systematically, and use AIC/BIC to choose between model families without touching the test set.</p>
+  </div>
+
+  <div class="topic-grid">
+    <div class="topic-card" onclick="nav('pe1')">
+      <div class="week-num">Lesson 1</div>
+      <h4>🏗️ Hierarchical Validation</h4>
+      <p>Group k-fold, patient/trip/session splitting, avoiding within-group leakage</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">GroupKFold</span><span class="badge badge-purple">Leakage</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('pe2')">
+      <div class="week-num">Lesson 2</div>
+      <h4>🔧 Pipelines & Preprocessing</h4>
+      <p>sklearn Pipeline, ColumnTransformer, fit/transform discipline</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Pipeline</span><span class="badge badge-purple">ColumnTransformer</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('pe3')">
+      <div class="week-num">Lesson 3</div>
+      <h4>🎯 Feature Selection</h4>
+      <p>Correlation filtering, PCA, mutual information, wrapper methods</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Mutual info</span><span class="badge badge-purple">Correlation</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('pe4')">
+      <div class="week-num">Lesson 4</div>
+      <h4>⚙️ Model Optimisation</h4>
+      <p>Grid search, random search, Bayesian optimisation, warm-starting</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">GridSearchCV</span><span class="badge badge-purple">Bayesian opt</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('pe5')">
+      <div class="week-num">Lesson 5</div>
+      <h4>🧭 Model Selection</h4>
+      <p>AIC/BIC, model families, complexity vs generalisation trade-off</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">AIC</span><span class="badge badge-purple">BIC</span></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="nav('quiz')">📝 Start Quiz</button>
+    <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
+  </div>
+</div>
+
 <div class="page" id="page-pe1">
   <h2>🏗️ Validation on Hierarchical Data</h2>
   <p class="subtitle">When your rows aren't independent — trips, patients, transactions — standard train/test splits leak information and inflate your metrics. Here's how to do it right.</p>
@@ -5605,6 +5785,55 @@ for epoch in range(1500):
     <button class="btn btn-primary" onclick="startTopicQuiz('pe5')">📝 Full Topic Quiz</button>
     <button class="btn btn-outline" onclick="nav('pe4')">← Model Optimisation</button>
     <button class="btn btn-outline" onclick="nav('ul1')">Unsupervised Learning →</button>
+  </div>
+</div>
+
+<!-- UNSUPERVISED LEARNING OVERVIEW -->
+<div class="page" id="page-ulov">
+  <h2>Unsupervised Learning</h2>
+  <p class="subtitle">Find structure without labels — master clustering algorithms, density-based methods, and non-linear dimensionality reduction on real datasets.</p>
+
+  <div class="card">
+    <h3 style="margin-top:0">📚 Module Structure</h3>
+    <p>This chapter covers the major families of unsupervised learning. Starting from the core challenges of working without labels, you'll implement K-Means, hierarchical, and density-based clustering, and learn t-SNE for high-dimensional visualisation. Each method has different strengths — understanding when to use which is the key skill this chapter builds.</p>
+  </div>
+
+  <div class="topic-grid">
+    <div class="topic-card" onclick="nav('ul1')">
+      <div class="week-num">Lesson 1</div>
+      <h4>🌐 Fundamentals</h4>
+      <p>Clustering, anomaly detection, generative modelling, evaluation without labels</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Clustering</span><span class="badge badge-purple">Unsupervised</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('ul2')">
+      <div class="week-num">Lesson 2</div>
+      <h4>🔵 K-Means Clustering</h4>
+      <p>Centroid iteration, elbow method, inertia, silhouette score</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Centroids</span><span class="badge badge-purple">Elbow method</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('ul3')">
+      <div class="week-num">Lesson 3</div>
+      <h4>🌳 Hierarchical Clustering</h4>
+      <p>Agglomerative merging, linkage criteria, dendrogram, no k required</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Dendrogram</span><span class="badge badge-purple">Linkage</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('ul4')">
+      <div class="week-num">Lesson 4</div>
+      <h4>🔴 DBSCAN</h4>
+      <p>Density-based clusters, noise/outlier labelling, ε and min_samples</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Density</span><span class="badge badge-purple">Outliers</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('ul5')">
+      <div class="week-num">Lesson 5</div>
+      <h4>🌀 t-SNE</h4>
+      <p>Non-linear dimensionality reduction, perplexity, 2D visualisation</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Non-linear</span><span class="badge badge-purple">Perplexity</span></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="nav('quiz')">📝 Start Quiz</button>
+    <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
   </div>
 </div>
 
@@ -7770,6 +7999,79 @@ plt.show()</pre></div>
     <button class="btn btn-primary" onclick="startTopicQuiz('ul5')">📝 Full Topic Quiz</button>
     <button class="btn btn-outline" onclick="nav('ul4')">← DBSCAN</button>
     <button class="btn btn-outline" onclick="nav('quiz')">Practice All Topics</button>
+  </div>
+</div>
+
+<!-- TIME SERIES ANALYSIS OVERVIEW -->
+<div class="page" id="page-tsov">
+  <h2>Time Series Analysis</h2>
+  <p class="subtitle">Model ordered, temporal data — from stationarity and preprocessing through autoregressive models, exponential smoothing, and end-to-end forecasting with Prophet.</p>
+
+  <div class="card">
+    <h3 style="margin-top:0">📚 Module Structure</h3>
+    <p>This chapter covers the full time series workflow. You'll learn why time-ordered data violates standard ML assumptions, how to make a series stationary, how to fit and diagnose AR/ARMA models, and how to produce real forecasts with proper evaluation. The chapter concludes with Prophet for decomposition-based forecasting and a full end-to-end practical on real pageviews data.</p>
+  </div>
+
+  <div class="topic-grid">
+    <div class="topic-card" onclick="nav('ts1')">
+      <div class="week-num">Lesson 1</div>
+      <h4>📈 Introduction</h4>
+      <p>Trend, seasonality, autocorrelation, stationarity, ACF/PACF plots</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Stationarity</span><span class="badge badge-purple">Autocorrelation</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('ts2')">
+      <div class="week-num">Lesson 2</div>
+      <h4>🧹 Preprocessing</h4>
+      <p>Missing data, resampling, smoothing, differencing, shifting</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Differencing</span><span class="badge badge-purple">Resampling</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('ts3')">
+      <div class="week-num">Lesson 3</div>
+      <h4>🔬 Preprocessing Practical</h4>
+      <p>Date parsing, ACF/PACF, stationarity tests, rolling windows</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Practical</span><span class="badge badge-purple">ADF test</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('ts4')">
+      <div class="week-num">Lesson 4</div>
+      <h4>🧪 Preprocessing Practical 2</h4>
+      <p>Resampling, ipywidgets, rolling windows as feature engineering</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Feature eng.</span><span class="badge badge-purple">Rolling windows</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('ts5')">
+      <div class="week-num">Lesson 5</div>
+      <h4>📉 Autoregressive Models</h4>
+      <p>AR, ARMA, lag selection, in-sample prediction, MAE</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">AR</span><span class="badge badge-purple">ARMA</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('ts6')">
+      <div class="week-num">Lesson 6</div>
+      <h4>🔎 Time Series Testing</h4>
+      <p>Residual diagnostics, genuine forecasting, ARMA selection, CV</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Forecasting</span><span class="badge badge-purple">Residuals</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('ts7')">
+      <div class="week-num">Lesson 7</div>
+      <h4>📊 Exponential Smoothing</h4>
+      <p>Simple, Holt's, Holt-Winters — trend and seasonality handling</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Holt-Winters</span><span class="badge badge-purple">Smoothing</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('ts8')">
+      <div class="week-num">Lesson 8</div>
+      <h4>🔮 Prophet</h4>
+      <p>Decomposition, holidays, trend changepoints, uncertainty intervals</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Decomposition</span><span class="badge badge-purple">Seasonality</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('ts9')">
+      <div class="week-num">Lesson 9</div>
+      <h4>📰 Practical Example</h4>
+      <p>End-to-end pipeline on pageviews — three models compared, business insights</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">End-to-end</span><span class="badge badge-purple">Comparison</span></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="nav('quiz')">📝 Start Quiz</button>
+    <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
   </div>
 </div>
 
@@ -13993,6 +14295,44 @@ neighbours vary in relevance.</pre></div>
 <!-- ══════════════════════════════════════════════════════════════ -->
 <!-- MODEL EXPLAINABILITY — L1: Introduction                       -->
 <!-- ══════════════════════════════════════════════════════════════ -->
+<!-- MODEL EXPLAINABILITY OVERVIEW -->
+<div class="page" id="page-exov">
+  <h2>Model Explainability & Interpretability</h2>
+  <p class="subtitle">Open the black box — use LIME, ANCHOR, Permutation Importance, and SHAP to explain any model's decisions locally and globally.</p>
+
+  <div class="card">
+    <h3 style="margin-top:0">📚 Module Structure</h3>
+    <p>This chapter covers the theory and practice of explaining machine learning models. You'll learn the difference between interpretability and explainability, implement local explanation methods (LIME and ANCHOR), and master global explanation methods (Permutation Importance and SHAP). Every technique is grounded in real regulatory and business motivations — from GDPR to debugging spurious patterns.</p>
+  </div>
+
+  <div class="topic-grid">
+    <div class="topic-card" onclick="nav('ex1')">
+      <div class="week-num">Lesson 1</div>
+      <h4>🧭 Introduction to Explainability</h4>
+      <p>Interpretability vs explainability, complexity spectrum, three axes of every method</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Intrinsic</span><span class="badge badge-purple">Post-hoc</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('ex2')">
+      <div class="week-num">Lesson 2</div>
+      <h4>🔎 Local Explanations</h4>
+      <p>LIME perturbation + linear fit, ANCHOR if-then rules, precision vs coverage</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">LIME</span><span class="badge badge-purple">ANCHOR</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('ex3')">
+      <div class="week-num">Lesson 3</div>
+      <h4>🌍 Global Explanations</h4>
+      <p>Permutation importance, SHAP Shapley values, beeswarm, waterfall, dependence plots</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">SHAP</span><span class="badge badge-purple">Permutation</span></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="nav('quiz')">📝 Start Quiz</button>
+    <button class="btn btn-outline" onclick="nav('exsheet')">📋 Cheat Sheet</button>
+    <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
+  </div>
+</div>
+
 <div class="page" id="page-ex1">
   <div class="lesson-header">
     <div class="breadcrumb">Model Explainability &amp; Interpretability · L1</div>
@@ -16166,9 +16506,9 @@ For age:
   <h3>What Each Lesson Covers</h3>
   <table>
     <tr><th>Lesson</th><th>Core topic</th><th>Key takeaway</th></tr>
-    <tr><td><strong>L1: Introduction</strong></td><td>Interpretability vs Explainability, the spectrum, three axes</td><td>Interpretability = model is readable by design. Explainability = post-hoc tool applied to a black box. Every method sits on three axes: Global/Local, Agnostic/Specific, Intrinsic/Post-hoc.</td></tr>
-    <tr><td><strong>L2: Local Explanations</strong></td><td>LIME and ANCHOR — explaining one prediction</td><td>LIME fits a local linear model via perturbation → feature weights. ANCHOR finds if-then rules with precision ≥ τ and maximum coverage.</td></tr>
-    <tr><td><strong>L3: Global Explanations</strong></td><td>Permutation Importance and SHAP — explaining whole-model behaviour</td><td>Permutation: shuffle a feature, measure accuracy drop. SHAP: game-theory fair attribution — values sum exactly to (prediction − base value).</td></tr>
+    <tr><td><strong>L1: Introduction</strong></td><td>Interpretability vs Explainability; the three axes</td><td>Interpretable = readable by design. Explainable = post-hoc tool on a black box. Every method sits on Global/Local, Agnostic/Specific, Intrinsic/Post-hoc axes.</td></tr>
+    <tr><td><strong>L2: Local Explanations</strong></td><td>LIME and ANCHOR — explaining one prediction</td><td>LIME: local linear model via perturbation → feature weights. ANCHOR: if-then rules with precision ≥ τ and max coverage.</td></tr>
+    <tr><td><strong>L3: Global Explanations</strong></td><td>Permutation Importance and SHAP — whole-model behaviour</td><td>Permutation: shuffle feature, measure accuracy drop. SHAP: fair Shapley attribution — values sum to (prediction − base value).</td></tr>
   </table>
 
   <!-- L1 -->
@@ -17081,6 +17421,73 @@ print(f"Prediction: {prediction}")</code></pre></div>
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- NEURAL NETWORKS & DEEP LEARNING — L1: Fundamentals       -->
 <!-- ══════════════════════════════════════════════════════════ -->
+<!-- NEURAL NETWORKS & DEEP LEARNING OVERVIEW -->
+<div class="page" id="page-nnov">
+  <h2>Neural Networks & Deep Learning</h2>
+  <p class="subtitle">From a single perceptron to CNNs, RNNs, and GNNs — build every component from scratch, then scale up with Keras to solve real vision, sequence, and graph problems.</p>
+
+  <div class="card">
+    <h3 style="margin-top:0">📚 Module Structure</h3>
+    <p>This chapter builds deep learning from the ground up. Starting with the mathematics of a single neuron, you'll implement gradient descent by hand, train networks on MNIST with Keras, and progressively add convolutional, recurrent, and graph layers. By the end you'll understand not just how to use these architectures but exactly why each one was invented and what problem it solves.</p>
+  </div>
+
+  <div class="topic-grid">
+    <div class="topic-card" onclick="nav('nn1')">
+      <div class="week-num">Lesson 1</div>
+      <h4>🧠 Neural Network Fundamentals</h4>
+      <p>Perceptrons, activation functions, forward pass, backpropagation</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Perceptron</span><span class="badge badge-purple">Backprop</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('nn2')">
+      <div class="week-num">Lesson 2</div>
+      <h4>🔢 MNIST Practical</h4>
+      <p>Keras Sequential API, Dense layers, softmax, 98% accuracy on digits</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Keras</span><span class="badge badge-purple">MNIST</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('nn3')">
+      <div class="week-num">Lesson 3</div>
+      <h4>📉 Gradient Descent from Scratch</h4>
+      <p>Loss surface, learning rate, momentum, convergence visualised</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Learning rate</span><span class="badge badge-purple">Convergence</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('nn4')">
+      <div class="week-num">Lesson 4</div>
+      <h4>🌸 Classification with GD</h4>
+      <p>SGD on Iris, centering, adaptive vs constant learning rate, confusion matrix</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">SGD</span><span class="badge badge-purple">Iris dataset</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('nn5')">
+      <div class="week-num">Lesson 5</div>
+      <h4>⚙️ Training a Neural Network</h4>
+      <p>Cross-entropy, ReLU, Glorot init, L2 regularisation, momentum SGD</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">ReLU</span><span class="badge badge-purple">Regularisation</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('nn6')">
+      <div class="week-num">Lesson 6</div>
+      <h4>🖼️ Convolutional Neural Networks</h4>
+      <p>Filters, pooling, feature maps, transfer learning, pretrained models</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Convolution</span><span class="badge badge-purple">Transfer learning</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('nn7')">
+      <div class="week-num">Lesson 7</div>
+      <h4>🔄 Recurrent Neural Networks</h4>
+      <p>Sequence memory, vanishing gradients, LSTM, time series regression</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">LSTM</span><span class="badge badge-purple">Sequences</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('nn8')">
+      <div class="week-num">Lesson 8</div>
+      <h4>🕸️ Graph Neural Networks</h4>
+      <p>Message passing, GCN, node embeddings, neighbourhood aggregation</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">GCN</span><span class="badge badge-purple">Message passing</span></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="nav('quiz')">📝 Start Quiz</button>
+    <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
+  </div>
+</div>
+
 <div class="page" id="page-nn1">
   <div class="lesson-header">
     <div class="breadcrumb">Neural Networks & Deep Learning · L1</div>
