@@ -194,12 +194,41 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 99px; }
 
+/* MOBILE */
+#menu-toggle {
+  display: none;
+  position: fixed; top: 12px; left: 12px; z-index: 300;
+  background: var(--sidebar-bg); border: 1px solid var(--card-border);
+  border-radius: 8px; padding: 8px 11px; cursor: pointer;
+  color: var(--text); font-size: 1.2rem; line-height: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+#sidebar-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55); z-index: 199;
+}
+@media (max-width: 768px) {
+  #menu-toggle { display: flex; align-items: center; justify-content: center; }
+  #sidebar { transform: translateX(-260px); transition: transform 0.25s ease; z-index: 200; }
+  body.sidebar-open #sidebar { transform: translateX(0); }
+  body.sidebar-open #sidebar-overlay { display: block; }
+  #main { margin-left: 0; width: 100%; }
+  .page { padding: 20px 16px; padding-top: 64px; }
+  .card-grid { grid-template-columns: 1fr; }
+  .topic-grid { grid-template-columns: 1fr; }
+  .btn-row { flex-direction: column; }
+  .btn-row .btn { width: 100%; justify-content: center; }
+}
+
 /* TOPIC QUIZ INLINE */
 .inline-quiz { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 20px; margin-top: 24px; }
 .inline-quiz h3 { margin-top: 0; }
 </style>
 </head>
 <body>
+
+<button id="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle navigation">☰</button>
+<div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
 <div id="sidebar">
   <div class="sidebar-header">
@@ -375,7 +404,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
   </div>
 
   <div class="btn-row">
-    <button class="btn btn-primary" onclick="nav('quiz')">📝 Start Quiz</button>
+    <button class="btn btn-primary" onclick="startChapterQuiz(['w1','w2','w3','w4','w5','w6','w7','w8'])">📝 Start Quiz</button>
     <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
   </div>
 </div>
@@ -1413,9 +1442,11 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
     <div class="topic-chips">
       <div class="topic-chip selected-all" id="fc-chip-all" onclick="fcFilter('all')">🌐 All</div>
     </div>
+
     <div class="chip-chapter">
       <div class="chip-chapter-label">📚 Foundation</div>
       <div class="topic-chips">
+        <div class="topic-chip" id="fc-chip-ch-foundation" onclick="fcFilterChapter('foundation',['w1','w2','w3','w4','w5','w6','w7','w8'])">All Foundation</div>
         <div class="topic-chip" id="fc-chip-w1" onclick="fcFilter('w1')">L1: Preprocessing</div>
         <div class="topic-chip" id="fc-chip-w2" onclick="fcFilter('w2')">L2: Feature Eng.</div>
         <div class="topic-chip" id="fc-chip-w3" onclick="fcFilter('w3')">L3: Linear Reg.</div>
@@ -1426,81 +1457,97 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
         <div class="topic-chip" id="fc-chip-w8" onclick="fcFilter('w8')">L8: PCA</div>
       </div>
     </div>
+
     <div class="chip-chapter">
       <div class="chip-chapter-label">📚 Supervised Classification</div>
       <div class="topic-chips">
-        <div class="topic-chip" id="fc-chip-w9"  onclick="fcFilter('w9')">L9: Intro</div>
-        <div class="topic-chip" id="fc-chip-nb"  onclick="fcFilter('nb')">L9b: Naive Bayes</div>
-        <div class="topic-chip" id="fc-chip-w10" onclick="fcFilter('w10')">L10: Logistic Reg.</div>
-        <div class="topic-chip" id="fc-chip-w11" onclick="fcFilter('w11')">L11: Metrics</div>
-        <div class="topic-chip" id="fc-chip-w12" onclick="fcFilter('w12')">L12: Decision Trees</div>
-        <div class="topic-chip" id="fc-chip-w13" onclick="fcFilter('w13')">L13: Random Forests</div>
-        <div class="topic-chip" id="fc-chip-w14" onclick="fcFilter('w14')">L14: KNN</div>
-        <div class="topic-chip" id="fc-chip-w15" onclick="fcFilter('w15')">L15: SVM</div>
-        <div class="topic-chip" id="fc-chip-w16" onclick="fcFilter('w16')">L16: Pipeline</div>
-        <div class="topic-chip" id="fc-chip-mc"  onclick="fcFilter('mc')">L17: Multiclass</div>
+        <div class="topic-chip" id="fc-chip-ch-classification" onclick="fcFilterChapter('classification',['w9','nb','w10','w11','w12','w13','w14','w15','w16','mc'])">All Classification</div>
+        <div class="topic-chip" id="fc-chip-w9"  onclick="fcFilter('w9')">L1: Intro</div>
+        <div class="topic-chip" id="fc-chip-nb"  onclick="fcFilter('nb')">L2: Naive Bayes</div>
+        <div class="topic-chip" id="fc-chip-w10" onclick="fcFilter('w10')">L3: Logistic Reg.</div>
+        <div class="topic-chip" id="fc-chip-w11" onclick="fcFilter('w11')">L4: Metrics</div>
+        <div class="topic-chip" id="fc-chip-w12" onclick="fcFilter('w12')">L5: Decision Trees</div>
+        <div class="topic-chip" id="fc-chip-w13" onclick="fcFilter('w13')">L6: Random Forests</div>
+        <div class="topic-chip" id="fc-chip-w14" onclick="fcFilter('w14')">L7: KNN</div>
+        <div class="topic-chip" id="fc-chip-w15" onclick="fcFilter('w15')">L8: SVM</div>
+        <div class="topic-chip" id="fc-chip-w16" onclick="fcFilter('w16')">L9: Pipeline</div>
+        <div class="topic-chip" id="fc-chip-mc"  onclick="fcFilter('mc')">L10: Multiclass</div>
       </div>
     </div>
+
     <div class="chip-chapter">
       <div class="chip-chapter-label">📚 Ensemble Methods</div>
       <div class="topic-chips">
+        <div class="topic-chip" id="fc-chip-ch-ensemble" onclick="fcFilterChapter('ensemble',['en1','en2','en3','en4'])">All Ensemble</div>
         <div class="topic-chip" id="fc-chip-en1" onclick="fcFilter('en1')">L1: Intro</div>
         <div class="topic-chip" id="fc-chip-en2" onclick="fcFilter('en2')">L2: Boosting</div>
         <div class="topic-chip" id="fc-chip-en3" onclick="fcFilter('en3')">L3: Stacking</div>
         <div class="topic-chip" id="fc-chip-en4" onclick="fcFilter('en4')">L4: Gradient Boosting</div>
       </div>
     </div>
+
     <div class="chip-chapter">
       <div class="chip-chapter-label">📚 Pragmatic Model Evaluation</div>
       <div class="topic-chips">
-        <div class="topic-chip" id="fc-chip-pe1" onclick="fcFilter('pe1')">L1: Hierarchical Validation</div>
+        <div class="topic-chip" id="fc-chip-ch-prageval" onclick="fcFilterChapter('prageval',['pe1','pe2','pe3','pe4','pe5'])">All Pragmatic Eval</div>
+        <div class="topic-chip" id="fc-chip-pe1" onclick="fcFilter('pe1')">L1: Hierarchical Val.</div>
         <div class="topic-chip" id="fc-chip-pe2" onclick="fcFilter('pe2')">L2: Pipelines</div>
         <div class="topic-chip" id="fc-chip-pe3" onclick="fcFilter('pe3')">L3: Feature Selection</div>
-        <div class="topic-chip" id="fc-chip-pe4" onclick="fcFilter('pe4')">L4: Model Optimisation</div>
+        <div class="topic-chip" id="fc-chip-pe4" onclick="fcFilter('pe4')">L4: Optimisation</div>
         <div class="topic-chip" id="fc-chip-pe5" onclick="fcFilter('pe5')">L5: Model Selection</div>
       </div>
     </div>
+
     <div class="chip-chapter">
       <div class="chip-chapter-label">📚 Unsupervised Learning</div>
       <div class="topic-chips">
+        <div class="topic-chip" id="fc-chip-ch-unsupervised" onclick="fcFilterChapter('unsupervised',['ul1','ul2','ul3','ul4','ul5'])">All Unsupervised</div>
         <div class="topic-chip" id="fc-chip-ul1" onclick="fcFilter('ul1')">L1: Fundamentals</div>
-        <div class="topic-chip" id="fc-chip-ul2" onclick="fcFilter('ul2')">L2: K-Means Clustering</div>
-        <div class="topic-chip" id="fc-chip-ul3" onclick="fcFilter('ul3')">L3: Hierarchical Clustering</div>
+        <div class="topic-chip" id="fc-chip-ul2" onclick="fcFilter('ul2')">L2: K-Means</div>
+        <div class="topic-chip" id="fc-chip-ul3" onclick="fcFilter('ul3')">L3: Hierarchical</div>
         <div class="topic-chip" id="fc-chip-ul4" onclick="fcFilter('ul4')">L4: DBSCAN</div>
         <div class="topic-chip" id="fc-chip-ul5" onclick="fcFilter('ul5')">L5: t-SNE</div>
       </div>
-      <div class="chip-chapter">
-        <div class="chip-chapter-label">🧠 Neural Networks & Deep Learning</div>
-        <div class="topic-chips">
-          <div class="topic-chip" id="fc-chip-nn1" onclick="fcFilter('nn1')">L1: NN Fundamentals</div>
-          <div class="topic-chip" id="fc-chip-nn2" onclick="fcFilter('nn2')">L2: MNIST Practical</div>
-          <div class="topic-chip" id="fc-chip-nn3" onclick="fcFilter('nn3')">L3: Gradient Descent</div>
-          <div class="topic-chip" id="fc-chip-nn4" onclick="fcFilter('nn4')">L4: Classification GD</div>
-          <div class="topic-chip" id="fc-chip-nn5" onclick="fcFilter('nn5')">L5: Training a NN</div>
-          <div class="topic-chip" id="fc-chip-nn6" onclick="fcFilter('nn6')">L6: CNNs</div>
-          <div class="topic-chip" id="fc-chip-nn7" onclick="fcFilter('nn7')">L7: RNNs</div>
-          <div class="topic-chip" id="fc-chip-nn8" onclick="fcFilter('nn8')">L8: GNNs</div>
-        </div>
-      </div>
-      <div class="chip-chapter">
-        <div class="chip-chapter-label">🔍 Model Explainability</div>
-        <div class="topic-chips">
-          <div class="topic-chip" id="fc-chip-ex1" onclick="fcFilter('ex1')">L1: Intro to Explainability</div>
-          <div class="topic-chip" id="fc-chip-ex2" onclick="fcFilter('ex2')">L2: Local Explanations</div>
-          <div class="topic-chip" id="fc-chip-ex3" onclick="fcFilter('ex3')">L3: Global Explanations</div>
-        </div>
-      </div>
+    </div>
+
+    <div class="chip-chapter">
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">
-        <div class="topic-chip" id="fc-chip-ts1" onclick="fcFilter('ts1')">L1: Intro to Time Series</div>
-        <div class="topic-chip" id="fc-chip-ts2" onclick="fcFilter('ts2')">L2: Preprocessing for Time Series</div>
-        <div class="topic-chip" id="fc-chip-ts3" onclick="fcFilter('ts3')">L3: Preprocessing Practical</div>
-        <div class="topic-chip" id="fc-chip-ts4" onclick="fcFilter('ts4')">L4: Preprocessing Practical 2</div>
-        <div class="topic-chip" id="fc-chip-ts5" onclick="fcFilter('ts5')">L5: Autoregressive Models</div>
-        <div class="topic-chip" id="fc-chip-ts6" onclick="fcFilter('ts6')">L6: Time Series Testing</div>
-        <div class="topic-chip" id="fc-chip-ts7" onclick="fcFilter('ts7')">L7: Exponential Smoothing</div>
+      <div class="topic-chips">
+        <div class="topic-chip" id="fc-chip-ch-timeseries" onclick="fcFilterChapter('timeseries',['ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9'])">All Time Series</div>
+        <div class="topic-chip" id="fc-chip-ts1" onclick="fcFilter('ts1')">L1: Introduction</div>
+        <div class="topic-chip" id="fc-chip-ts2" onclick="fcFilter('ts2')">L2: Preprocessing</div>
+        <div class="topic-chip" id="fc-chip-ts3" onclick="fcFilter('ts3')">L3: Practical</div>
+        <div class="topic-chip" id="fc-chip-ts4" onclick="fcFilter('ts4')">L4: Practical 2</div>
+        <div class="topic-chip" id="fc-chip-ts5" onclick="fcFilter('ts5')">L5: AR Models</div>
+        <div class="topic-chip" id="fc-chip-ts6" onclick="fcFilter('ts6')">L6: TS Testing</div>
+        <div class="topic-chip" id="fc-chip-ts7" onclick="fcFilter('ts7')">L7: Exp. Smoothing</div>
         <div class="topic-chip" id="fc-chip-ts8" onclick="fcFilter('ts8')">L8: Prophet</div>
         <div class="topic-chip" id="fc-chip-ts9" onclick="fcFilter('ts9')">L9: Practical Example</div>
+      </div>
+    </div>
+
+    <div class="chip-chapter">
+      <div class="chip-chapter-label">🧠 Neural Networks & Deep Learning</div>
+      <div class="topic-chips">
+        <div class="topic-chip" id="fc-chip-ch-neural" onclick="fcFilterChapter('neural',['nn1','nn2','nn3','nn4','nn5','nn6','nn7','nn8'])">All Neural Networks</div>
+        <div class="topic-chip" id="fc-chip-nn1" onclick="fcFilter('nn1')">L1: Fundamentals</div>
+        <div class="topic-chip" id="fc-chip-nn2" onclick="fcFilter('nn2')">L2: MNIST</div>
+        <div class="topic-chip" id="fc-chip-nn3" onclick="fcFilter('nn3')">L3: Gradient Descent</div>
+        <div class="topic-chip" id="fc-chip-nn4" onclick="fcFilter('nn4')">L4: Classification GD</div>
+        <div class="topic-chip" id="fc-chip-nn5" onclick="fcFilter('nn5')">L5: Training a NN</div>
+        <div class="topic-chip" id="fc-chip-nn6" onclick="fcFilter('nn6')">L6: CNNs</div>
+        <div class="topic-chip" id="fc-chip-nn7" onclick="fcFilter('nn7')">L7: RNNs</div>
+        <div class="topic-chip" id="fc-chip-nn8" onclick="fcFilter('nn8')">L8: GNNs</div>
+      </div>
+    </div>
+
+    <div class="chip-chapter">
+      <div class="chip-chapter-label">🔍 Model Explainability</div>
+      <div class="topic-chips">
+        <div class="topic-chip" id="fc-chip-ch-explainability" onclick="fcFilterChapter('explainability',['ex1','ex2','ex3'])">All Explainability</div>
+        <div class="topic-chip" id="fc-chip-ex1" onclick="fcFilter('ex1')">L1: Introduction</div>
+        <div class="topic-chip" id="fc-chip-ex2" onclick="fcFilter('ex2')">L2: Local Explanations</div>
+        <div class="topic-chip" id="fc-chip-ex3" onclick="fcFilter('ex3')">L3: Global Explanations</div>
       </div>
     </div>
   </div>
@@ -1614,7 +1661,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
   </div>
 
   <div class="btn-row">
-    <button class="btn btn-primary" onclick="nav('quiz')">📝 Start Quiz</button>
+    <button class="btn btn-primary" onclick="startChapterQuiz(['w9','nb','w10','w11','w12','w13','w14','w15','w16','mc'])">📝 Start Quiz</button>
     <button class="btn btn-outline" onclick="nav('csheet')">📋 Cheat Sheet</button>
     <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
   </div>
@@ -3429,7 +3476,7 @@ ovo.<span class="fn">fit</span>(X_train, y_train)
   </div>
 
   <div class="btn-row">
-    <button class="btn btn-primary" onclick="nav('quiz')">📝 Start Quiz</button>
+    <button class="btn btn-primary" onclick="startChapterQuiz(['en1','en2','en3','en4'])">📝 Start Quiz</button>
     <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
   </div>
 </div>
@@ -4582,7 +4629,7 @@ tuning.<span class="fn">fit</span>(X_train, y_train)
   </div>
 
   <div class="btn-row">
-    <button class="btn btn-primary" onclick="nav('quiz')">📝 Start Quiz</button>
+    <button class="btn btn-primary" onclick="startChapterQuiz(['pe1','pe2','pe3','pe4','pe5'])">📝 Start Quiz</button>
     <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
   </div>
 </div>
@@ -5832,7 +5879,7 @@ for epoch in range(1500):
   </div>
 
   <div class="btn-row">
-    <button class="btn btn-primary" onclick="nav('quiz')">📝 Start Quiz</button>
+    <button class="btn btn-primary" onclick="startChapterQuiz(['ul1','ul2','ul3','ul4','ul5'])">📝 Start Quiz</button>
     <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
   </div>
 </div>
@@ -8070,7 +8117,7 @@ plt.show()</pre></div>
   </div>
 
   <div class="btn-row">
-    <button class="btn btn-primary" onclick="nav('quiz')">📝 Start Quiz</button>
+    <button class="btn btn-primary" onclick="startChapterQuiz(['ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9'])">📝 Start Quiz</button>
     <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
   </div>
 </div>
@@ -14327,7 +14374,7 @@ neighbours vary in relevance.</pre></div>
   </div>
 
   <div class="btn-row">
-    <button class="btn btn-primary" onclick="nav('quiz')">📝 Start Quiz</button>
+    <button class="btn btn-primary" onclick="startChapterQuiz(['ex1','ex2','ex3'])">📝 Start Quiz</button>
     <button class="btn btn-outline" onclick="nav('exsheet')">📋 Cheat Sheet</button>
     <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
   </div>
@@ -17483,7 +17530,7 @@ print(f"Prediction: {prediction}")</code></pre></div>
   </div>
 
   <div class="btn-row">
-    <button class="btn btn-primary" onclick="nav('quiz')">📝 Start Quiz</button>
+    <button class="btn btn-primary" onclick="startChapterQuiz(['nn1','nn2','nn3','nn4','nn5','nn6','nn7','nn8'])">📝 Start Quiz</button>
     <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
   </div>
 </div>
@@ -19177,6 +19224,10 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+function toggleSidebar() {
+  document.body.classList.toggle('sidebar-open');
+}
+
 function nav(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -19184,6 +19235,7 @@ function nav(page) {
   document.getElementById('main').scrollTop = 0;
   const navEl = document.querySelector(`[onclick="nav('${page}')"]`);
   if (navEl) navEl.classList.add('active');
+  if (window.innerWidth <= 768) document.body.classList.remove('sidebar-open');
   if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9','nn1','nn2','nn3','nn4','nn5','nn6','nn7','nn8','ex1','ex2','ex3'].includes(page)) {
     markVisited(page);
     renderInlineQuiz(page);
@@ -19242,6 +19294,12 @@ function selectInlineAnswer(btn, idx, ans) {
 // ===================== MAIN QUIZ =====================
 function startTopicQuiz(topic) {
   selectedTopics = [topic];
+  nav('quiz');
+  startQuiz();
+}
+
+function startChapterQuiz(topics) {
+  selectedTopics = topics;
   nav('quiz');
   startQuiz();
 }
@@ -19374,6 +19432,15 @@ function fcFilter(t) {
   const el = document.getElementById('fc-chip-' + t);
   if (t === 'all') el.classList.add('selected-all'); else el.classList.add('selected');
   fcCards = t === 'all' ? [...FLASHCARDS] : FLASHCARDS.filter(c => c.t === t);
+  fcIdx = 0;
+  renderFlashcard();
+}
+
+function fcFilterChapter(chapterId, topics) {
+  document.querySelectorAll('[id^="fc-chip-"]').forEach(c => { c.classList.remove('selected','selected-all'); });
+  const el = document.getElementById('fc-chip-ch-' + chapterId);
+  if (el) el.classList.add('selected-all');
+  fcCards = FLASHCARDS.filter(c => topics.includes(c.t));
   fcIdx = 0;
   renderFlashcard();
 }
