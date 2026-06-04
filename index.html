@@ -293,6 +293,8 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
   <div class="nav-chapter-items" id="chapter-explainability">
     <div class="nav-item nav-item-sub" onclick="nav('ex1')" id="nav-ex1"><span class="icon">🧭</span> L1: Introduction to Explainability<span class="check" id="check-ex1"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ex2')" id="nav-ex2"><span class="icon">🔎</span> L2: Local Explanations<span class="check" id="check-ex2"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('ex3')" id="nav-ex3"><span class="icon">🌍</span> L3: Global Explanations<span class="check" id="check-ex3"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('exsheet')" id="nav-exsheet"><span class="icon">📋</span> Explainability Cheat Sheet</div>
   </div>
 
   <div class="sidebar-section" style="margin-top:10px">Practice</div>
@@ -1334,6 +1336,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
         <div class="topic-chips">
           <div class="topic-chip" id="chip-ex1" onclick="toggleChip('ex1')">L1: Intro to Explainability</div>
           <div class="topic-chip" id="chip-ex2" onclick="toggleChip('ex2')">L2: Local Explanations</div>
+          <div class="topic-chip" id="chip-ex3" onclick="toggleChip('ex3')">L3: Global Explanations</div>
         </div>
       </div>
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
@@ -1476,6 +1479,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
         <div class="topic-chips">
           <div class="topic-chip" id="fc-chip-ex1" onclick="fcFilter('ex1')">L1: Intro to Explainability</div>
           <div class="topic-chip" id="fc-chip-ex2" onclick="fcFilter('ex2')">L2: Local Explanations</div>
+          <div class="topic-chip" id="fc-chip-ex3" onclick="fcFilter('ex3')">L3: Global Explanations</div>
         </div>
       </div>
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
@@ -15346,6 +15350,1017 @@ Tip:    Lower the threshold to get simpler, more general rules.</pre></div>
   <div class="btn-row">
     <button class="btn btn-primary" onclick="startTopicQuiz('ex2')">📝 Full Topic Quiz</button>
     <button class="btn btn-outline" onclick="nav('ex1')">← L1: Introduction</button>
+    <button class="btn btn-outline" onclick="nav('ex3')">L3: Global Explanations →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- MODEL EXPLAINABILITY — L3: Global Explanations               -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-ex3">
+  <div class="lesson-header">
+    <div class="breadcrumb">Model Explainability &amp; Interpretability · L3</div>
+    <h1>🌍 Global Explanations — Permutation Importance &amp; SHAP</h1>
+    <p class="subtitle">Understand how to explain what a black-box model relies on overall — using Permutation Feature Importance and SHAP Shapley values — with the bank marketing and adult income datasets</p>
+  </div>
+
+  <!-- PART 1: WHY GLOBAL -->
+  <h2>Part 1: Why Global Explanations?</h2>
+  <p>Local explanations (L2) answer "why did the model make <em>this</em> decision for <em>this person</em>?" But sometimes the question is bigger: <strong>"Can we trust this model at all? Is it using the right features?"</strong> That requires a global view.</p>
+
+  <div class="key-concept">
+    <div class="label">The Motivating Scenario</div>
+    <p>A hospital trains a Random Forest on 569 breast tumour samples — 30 cell nucleus features, 97% test accuracy. An oncologist wants to use it as a diagnostic aid. Before trusting it with patient lives, she asks: <strong>"Is this model relying on medically sensible measurements? Or has it found some spurious correlation in the training data?"</strong> You can't answer this by explaining one patient at a time. You need to see the whole model's behaviour.</p>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left"></th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Local (L2)</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Global (L3)</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Question</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">"Why this prediction for this person?"</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">"What is this model generally relying on?"</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Output</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Explanation for one instance</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Importance ranking across all predictions</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Audience</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Individual affected, regulators</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Data scientists, doctors, business, auditors</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">Methods</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">LIME, ANCHOR</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Permutation Feature Importance, SHAP (global)</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- PART 2: PERMUTATION FEATURE IMPORTANCE -->
+  <h2>Part 2: Permutation Feature Importance</h2>
+
+  <div class="key-concept">
+    <div class="label">The Core Idea</div>
+    <p>Ask: <strong>"What happens to the model's accuracy if I destroy one feature's signal?"</strong> Shuffle a feature column (breaking its relationship with the target) and measure how much accuracy drops. A big drop = the model relied heavily on that feature. No drop = the feature is irrelevant.</p>
+  </div>
+
+  <!-- INTERACTIVE PERMUTATION DEMO -->
+  <div class="card" style="margin-bottom:16px">
+    <p style="margin:0 0 8px; font-weight:600; color:var(--accent)">Interactive: See Permutation in Action</p>
+    <p style="margin:0 0 12px; font-size:0.83rem; color:var(--text-muted)">Select a feature and click Shuffle to see what happens to model accuracy. The table shows the original vs shuffled values.</p>
+    <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start">
+      <div style="flex:1; min-width:220px">
+        <div style="margin-bottom:10px">
+          <label style="font-size:0.78rem; color:var(--text-muted)">Select feature to shuffle:</label>
+          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px" id="permFeatButtons"></div>
+        </div>
+        <button onclick="runPermShuffle()" style="background:var(--accent);color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:0.83rem;width:100%;margin-bottom:6px">🔀 Shuffle Selected Feature</button>
+        <button onclick="resetPerm()" style="background:transparent;color:var(--accent);border:1px solid var(--accent);padding:8px 18px;border-radius:6px;cursor:pointer;font-size:0.83rem;width:100%">Reset</button>
+        <div style="margin-top:12px;padding:10px;background:var(--card-bg);border-radius:6px;font-size:0.78rem">
+          <div id="permAccBefore" style="color:var(--text-muted);margin-bottom:4px">Baseline accuracy: 94.0%</div>
+          <div id="permAccAfter" style="color:var(--text-muted);margin-bottom:4px">Shuffled accuracy: —</div>
+          <div id="permImportance" style="font-weight:600;color:var(--text)"></div>
+        </div>
+      </div>
+      <div style="flex:1; min-width:220px">
+        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:6px">Sample data (first 6 rows):</div>
+        <div id="permTable" style="font-size:0.72rem; overflow-x:auto"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    const features = ['age','duration','pdays','campaign'];
+    const importances = {age:0.5, duration:8.2, pdays:1.1, campaign:0.3};
+    const origData = {
+      age:     [42,28,35,55,23,47],
+      duration:[261,149,226,330,87,195],
+      pdays:   [999,6,999,12,999,3],
+      campaign:[1,2,1,3,1,2]
+    };
+    let selected = 'duration';
+    let shuffled = false;
+
+    function renderButtons(){
+      document.getElementById('permFeatButtons').innerHTML = features.map(f =>
+        `<button onclick="selectPermFeat('${f}')" id="pfb-${f}" style="padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.75rem;border:1.5px solid ${f===selected?'var(--accent)':'var(--card-border)'};background:${f===selected?'var(--accent)':'transparent'};color:${f===selected?'#fff':'var(--text-muted)'}">${f}</button>`
+      ).join('');
+    }
+    function renderTable(feat, isShuffled){
+      const keys = features;
+      let html = '<table style="border-collapse:collapse;width:100%"><tr>';
+      keys.forEach(k => html += `<th style="padding:4px 8px;text-align:left;color:${k===feat?'var(--accent)':'var(--text-muted)'};font-size:0.7rem;border-bottom:1px solid var(--card-border)">${k}${k===feat&&isShuffled?' 🔀':''}</th>`);
+      html += '</tr>';
+      for(let i=0;i<6;i++){
+        html += '<tr>';
+        keys.forEach(k => {
+          const val = (k===feat && isShuffled)
+            ? origData[k][[2,5,0,3,1,4][i]]
+            : origData[k][i];
+          html += `<td style="padding:4px 8px;color:${k===feat&&isShuffled?'#f87171':'var(--text-muted)'};font-size:0.7rem">${val}</td>`;
+        });
+        html += '</tr>';
+      }
+      html += '</table>';
+      document.getElementById('permTable').innerHTML = html;
+    }
+    window.selectPermFeat = function(f){ selected=f; shuffled=false; renderButtons(); renderTable(f,false); document.getElementById('permAccAfter').textContent='Shuffled accuracy: —'; document.getElementById('permImportance').textContent=''; };
+    window.runPermShuffle = function(){
+      shuffled=true; renderTable(selected,true);
+      const imp = importances[selected];
+      const after = (94.0 - imp).toFixed(1);
+      document.getElementById('permAccAfter').textContent = `Shuffled accuracy: ${after}%`;
+      const color = imp>2?'#f87171':imp>0.5?'#fbbf24':'#34d399';
+      document.getElementById('permImportance').innerHTML = `<span style="color:${color}">Importance = 94.0 − ${after} = ${imp.toFixed(1)}pp ${imp>2?'🔴 HIGH':imp>0.5?'🟡 MEDIUM':'🟢 LOW'}</span>`;
+    };
+    window.resetPerm = function(){ shuffled=false; renderTable(selected,false); document.getElementById('permAccAfter').textContent='Shuffled accuracy: —'; document.getElementById('permImportance').textContent=''; };
+    renderButtons(); renderTable(selected,false);
+  })();
+  </script>
+
+  <h3>The Algorithm Step by Step</h3>
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:center; width:5%">Step</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Action</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">In the bank marketing practical</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px;font-weight:700;color:#60a5fa;text-align:center">1</td>
+        <td style="padding:8px 14px;font-weight:600">Train model, record baseline accuracy</td>
+        <td style="padding:8px 14px;color:var(--text-muted)">LightGBM on bank marketing data → balanced accuracy ~74%</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px;font-weight:700;color:#60a5fa;text-align:center">2</td>
+        <td style="padding:8px 14px;font-weight:600">Choose a feature, randomly shuffle its column</td>
+        <td style="padding:8px 14px;color:var(--text-muted)">Shuffle "duration" → breaks all signal in call duration</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px;font-weight:700;color:#60a5fa;text-align:center">3</td>
+        <td style="padding:8px 14px;font-weight:600">Re-evaluate accuracy on shuffled data</td>
+        <td style="padding:8px 14px;color:var(--text-muted)">Accuracy drops significantly → duration was critical</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px;font-weight:700;color:#60a5fa;text-align:center">4</td>
+        <td style="padding:8px 14px;font-weight:600">Importance = baseline − shuffled accuracy</td>
+        <td style="padding:8px 14px;color:var(--text-muted)">Repeat n_repeats=10 times → box plot of scores</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px;font-weight:700;color:#60a5fa;text-align:center">5</td>
+        <td style="padding:8px 14px;font-weight:600">Repeat for every feature, rank by importance</td>
+        <td style="padding:8px 14px;color:var(--text-muted)">Sort by mean importance → read the box plot</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>In Code — Bank Marketing Dataset</h3>
+  <div class="code-block"><pre><span class="kw">from</span> sklearn.inspection <span class="kw">import</span> permutation_importance
+<span class="kw">from</span> lightgbm <span class="kw">import</span> LGBMClassifier
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="cm"># Train model (LightGBM handles mixed numeric + categorical data well)</span>
+model = LGBMClassifier(class_weight=<span class="str">"balanced"</span>)
+model.fit(X_train, y_train)
+
+<span class="cm"># Compute permutation importance (repeat 10x to average out randomness)</span>
+result = permutation_importance(
+    model, X_test, y_test,
+    n_repeats=10,                      <span class="cm"># 10 repeats → 10 scores per feature → box plot</span>
+    scoring=<span class="str">"balanced_accuracy"</span>,       <span class="cm"># use balanced accuracy for imbalanced data</span>
+    random_state=42
+)
+
+<span class="cm"># Plot as box plot — shows spread across 10 repeats</span>
+sorted_idx = result.importances_mean.argsort()
+fig, ax = plt.subplots()
+ax.boxplot(
+    result.importances[sorted_idx].T,
+    vert=<span class="kw">False</span>,
+    labels=X_test.columns[sorted_idx]
+)
+ax.set_title(<span class="str">"Permutation Feature Importances"</span>)
+plt.tight_layout()</pre></div>
+
+  <h3>Reading the Box Plot</h3>
+  <div class="card" style="margin-bottom:16px">
+    <div class="code-block" style="margin:0 0 10px"><pre style="font-size:0.75rem">feature_A  |──────[  ████████████  ]────────────────|    ← wide box = unstable
+feature_B  |──[██████████████████████████████]─|         ← narrow box = stable
+feature_C  |──[█]──|                                     ← small = low importance
+                0.0    0.02   0.04   0.06   0.08  0.10
+                              Importance (accuracy drop)</pre></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; font-size:0.78rem">
+      <div style="padding:8px; background:rgba(96,165,250,0.08); border-radius:6px">
+        <strong style="color:#60a5fa">Box centre (median)</strong><br>
+        <span style="color:var(--text-muted)">Typical importance score across the 10 shuffling repeats</span>
+      </div>
+      <div style="padding:8px; background:rgba(167,139,250,0.08); border-radius:6px">
+        <strong style="color:#a78bfa">Box width (IQR)</strong><br>
+        <span style="color:var(--text-muted)">Variability — wide box = unstable score, depends on which values were shuffled</span>
+      </div>
+      <div style="padding:8px; background:rgba(248,113,113,0.08); border-radius:6px">
+        <strong style="color:#f87171">Negative values</strong><br>
+        <span style="color:var(--text-muted)">On test set only — model learned a spurious pattern from this feature that hurts generalisation</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>Three Important Limitations</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">1. Randomness → Instability</p>
+      <p style="margin:0 0 6px; font-size:0.83rem; color:var(--text-muted)">Different random shuffles produce different scores. Run <code>n_repeats=20</code> to average out noise — the box plot shows you whether the importance is stable or variable.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">2. Train vs Test</p>
+      <p style="margin:0 0 6px; font-size:0.83rem; color:var(--text-muted)">Train set: can't go negative (model was optimised here). Test set: can go negative if a feature caused overfitting. Test set is better for measuring <em>real</em> usefulness — but both are valid for different questions.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">3. Correlated Features</p>
+      <p style="margin:0 0 8px; font-size:0.83rem; color:var(--text-muted)">If two features are correlated (e.g. <code>month</code> and <code>season</code>), shuffling one doesn't fully break the signal — the model compensates using the other. Both appear <em>less important</em> than they really are.</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.7rem">month: importance drops when season is added
+season: gets moderate importance
+True importance: month (or season) is actually critical
+→ importance is "split" between correlated features</pre></div>
+    </div>
+  </div>
+
+  <h3>The Random Feature Sanity Check</h3>
+  <p>The practical adds two completely random features (<code>random_num</code>, <code>random_cat</code>) to verify the method is working:</p>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 4px; font-weight:600; color:#34d399">On test set ✓</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Both random features have near-zero importance — exactly as expected. The method correctly identifies that they carry no real signal.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 4px; font-weight:600; color:#f87171">On training set ⚠</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)"><code>random_num</code> gets a significantly higher importance. The model <em>overfit</em> to noise in the random numbers — it found patterns that don't generalise. This is why test-set importance is more trustworthy for real model validation.</p>
+    </div>
+  </div>
+
+  <!-- PART 3: SHAP -->
+  <h2>Part 3: SHAP — SHapley Additive exPlanations</h2>
+  <p>SHAP is more powerful than permutation importance. It tells you not just <em>which</em> features matter, but <em>how much</em> each feature contributed to <em>each specific prediction</em> — and then averages those local contributions to give a global picture.</p>
+
+  <h3>The Game Theory Foundation — Shapley Values</h3>
+  <div class="key-concept">
+    <div class="label">The Analogy</div>
+    <p>Four superheroes form a team to win a prize. Each hero has different skills. Some work well together; others clash. After winning, <strong>how do you fairly distribute the prize according to each hero's actual contribution?</strong> Shapley values answer this by evaluating every possible team combination and computing each hero's average marginal contribution.</p>
+  </div>
+
+  <!-- SHAPLEY INTERACTIVE -->
+  <div class="card" style="margin-bottom:16px">
+    <p style="margin:0 0 8px; font-weight:600; color:var(--accent)">Interactive: Shapley Value Calculator</p>
+    <p style="margin:0 0 10px; font-size:0.83rem; color:var(--text-muted)">A model predicts house price. See how each feature's Shapley value is computed as a weighted average of its marginal contributions across all orderings.</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start">
+      <div>
+        <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:8px">This house: <strong style="color:var(--text)">6 bedrooms, 200m² floor area, has garden</strong><br>Average house price (base value): <strong style="color:var(--accent)">£250,000</strong></div>
+        <div id="shapleyOrders" style="font-size:0.73rem; color:var(--text-muted); line-height:1.8"></div>
+        <button onclick="computeShapley()" style="margin-top:10px;background:var(--accent);color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:0.83rem;width:100%">▶ Compute Shapley Values</button>
+      </div>
+      <div id="shapleyResult" style="font-size:0.78rem"></div>
+    </div>
+  </div>
+  <script>
+  window.computeShapley = function() {
+    const orders = [
+      {order:['bedrooms','floor','garden'], mc:{bedrooms:60, floor:80, garden:10}},
+      {order:['bedrooms','garden','floor'], mc:{bedrooms:60, floor:75, garden:15}},
+      {order:['floor','bedrooms','garden'], mc:{bedrooms:55, floor:85, garden:10}},
+      {order:['floor','garden','bedrooms'], mc:{bedrooms:50, floor:85, garden:15}},
+      {order:['garden','bedrooms','floor'], mc:{bedrooms:58, floor:80, garden:12}},
+      {order:['garden','floor','bedrooms'], mc:{bedrooms:52, floor:82, garden:16}},
+    ];
+    let html = '';
+    orders.forEach((o,i) => {
+      html += `<div style="margin-bottom:4px;padding:6px 8px;background:var(--card-bg);border-radius:4px">
+        <span style="color:var(--accent)">Order ${i+1}:</span> ${o.order.join(' → ')}
+        <span style="color:var(--text-muted);margin-left:8px">bedrooms: +£${o.mc.bedrooms}k &nbsp; floor: +£${o.mc.floor}k &nbsp; garden: +£${o.mc.garden}k</span>
+      </div>`;
+    });
+    document.getElementById('shapleyOrders').innerHTML = html;
+    const sv = {
+      bedrooms: Math.round((60+60+55+50+58+52)/6),
+      floor:    Math.round((80+75+85+85+80+82)/6),
+      garden:   Math.round((10+15+10+15+12+16)/6)
+    };
+    const total = sv.bedrooms + sv.floor + sv.garden;
+    const resHtml = `
+      <div style="font-weight:600;color:var(--text);margin-bottom:8px">Shapley Values (weighted averages):</div>
+      ${Object.entries(sv).map(([f,v]) => {
+        const pct = Math.round(v/total*100);
+        return `<div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-bottom:3px">
+            <span style="color:var(--text-muted)">${f}</span>
+            <span style="color:#34d399">+£${v},000</span>
+          </div>
+          <div style="height:12px;background:var(--card-border);border-radius:3px">
+            <div style="width:${pct}%;height:100%;background:#34d399;border-radius:3px"></div>
+          </div>
+        </div>`;
+      }).join('')}
+      <div style="margin-top:8px;padding:8px;background:var(--card-bg);border-radius:6px;font-size:0.73rem;color:var(--text-muted)">
+        Sum: £${sv.bedrooms}k + £${sv.floor}k + £${sv.garden}k = £${total}k<br>
+        Base: £250k + £${total}k = <strong style="color:var(--accent)">£${250+total}k predicted price</strong><br>
+        <em>SHAP values always sum to (prediction − base value) ✓</em>
+      </div>`;
+    document.getElementById('shapleyResult').innerHTML = resHtml;
+  };
+  </script>
+
+  <h3>Transferring Shapley Values to Machine Learning</h3>
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+      <div>
+        <p style="margin:0 0 6px; font-weight:600; color:#a78bfa">Game Theory</p>
+        <div class="code-block" style="margin:0"><pre style="font-size:0.72rem">Players    → Features
+Prize      → Model prediction f(x)
+"In team"  → Use feature's real value
+"Out"      → Replace with E[feature]
+Winnings   → Model output difference
+Shapley φ  → Feature's fair contribution</pre></div>
+      </div>
+      <div>
+        <p style="margin:0 0 6px; font-weight:600; color:#34d399">ML Setting</p>
+        <div class="code-block" style="margin:0"><pre style="font-size:0.72rem">φⱼ = Σ |S|!(p-|S|-1)!/p! ×
+     (f(S ∪ {xⱼ}) - f(S))
+
+Always true:
+  Σⱼ φⱼ = f(x) - E[f(x)]
+  ↑ SHAP values sum to
+    prediction minus base value</pre></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>SHAP Explainer Types — Which to Use</h3>
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Explainer</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">For which models</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Speed</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Notes</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#34d399"><code>TreeExplainer</code></td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Random Forest, XGBoost, LightGBM, CatBoost</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Very fast — polynomial time exact algorithm</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">No training data needed. Output in log-odds for classifiers. <strong>Use this for tree models.</strong></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#60a5fa"><code>DeepExplainer</code></td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Neural networks (TF, PyTorch)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Fast — uses backpropagation</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Approximation — assumes feature independence</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#fbbf24"><code>KernelExplainer</code></td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Any model (fully model-agnostic)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Slow — ~5,000 model calls per sample</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Use when no optimised explainer exists. Same API as others.</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>Full SHAP Code — Adult Income Dataset</h3>
+  <div class="code-block"><pre><span class="kw">import</span> shap
+shap.initjs()   <span class="cm"># loads JS visualisations in notebooks</span>
+
+<span class="cm"># 1. Train the black-box model</span>
+model = LGBMClassifier(n_estimators=500)
+model.fit(X_train, y_train)
+
+<span class="cm"># 2. Create explainer — TreeExplainer for LightGBM (fast + exact)</span>
+explainer = shap.TreeExplainer(model)
+
+<span class="cm"># 3. Compute SHAP values for all test samples</span>
+<span class="cm">#    shape: (n_samples, n_features)</span>
+shap_values = explainer.shap_values(X_test)
+
+<span class="cm"># 4. Base value — average model output across training data</span>
+<span class="cm">#    (equivalent to £250k in the house price example)</span>
+base_value = explainer.expected_value
+print(<span class="str">"Base value (avg log-odds):"</span>, base_value)
+
+<span class="cm"># ── LOCAL EXPLANATION ──────────────────────────</span>
+<span class="cm"># Force plot for one person (sample i)</span>
+i = 0
+shap.force_plot(base_value, shap_values[i, :], X_test.iloc[i, :])
+
+<span class="cm"># ── GLOBAL EXPLANATIONS ────────────────────────</span>
+<span class="cm"># Beeswarm plot: every dot = one person</span>
+shap.summary_plot(shap_values, X_test, feature_names=feature_names)
+
+<span class="cm"># Bar chart: mean |SHAP value| per feature</span>
+shap.summary_plot(shap_values, X_test, plot_type=<span class="str">"bar"</span>)
+
+<span class="cm"># Dependence plot: SHAP vs feature value for one feature</span>
+shap.dependence_plot(<span class="str">"age"</span>, shap_values, X_test)</pre></div>
+
+  <h3>Understanding the Base Value</h3>
+  <div class="card" style="margin-bottom:16px">
+    <div class="code-block" style="margin:0 0 8px"><pre style="font-size:0.75rem">base_value = E[f(x)] over all training samples
+           = average model output before knowing anything about this person
+
+For classification (LightGBM): expressed in log-odds
+  log-odds = log(P(class=1) / P(class=0))
+  base_value ≈ -1.5 means ~18% of training data earns >$50k on average
+
+Then for a specific person:
+  f(x) = base_value + Σ SHAP values
+       = -1.5       + 0.8 + 0.6 - 0.3 + ...
+  SHAP values show how each feature moved the prediction away from average</pre></div>
+    <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">This is the <strong>local accuracy axiom</strong> — SHAP values always sum exactly to (prediction − base value). Every fraction of the prediction is attributed to a feature. Nothing is unexplained.</p>
+  </div>
+
+  <h3>Reading the Three SHAP Plots</h3>
+
+  <!-- BEESWARM EXPLANATION -->
+  <div class="card" style="margin-bottom:12px">
+    <p style="margin:0 0 4px; font-weight:600; color:var(--accent)">Plot 1 — Beeswarm / Summary Plot: Global + Directional</p>
+    <p style="margin:0 0 12px; font-size:0.8rem; color:var(--text-muted)">Each dot = one person. X-axis = SHAP value (how much this feature moved their prediction). <span style="color:#ef4444; font-weight:600">■ Red</span> = high feature value &nbsp; <span style="color:#3b82f6; font-weight:600">■ Blue</span> = low feature value.</p>
+
+    <!-- Beeswarm axis header -->
+    <div style="display:flex; align-items:center; margin-bottom:4px; padding:0 8px">
+      <div style="width:110px; flex-shrink:0"></div>
+      <div style="flex:1; display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted)">
+        <span>← negative (pushes toward False / low income)</span>
+        <span>positive → (pushes toward True / high income)</span>
+      </div>
+    </div>
+    <!-- Centre line -->
+    <div style="display:flex; align-items:center; padding:0 8px; margin-bottom:12px">
+      <div style="width:110px; flex-shrink:0"></div>
+      <div style="flex:1; height:1px; background:var(--card-border); position:relative">
+        <span style="position:absolute; left:50%; transform:translateX(-50%); top:-8px; font-size:0.68rem; color:var(--text-muted)">0</span>
+      </div>
+    </div>
+
+    <!-- AGE ROW -->
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding:0 8px">
+      <div style="width:110px; flex-shrink:0; font-size:0.78rem; font-weight:600; color:var(--text)">age</div>
+      <div style="flex:1; position:relative; height:20px">
+        <div style="position:absolute; left:50%; top:0; width:1px; height:100%; background:var(--card-border)"></div>
+        <!-- Blue dots left (young = low SHAP) -->
+        <span style="position:absolute; left:4%;  top:4px; color:#3b82f6; font-size:13px">●</span>
+        <span style="position:absolute; left:9%;  top:2px; color:#3b82f6; font-size:15px">●</span>
+        <span style="position:absolute; left:14%; top:5px; color:#3b82f6; font-size:12px">●</span>
+        <span style="position:absolute; left:19%; top:1px; color:#3b82f6; font-size:14px">●</span>
+        <span style="position:absolute; left:23%; top:6px; color:#3b82f6; font-size:11px">●</span>
+        <span style="position:absolute; left:28%; top:3px; color:#3b82f6; font-size:13px">●</span>
+        <span style="position:absolute; left:33%; top:7px; color:#3b82f6; font-size:12px">●</span>
+        <!-- Red dots right (older = high SHAP) -->
+        <span style="position:absolute; left:58%; top:4px; color:#ef4444; font-size:12px">●</span>
+        <span style="position:absolute; left:63%; top:1px; color:#ef4444; font-size:14px">●</span>
+        <span style="position:absolute; left:68%; top:6px; color:#ef4444; font-size:13px">●</span>
+        <span style="position:absolute; left:73%; top:2px; color:#ef4444; font-size:15px">●</span>
+        <span style="position:absolute; left:78%; top:5px; color:#ef4444; font-size:12px">●</span>
+        <span style="position:absolute; left:82%; top:3px; color:#ef4444; font-size:13px">●</span>
+        <span style="position:absolute; left:87%; top:7px; color:#ef4444; font-size:14px">●</span>
+        <span style="position:absolute; left:91%; top:2px; color:#ef4444; font-size:12px">●</span>
+      </div>
+    </div>
+    <div style="display:flex; margin-bottom:16px; padding:0 8px">
+      <div style="width:110px; flex-shrink:0"></div>
+      <div style="flex:1; display:flex; justify-content:space-between; font-size:0.68rem; color:var(--text-muted)">
+        <span style="color:#3b82f6">young → lower income probability</span>
+        <span style="color:#ef4444">older → higher income probability</span>
+      </div>
+    </div>
+
+    <!-- CAPITAL LOSS ROW -->
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding:0 8px">
+      <div style="width:110px; flex-shrink:0; font-size:0.78rem; font-weight:600; color:var(--text)">capital_loss</div>
+      <div style="flex:1; position:relative; height:20px">
+        <div style="position:absolute; left:50%; top:0; width:1px; height:100%; background:var(--card-border)"></div>
+        <!-- Blue cluster near zero (low loss = neutral) -->
+        <span style="position:absolute; left:42%; top:2px; color:#3b82f6; font-size:14px">●</span>
+        <span style="position:absolute; left:45%; top:6px; color:#3b82f6; font-size:12px">●</span>
+        <span style="position:absolute; left:48%; top:1px; color:#3b82f6; font-size:13px">●</span>
+        <span style="position:absolute; left:51%; top:5px; color:#3b82f6; font-size:11px">●</span>
+        <span style="position:absolute; left:54%; top:2px; color:#3b82f6; font-size:14px">●</span>
+        <span style="position:absolute; left:57%; top:7px; color:#3b82f6; font-size:12px">●</span>
+        <!-- Red dots spread both ways (high loss = mixed effect) -->
+        <span style="position:absolute; left:12%; top:4px; color:#ef4444; font-size:13px">●</span>
+        <span style="position:absolute; left:20%; top:2px; color:#ef4444; font-size:11px">●</span>
+        <span style="position:absolute; left:28%; top:6px; color:#ef4444; font-size:14px">●</span>
+        <span style="position:absolute; left:68%; top:3px; color:#ef4444; font-size:12px">●</span>
+        <span style="position:absolute; left:75%; top:7px; color:#ef4444; font-size:13px">●</span>
+        <span style="position:absolute; left:82%; top:1px; color:#ef4444; font-size:11px">●</span>
+      </div>
+    </div>
+    <div style="display:flex; margin-bottom:16px; padding:0 8px">
+      <div style="width:110px; flex-shrink:0"></div>
+      <div style="flex:1; display:flex; justify-content:space-between; font-size:0.68rem; color:var(--text-muted)">
+        <span style="color:#ef4444">high loss can push ←</span>
+        <span style="color:#3b82f6">low loss ≈ neutral (near 0)</span>
+        <span style="color:#ef4444">high loss can push →</span>
+      </div>
+    </div>
+
+    <!-- EDUCATION ROW -->
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding:0 8px">
+      <div style="width:110px; flex-shrink:0; font-size:0.78rem; font-weight:600; color:var(--text)">education_num</div>
+      <div style="flex:1; position:relative; height:20px">
+        <div style="position:absolute; left:50%; top:0; width:1px; height:100%; background:var(--card-border)"></div>
+        <span style="position:absolute; left:6%;  top:3px; color:#3b82f6; font-size:13px">●</span>
+        <span style="position:absolute; left:11%; top:6px; color:#3b82f6; font-size:14px">●</span>
+        <span style="position:absolute; left:17%; top:1px; color:#3b82f6; font-size:12px">●</span>
+        <span style="position:absolute; left:22%; top:5px; color:#3b82f6; font-size:13px">●</span>
+        <span style="position:absolute; left:27%; top:2px; color:#3b82f6; font-size:11px">●</span>
+        <span style="position:absolute; left:60%; top:4px; color:#ef4444; font-size:12px">●</span>
+        <span style="position:absolute; left:65%; top:1px; color:#ef4444; font-size:14px">●</span>
+        <span style="position:absolute; left:70%; top:6px; color:#ef4444; font-size:13px">●</span>
+        <span style="position:absolute; left:75%; top:3px; color:#ef4444; font-size:15px">●</span>
+        <span style="position:absolute; left:80%; top:7px; color:#ef4444; font-size:12px">●</span>
+        <span style="position:absolute; left:85%; top:2px; color:#ef4444; font-size:13px">●</span>
+      </div>
+    </div>
+    <div style="display:flex; margin-bottom:14px; padding:0 8px">
+      <div style="width:110px; flex-shrink:0"></div>
+      <div style="flex:1; display:flex; justify-content:space-between; font-size:0.68rem; color:var(--text-muted)">
+        <span style="color:#3b82f6">low education → lower income probability</span>
+        <span style="color:#ef4444">high education → higher income probability</span>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div style="display:flex; gap:16px; padding:10px 8px; background:var(--card-bg); border-radius:6px; font-size:0.78rem; flex-wrap:wrap">
+      <span><span style="color:#ef4444; font-weight:700">●</span> <strong>Red</strong> = <strong>high</strong> feature value</span>
+      <span><span style="color:#3b82f6; font-weight:700">●</span> <strong>Blue</strong> = <strong>low</strong> feature value</span>
+      <span style="color:var(--text-muted)">X-axis: SHAP value (how much this feature moved this person's prediction)</span>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:0.8rem; margin-top:12px">
+      <div style="padding:8px; background:rgba(96,165,250,0.08); border-radius:6px">
+        <strong style="color:#60a5fa">Age — clean colour split</strong><br>
+        <span style="color:var(--text-muted)">Blue dots all on the left, red all on the right. Low age → negative SHAP (reduces income probability). High age → positive SHAP. Clear monotonic positive relationship.</span>
+      </div>
+      <div style="padding:8px; background:rgba(167,139,250,0.08); border-radius:6px">
+        <strong style="color:#a78bfa">Capital Loss — mixed pattern</strong><br>
+        <span style="color:var(--text-muted)">Blue clustered near zero (low loss = neutral effect). Red dots spread to both left AND right — high capital loss can push the prediction either way. Non-linear, interaction-dependent effect.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <p style="margin:0 0 4px; font-weight:600; color:var(--accent)">Plot 2 — Bar Chart: Global Importance (No Direction)</p>
+    <p style="margin:0 0 12px; font-size:0.8rem; color:var(--text-muted)">Mean |SHAP value| per feature across all test samples — shows <em>how much</em> each feature matters overall, but not which direction.</p>
+    <div style="padding:4px 0">
+      <!-- relationship -->
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px">
+        <div style="width:115px; text-align:right; font-size:0.75rem; color:var(--text); flex-shrink:0">relationship</div>
+        <div style="flex:1; height:18px; background:var(--card-border); border-radius:3px; overflow:hidden">
+          <div style="width:100%; height:100%; background:#7c3aed; border-radius:3px"></div>
+        </div>
+        <span style="width:32px; font-size:0.72rem; color:var(--text-muted)">0.52</span>
+      </div>
+      <!-- capital_gain -->
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px">
+        <div style="width:115px; text-align:right; font-size:0.75rem; color:var(--text); flex-shrink:0">capital_gain</div>
+        <div style="flex:1; height:18px; background:var(--card-border); border-radius:3px; overflow:hidden">
+          <div style="width:84%; height:100%; background:#7c3aed; border-radius:3px"></div>
+        </div>
+        <span style="width:32px; font-size:0.72rem; color:var(--text-muted)">0.44</span>
+      </div>
+      <!-- age -->
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px">
+        <div style="width:115px; text-align:right; font-size:0.75rem; color:var(--text); flex-shrink:0">age</div>
+        <div style="flex:1; height:18px; background:var(--card-border); border-radius:3px; overflow:hidden">
+          <div style="width:73%; height:100%; background:#7c3aed; border-radius:3px"></div>
+        </div>
+        <span style="width:32px; font-size:0.72rem; color:var(--text-muted)">0.38</span>
+      </div>
+      <!-- education_num -->
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px">
+        <div style="width:115px; text-align:right; font-size:0.75rem; color:var(--text); flex-shrink:0">education_num</div>
+        <div style="flex:1; height:18px; background:var(--card-border); border-radius:3px; overflow:hidden">
+          <div style="width:63%; height:100%; background:#7c3aed; border-radius:3px"></div>
+        </div>
+        <span style="width:32px; font-size:0.72rem; color:var(--text-muted)">0.33</span>
+      </div>
+      <!-- hours_per_week -->
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px">
+        <div style="width:115px; text-align:right; font-size:0.75rem; color:var(--text); flex-shrink:0">hours_per_week</div>
+        <div style="flex:1; height:18px; background:var(--card-border); border-radius:3px; overflow:hidden">
+          <div style="width:56%; height:100%; background:#7c3aed; border-radius:3px"></div>
+        </div>
+        <span style="width:32px; font-size:0.72rem; color:var(--text-muted)">0.29</span>
+      </div>
+      <!-- occupation -->
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px">
+        <div style="width:115px; text-align:right; font-size:0.75rem; color:var(--text); flex-shrink:0">occupation</div>
+        <div style="flex:1; height:18px; background:var(--card-border); border-radius:3px; overflow:hidden">
+          <div style="width:42%; height:100%; background:#7c3aed; border-radius:3px"></div>
+        </div>
+        <span style="width:32px; font-size:0.72rem; color:var(--text-muted)">0.22</span>
+      </div>
+      <div style="font-size:0.68rem; color:var(--text-muted); text-align:right; margin-top:4px; padding-left:125px">mean |SHAP value| →</div>
+    </div>
+    <div style="margin-top:12px; padding:10px; background:var(--card-bg); border-radius:6px; font-size:0.8rem; color:var(--text-muted)">
+      <strong style="color:var(--text)">Why absolute values?</strong> Without |·|, positive and negative SHAPs cancel each other out — e.g. age SHAP values of +0.4, −0.3, +0.5, −0.2 would average to only +0.1 (misleadingly small). Taking the absolute value first gives 0.35 — the true average <em>magnitude</em> of impact regardless of direction. This gives a fair global importance ranking.
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <p style="margin:0 0 8px; font-weight:600; color:var(--accent)">Plot 3 — Dependence Plot: How One Feature's Effect Changes</p>
+    <div class="code-block" style="margin:0 0 8px"><pre style="font-size:0.74rem">X-axis: actual feature value (e.g. age from 17 to 90)
+Y-axis: SHAP value for that feature (its contribution to the prediction)
+Colour: a second correlated feature (chosen automatically by SHAP)
+
+For age:
+  Low age (17-25):  SHAP ≈ -0.6  → being young strongly reduces P(high income)
+  Age 30-45:        SHAP rises rapidly → career-building years
+  Age 50+:          SHAP ≈ +0.4  → plateaus at high positive contribution
+  Vertical spread:  driven by interaction with another feature (e.g. education)</pre></div>
+    <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Dependence plots reveal non-linear effects and interactions — things a bar chart can't show. The vertical spread at any single x-value shows the interaction effect with the coloured feature.</p>
+  </div>
+
+  <!-- INTERACTIVE SHAP WATERFALL -->
+  <div class="card" style="margin-bottom:16px">
+    <p style="margin:0 0 8px; font-weight:600; color:var(--accent)">Interactive: SHAP Force Plot / Waterfall</p>
+    <p style="margin:0 0 12px; font-size:0.83rem; color:var(--text-muted)">Adjust this person's features to see how SHAP values build up from the base value to the final prediction.</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start">
+      <div>
+        <div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-muted);margin-bottom:3px"><span>Age</span><span id="sv1">35</span></div>
+          <input type="range" id="ss1" min="18" max="70" value="35" style="width:100%" oninput="updateSHAP()">
+        </div>
+        <div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-muted);margin-bottom:3px"><span>Education (years)</span><span id="sv2">10</span></div>
+          <input type="range" id="ss2" min="1" max="16" value="10" style="width:100%" oninput="updateSHAP()">
+        </div>
+        <div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-muted);margin-bottom:3px"><span>Hours/week</span><span id="sv3">40</span></div>
+          <input type="range" id="ss3" min="1" max="80" value="40" style="width:100%" oninput="updateSHAP()">
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-muted);margin-bottom:3px"><span>Capital gain ($k)</span><span id="sv4">0</span></div>
+          <input type="range" id="ss4" min="0" max="100" value="0" style="width:100%" oninput="updateSHAP()">
+        </div>
+      </div>
+      <div id="shapWaterfall" style="font-size:0.78rem"></div>
+    </div>
+  </div>
+  <script>
+  function updateSHAP() {
+    const age = parseInt(document.getElementById('ss1').value);
+    const edu = parseInt(document.getElementById('ss2').value);
+    const hrs = parseInt(document.getElementById('ss3').value);
+    const cap = parseInt(document.getElementById('ss4').value);
+    document.getElementById('sv1').textContent = age;
+    document.getElementById('sv2').textContent = edu;
+    document.getElementById('sv3').textContent = hrs;
+    document.getElementById('sv4').textContent = cap;
+    const base = -1.5;
+    const sw = {
+      age:        +((age-35)/35*0.8).toFixed(2),
+      education:  +((edu-10)/8*0.6).toFixed(2),
+      hours_week: +((hrs-40)/40*0.4).toFixed(2),
+      capital_gain: +(cap/100*1.2).toFixed(2)
+    };
+    const total = Object.values(sw).reduce((a,b)=>a+b,0);
+    const pred = (base + total).toFixed(2);
+    const prob = (1/(1+Math.exp(-pred))*100).toFixed(1);
+    const sortedEntries = Object.entries(sw).sort((a,b)=>b[1]-a[1]);
+    let html = `<div style="margin-bottom:8px;font-size:0.75rem;color:var(--text-muted)">Base value (avg): <strong style="color:var(--accent)">${base} log-odds</strong></div>`;
+    let running = base;
+    sortedEntries.forEach(([f,v]) => {
+      const col = v>=0?'#34d399':'#f87171';
+      const dir = v>=0?'►':'◄';
+      running += v;
+      html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+        <span style="font-size:0.7rem;color:var(--text-muted);width:90px;flex-shrink:0">${f}</span>
+        <div style="flex:1;height:13px;background:var(--card-border);border-radius:3px;position:relative">
+          <div style="position:absolute;${v>=0?'left:50%':'right:50%'};width:${Math.min(Math.abs(v)/1.5*40,48)}%;height:100%;background:${col};border-radius:3px"></div>
+          <div style="position:absolute;left:50%;top:0;width:1px;height:100%;background:var(--text-muted)"></div>
+        </div>
+        <span style="font-size:0.7rem;color:${col};width:40px;text-align:right">${dir}${Math.abs(v)}</span>
+      </div>`;
+    });
+    html += `<div style="margin-top:10px;padding:8px;background:var(--card-bg);border-radius:6px;font-size:0.73rem">
+      <div style="color:var(--text-muted)">Prediction: ${pred} log-odds</div>
+      <div style="color:var(--text-muted)">P(income > $50k): <strong style="color:${parseFloat(prob)>50?'#34d399':'#f87171'}">${prob}%</strong></div>
+      <div style="color:var(--text-muted);margin-top:3px;font-size:0.7rem">SHAP sum: ${total.toFixed(2)} = prediction − base (${(parseFloat(pred)-base).toFixed(2)}) ✓</div>
+    </div>`;
+    document.getElementById('shapWaterfall').innerHTML = html;
+  }
+  updateSHAP();
+  </script>
+
+  <!-- PART 4: COMPARISON -->
+  <h2>Part 4: Permutation Importance vs SHAP</h2>
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left"></th>
+        <th style="padding:9px 14px; color:#60a5fa; text-align:left">Permutation Importance</th>
+        <th style="padding:9px 14px; color:#34d399; text-align:left">SHAP</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">What it measures</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Accuracy drop when feature is shuffled</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Each feature's fair contribution to each individual prediction</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Output</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">One score per feature (global only)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">One value per feature per sample — global and local</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Direction</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">No — just magnitude</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Yes — positive = pushes toward class 1, negative = away</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Correlated features</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Badly affected — splits importance between them</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Handles better by evaluating all feature coalitions</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Speed</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Fast — one full eval per feature per repeat</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">TreeSHAP very fast. KernelSHAP slow (~5k calls/sample)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Theory</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Heuristic — no mathematical guarantees</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Unique solution satisfying 4 axioms (local accuracy, missingness, consistency, symmetry)</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">Use when</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Quick sanity check, features are mostly independent</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">You need direction, interactions, or both global and local explanations</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>A Word of Warning — SHAP Can Be Fooled</h3>
+  <div class="alert-box">
+    <strong>Adversarial attacks on SHAP (Slack et al. 2020):</strong> It is possible to build a model that detects when it's being explained (explanation queries look different from real queries) and switches to an "innocent" version of itself for SHAP calls, while continuing to discriminate on real predictions. If you are generating explanations for your own model, this is not a concern. But if you are <em>receiving</em> SHAP explanations from a third party (a vendor, a regulatory submission), you cannot be fully certain the explanations reflect true behaviour. Treat SHAP as strong evidence — not ground truth.
+  </div>
+
+  <!-- SUMMARY -->
+  <h2>Summary</h2>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Concept</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Key Point</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Global explanation</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Explains whole-model behaviour. Answers: "what is this model habitually relying on?" Needed before trusting a model in production.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Permutation Importance</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Shuffle one feature → measure accuracy drop. Fast and intuitive. Limitations: unstable (use n_repeats=20), breaks with correlated features, no direction information.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Negative importance</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Only on test set — means the model overfit to a spurious pattern from that feature. Shuffling it accidentally helps test performance.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Shapley values</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Game theory: each feature is a player, model output is the prize. Fair weighted-average of marginal contributions across all coalitions.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">SHAP guarantee</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">SHAP values always sum to (prediction − base value). Satisfies 4 axioms. Both global (bar/beeswarm) and local (force plot).</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Beeswarm plot</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Every dot = one sample. X-axis = SHAP magnitude and direction. Colour = feature value (red=high, blue=low). Shows direction + importance + non-linearity.</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">TreeExplainer</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Use for RF/XGBoost/LightGBM — fast and exact. KernelExplainer works on anything but is much slower. Output in log-odds for classifiers.</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-ex3"></div></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('ex3')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('ex2')">← L2: Local Explanations</button>
+    <button class="btn btn-outline" onclick="nav('exsheet')">📋 Cheat Sheet →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- MODEL EXPLAINABILITY — Cheat Sheet                           -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-exsheet">
+  <h2>📋 Model Explainability &amp; Interpretability — Cheat Sheet</h2>
+  <p class="subtitle">Everything from L1–L3 in one place. Concepts, methods, formulas, and when to use what.</p>
+
+  <!-- LESSON OVERVIEW -->
+  <h3>What Each Lesson Covers</h3>
+  <table>
+    <tr><th>Lesson</th><th>Core topic</th><th>Key takeaway</th></tr>
+    <tr><td><strong>L1: Introduction</strong></td><td>Interpretability vs Explainability, the spectrum, three axes</td><td>Interpretability = model is readable by design. Explainability = post-hoc tool applied to a black box. Every method sits on three axes: Global/Local, Agnostic/Specific, Intrinsic/Post-hoc.</td></tr>
+    <tr><td><strong>L2: Local Explanations</strong></td><td>LIME and ANCHOR — explaining one prediction</td><td>LIME fits a local linear model via perturbation → feature weights. ANCHOR finds if-then rules with precision ≥ τ and maximum coverage.</td></tr>
+    <tr><td><strong>L3: Global Explanations</strong></td><td>Permutation Importance and SHAP — explaining whole-model behaviour</td><td>Permutation: shuffle a feature, measure accuracy drop. SHAP: game-theory fair attribution — values sum exactly to (prediction − base value).</td></tr>
+  </table>
+
+  <!-- L1 -->
+  <h3>L1: Introduction to Explainability &amp; Interpretability</h3>
+
+  <h4>Interpretability vs Explainability</h4>
+  <table>
+    <tr><th></th><th>Interpretability</th><th>Explainability</th></tr>
+    <tr><td><strong>What it is</strong></td><td>Intrinsic model property — structure is directly readable</td><td>Post-hoc technique applied to a black-box model</td></tr>
+    <tr><td><strong>Tools needed</strong></td><td>None — just read the model</td><td>SHAP, LIME, ANCHOR, PDP…</td></tr>
+    <tr><td><strong>Examples</strong></td><td>Linear regression (read coefficients), shallow decision tree (follow the path)</td><td>SHAP on a Random Forest, LIME on a neural network</td></tr>
+    <tr><td><strong>Accuracy</strong></td><td>Often lower on complex tasks</td><td>Model can be state-of-the-art</td></tr>
+    <tr><td><strong>Key caveat</strong></td><td>—</td><td>An explanation is always an <em>approximation</em> — not the model itself</td></tr>
+  </table>
+
+  <h4>The Complexity–Interpretability Spectrum</h4>
+  <table>
+    <tr><th>Model</th><th>Complexity</th><th>How to understand it</th><th>Category</th></tr>
+    <tr><td>Decision Tree (shallow)</td><td>Low</td><td>Follow the decision path directly</td><td>Interpretable</td></tr>
+    <tr><td>Linear / Logistic Regression</td><td>Low</td><td>Read the coefficients</td><td>Interpretable</td></tr>
+    <tr><td>Random Forest</td><td>Medium-High</td><td>SHAP, permutation importance, PDP</td><td>Explainable</td></tr>
+    <tr><td>Gradient Boosting (XGB, LGBM)</td><td>High</td><td>SHAP (TreeExplainer — fast &amp; exact)</td><td>Explainable</td></tr>
+    <tr><td>Deep Neural Network</td><td>Very High</td><td>SHAP, LIME, Grad-CAM, attention maps</td><td>Explainable</td></tr>
+  </table>
+
+  <h4>Three Axes — Every Method Sits on All Three</h4>
+  <table>
+    <tr><th>Axis</th><th>Option A</th><th>Option B</th><th>Example A</th><th>Example B</th></tr>
+    <tr><td><strong>Scope</strong></td><td>Global — whole model</td><td>Local — one prediction</td><td>SHAP bar chart, permutation importance</td><td>LIME, ANCHOR, SHAP waterfall</td></tr>
+    <tr><td><strong>Access</strong></td><td>Model-agnostic — black box</td><td>Model-specific — uses internals</td><td>LIME, SHAP KernelExplainer</td><td>Decision tree path, Grad-CAM</td></tr>
+    <tr><td><strong>Timing</strong></td><td>Intrinsic — by design</td><td>Post-hoc — after training</td><td>Linear regression coefficients</td><td>SHAP on any trained model</td></tr>
+  </table>
+
+  <h4>Four Reasons You Need Explainability</h4>
+  <table>
+    <tr><th>Reason</th><th>What can go wrong without it</th></tr>
+    <tr><td><strong>Debugging</strong></td><td>Model learns scanner type instead of medical signal — 93% accuracy, fails on new equipment</td></tr>
+    <tr><td><strong>Trust &amp; Adoption</strong></td><td>Doctors/loan officers won't act on unexplained recommendations</td></tr>
+    <tr><td><strong>Fairness &amp; Bias</strong></td><td>Model uses "postcode" as proxy for race — discrimination hidden inside high accuracy</td></tr>
+    <tr><td><strong>Regulation</strong></td><td>GDPR Art. 22: right to explanation. FDA: required for AI medical devices. Finance: model documentation for credit</td></tr>
+  </table>
+
+  <!-- L2 -->
+  <h3>L2: Local Explanations — LIME &amp; ANCHOR</h3>
+
+  <h4>Local vs Global</h4>
+  <table>
+    <tr><th></th><th>Local</th><th>Global</th></tr>
+    <tr><td><strong>Question</strong></td><td>"Why this decision for this person?"</td><td>"What does this model rely on overall?"</td></tr>
+    <tr><td><strong>Output</strong></td><td>Explanation for one instance</td><td>Importance across all predictions</td></tr>
+    <tr><td><strong>Audience</strong></td><td>Individual affected, regulators (GDPR), debugger</td><td>Data scientists, business, auditors</td></tr>
+    <tr><td><strong>Methods</strong></td><td>LIME, ANCHOR, SHAP waterfall, counterfactuals</td><td>Permutation importance, SHAP bar/beeswarm</td></tr>
+  </table>
+
+  <h4>Three Types of Local Explanation</h4>
+  <table>
+    <tr><th>Type</th><th>Output example</th><th>Method</th><th>Limitation</th></tr>
+    <tr><td><strong>Feature weighting</strong></td><td><code>[("debt", +0.31), ("income", −0.18)]</code></td><td>LIME, SHAP</td><td>Many features = hard to read</td></tr>
+    <tr><td><strong>Feature subsets</strong></td><td>"Top features: debt_ratio, age"</td><td>Subset selection</td><td>No direction — was debt too high or too low?</td></tr>
+    <tr><td><strong>Rule-based</strong></td><td><code>IF debt &gt; 0.7 AND age &lt; 30 → DENY</code></td><td>ANCHOR</td><td>Primarily tabular data only</td></tr>
+  </table>
+
+  <h4>Perturbation — The Shared Foundation of LIME and ANCHOR</h4>
+  <p>Both methods probe the model by creating many slightly modified copies of the point of interest, getting the model's predictions for each, and using the pattern to explain local behaviour. Neither method needs access to model internals.</p>
+
+  <h4>LIME — Algorithm &amp; Key Parameters</h4>
+  <table>
+    <tr><th>Step</th><th>What happens</th><th>Key parameter</th></tr>
+    <tr><td>1. Perturb</td><td>Generate ~5,000 modified copies of point x</td><td><code>num_samples</code></td></tr>
+    <tr><td>2. Predict</td><td>Get <code>predict_proba</code> for each (not <code>predict</code>)</td><td>Must pass pointer, not call</td></tr>
+    <tr><td>3. Weight</td><td>π(z) = exp(−D(x,z)²/σ²) — closer = higher weight</td><td>σ (kernel width)</td></tr>
+    <tr><td>4. Fit</td><td>Weighted Ridge regression on perturbed samples</td><td><code>discretize_continuous</code></td></tr>
+    <tr><td>5. Return</td><td>Linear coefficients = feature weights</td><td><code>num_features</code></td></tr>
+  </table>
+
+  <h4>Reading LIME Output</h4>
+  <table>
+    <tr><th>Output</th><th>Meaning</th></tr>
+    <tr><td><code>exp.as_list()</code></td><td>List of <code>(feature_name, weight)</code> tuples. Positive = pushed toward predicted class. Negative = pushed away.</td></tr>
+    <tr><td><code>exp.as_pyplot_figure()</code></td><td>Bar chart: 🟢 green bars extend right (for predicted class), 🔴 red bars extend left (against it). Bar length = magnitude.</td></tr>
+    <tr><td>Title: "Local explanation for class 1"</td><td>Class = what the model predicted. Features = the inputs. Bars show which feature argued for/against that class.</td></tr>
+    <tr><td>Negative importance (test set)</td><td>Feature pushed the model <em>away</em> from the correct prediction — the model may have overfit to it</td></tr>
+  </table>
+
+  <div class="alert alert-warn">⚠️ <strong>LIME instability:</strong> Two runs on the same point can give different weights due to random sampling. Near complex decision boundaries, the local linear approximation breaks down → short, inconsistent arrows in the quiver plot. Run multiple times; use SHAP for high-stakes decisions.</div>
+
+  <h4>ANCHOR — Components &amp; Interpretation</h4>
+  <table>
+    <tr><th>Component</th><th>Definition</th><th>Example</th></tr>
+    <tr><td><strong>Predicate</strong></td><td>A single if-then condition on one feature</td><td><code>debt_ratio &gt; 0.70</code></td></tr>
+    <tr><td><strong>Anchor A</strong></td><td>A set of predicates that must ALL be true. A(x)=1 if all hold.</td><td><code>debt &gt; 0.70 AND age &lt; 30</code></td></tr>
+    <tr><td><strong>Precision</strong></td><td>Of perturbed samples where A holds, % getting same prediction as x</td><td>0.97 → rule correct 97% of the time</td></tr>
+    <tr><td><strong>Coverage</strong></td><td>Fraction of training data where all predicates are true</td><td>0.09 → rule applies to 9% of cases</td></tr>
+  </table>
+  <p>ANCHOR selects: <strong>the valid anchor (precision ≥ τ) with the highest coverage.</strong> More conditions → lower coverage but higher precision. Lower threshold τ → simpler, more general rules.</p>
+
+  <h4>LIME vs ANCHOR — Quick Reference</h4>
+  <table>
+    <tr><th></th><th>LIME</th><th>ANCHOR</th></tr>
+    <tr><td>Output</td><td>Feature weights</td><td>If-then rules</td></tr>
+    <tr><td>Model call</td><td><code>predict_proba</code></td><td><code>predict</code></td></tr>
+    <tr><td>Stability</td><td>Low</td><td>Higher</td></tr>
+    <tr><td>Data types</td><td>Tabular, image, text</td><td>Primarily tabular</td></tr>
+    <tr><td>Best for</td><td>Data scientists, technical users</td><td>Business, regulators, individuals</td></tr>
+    <tr><td>Question answered</td><td>"How much did each feature contribute?"</td><td>"What conditions are sufficient to guarantee this prediction?"</td></tr>
+  </table>
+
+  <!-- L3 -->
+  <h3>L3: Global Explanations — Permutation Importance &amp; SHAP</h3>
+
+  <h4>Permutation Feature Importance</h4>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>Formula</strong></td><td>Importance(j) = Baseline accuracy − Accuracy after shuffling feature j</td></tr>
+    <tr><td><strong>Interpretation</strong></td><td>Large drop = model relied heavily on this feature. Near zero = irrelevant. <strong>Negative (test only)</strong> = model overfit to a spurious pattern in this feature</td></tr>
+    <tr><td><strong>n_repeats</strong></td><td>Run 10–20 times to average out randomness. Box plot shows spread — wide = unstable, narrow = reliable</td></tr>
+    <tr><td><strong>Train vs Test</strong></td><td>Training: always ≥ 0. Test: can be negative. Test set better for real validation of generalisation</td></tr>
+    <tr><td><strong>Correlated features</strong></td><td>Shuffling A → model uses correlated B → A looks unimportant. Both features appear undervalued. SHAP handles this better.</td></tr>
+    <tr><td><strong>Code</strong></td><td><code>from sklearn.inspection import permutation_importance</code><br><code>result = permutation_importance(model, X_test, y_test, n_repeats=20)</code></td></tr>
+  </table>
+
+  <h4>Shapley Values — The Game Theory Foundation</h4>
+  <table>
+    <tr><th>Game Theory</th><th>Machine Learning equivalent</th></tr>
+    <tr><td>Players</td><td>Features</td></tr>
+    <tr><td>Prize won</td><td>Model prediction f(x)</td></tr>
+    <tr><td>Player "in team"</td><td>Use feature's real value</td></tr>
+    <tr><td>Player "out"</td><td>Replace feature with its mean E[x]</td></tr>
+    <tr><td>Marginal contribution</td><td>f(S ∪ {j}) − f(S) — how much adding feature j changes the prediction</td></tr>
+    <tr><td>Shapley value φⱼ</td><td>Weighted average of all marginal contributions across all possible coalitions S</td></tr>
+  </table>
+
+  <h4>SHAP — Key Properties &amp; Guarantees</h4>
+  <table>
+    <tr><th>Property</th><th>Meaning</th></tr>
+    <tr><td><strong>Local accuracy</strong></td><td>Σⱼ φⱼ = f(x) − E[f(x)] — SHAP values always sum exactly to prediction minus base value. Nothing unexplained.</td></tr>
+    <tr><td><strong>Missingness</strong></td><td>Features absent from the model get zero SHAP value</td></tr>
+    <tr><td><strong>Consistency</strong></td><td>If a feature becomes more important in a new model, its SHAP value never decreases</td></tr>
+    <tr><td><strong>Symmetry</strong></td><td>Two features with identical contributions get identical SHAP values</td></tr>
+  </table>
+
+  <h4>SHAP Explainer Types</h4>
+  <table>
+    <tr><th>Explainer</th><th>For</th><th>Speed</th><th>Notes</th></tr>
+    <tr><td><code>TreeExplainer</code></td><td>Random Forest, XGBoost, LightGBM</td><td>Very fast — exact polynomial algorithm</td><td>Always use for tree models. Output in log-odds for classifiers.</td></tr>
+    <tr><td><code>DeepExplainer</code></td><td>Neural networks</td><td>Fast</td><td>Approximation via backpropagation</td></tr>
+    <tr><td><code>KernelExplainer</code></td><td>Any model (agnostic)</td><td>Slow (~5k calls/sample)</td><td>Use when no specific explainer available</td></tr>
+  </table>
+
+  <h4>Reading the Three SHAP Plots</h4>
+  <table>
+    <tr><th>Plot</th><th>X-axis</th><th>Colour</th><th>What it shows</th><th>Code</th></tr>
+    <tr><td><strong>Beeswarm</strong></td><td>SHAP value (+ or −)</td><td>🔴 Red = high feature value<br>🔵 Blue = low feature value</td><td>Direction + magnitude + distribution for all features. Blue-left/red-right = positive monotonic relationship.</td><td><code>shap.summary_plot(shap_values, X)</code></td></tr>
+    <tr><td><strong>Bar chart</strong></td><td>Mean |SHAP value|</td><td>Single colour (purple)</td><td>Global importance ranking — magnitude only, no direction. Uses |·| to prevent positive/negative cancellation.</td><td><code>shap.summary_plot(shap_values, X, plot_type="bar")</code></td></tr>
+    <tr><td><strong>Dependence</strong></td><td>Feature value</td><td>Second correlated feature</td><td>How SHAP value changes as feature varies. Reveals non-linearity and interactions. Vertical spread = interaction effect.</td><td><code>shap.dependence_plot("age", shap_values, X)</code></td></tr>
+    <tr><td><strong>Force / Waterfall</strong></td><td>SHAP contributions</td><td>Red = pushes up, Blue = pushes down</td><td>Local explanation for one sample. Shows base value → contributions → final prediction.</td><td><code>shap.force_plot(base_val, shap_values[i], X.iloc[i])</code></td></tr>
+  </table>
+
+  <h4>Permutation Importance vs SHAP — Decision Guide</h4>
+  <table>
+    <tr><th>Situation</th><th>Recommendation</th></tr>
+    <tr><td>Quick sanity check, features are independent</td><td>Permutation importance — fast, simple, easy to explain</td></tr>
+    <tr><td>Features are correlated</td><td>SHAP — evaluates all coalitions, doesn't split importance</td></tr>
+    <tr><td>Need direction (which way does feature push the prediction?)</td><td>SHAP beeswarm or waterfall</td></tr>
+    <tr><td>Need both global AND local explanation from same method</td><td>SHAP — runs locally per sample, averages globally</td></tr>
+    <tr><td>Model is a tree (RF, XGB, LGBM)</td><td>SHAP TreeExplainer — fast, exact, no sampling needed</td></tr>
+    <tr><td>Model is a neural network</td><td>SHAP DeepExplainer or KernelExplainer</td></tr>
+    <tr><td>Negative test importance</td><td>Warning: model overfit to that feature — consider removing it</td></tr>
+  </table>
+
+  <div class="alert alert-warn">⚠️ <strong>SHAP can be fooled (Slack et al. 2020):</strong> A model can detect explanation queries and return innocent-looking SHAP values while still discriminating on real data. If you receive SHAP from a third party, treat it as strong evidence — not ground truth.</div>
+
+  <!-- METHODS REFERENCE -->
+  <h3>Quick Methods Reference — When to Use What</h3>
+  <table>
+    <tr><th>You want to…</th><th>Use this</th><th>Global or Local</th></tr>
+    <tr><td>Explain one specific prediction to a non-technical person</td><td>ANCHOR (if-then rules)</td><td>Local</td></tr>
+    <tr><td>Explain one prediction with feature weights</td><td>LIME or SHAP waterfall</td><td>Local</td></tr>
+    <tr><td>Tell a user what to change to get a different outcome</td><td>Counterfactual explanation</td><td>Local</td></tr>
+    <tr><td>See which features the model relies on overall</td><td>Permutation importance or SHAP bar chart</td><td>Global</td></tr>
+    <tr><td>See the direction of each feature's effect</td><td>SHAP beeswarm plot</td><td>Global</td></tr>
+    <tr><td>Detect if a feature has a non-linear or interaction effect</td><td>SHAP dependence plot or PDP</td><td>Global</td></tr>
+    <tr><td>Audit a model for bias across demographic groups</td><td>SHAP grouped by demographic + permutation importance</td><td>Global</td></tr>
+    <tr><td>Debug a suspicious prediction during development</td><td>SHAP waterfall for that sample</td><td>Local</td></tr>
+    <tr><td>Check if a model overfit to a spurious feature</td><td>Permutation importance on test set — look for negatives</td><td>Global</td></tr>
+    <tr><td>Explain a CNN image classification (which region?)</td><td>Grad-CAM or saliency maps</td><td>Local</td></tr>
+  </table>
+
+  <div class="btn-row">
+    <button class="btn btn-outline" onclick="nav('ex1')">← L1: Introduction</button>
+    <button class="btn btn-outline" onclick="nav('ex2')">L2: Local Explanations</button>
+    <button class="btn btn-outline" onclick="nav('ex3')">L3: Global Explanations</button>
   </div>
 </div>
 
@@ -16815,7 +17830,8 @@ const TOPICS = {
   nn7: 'NN L7: Recurrent Neural Networks',
   nn8: 'NN L8: Graph Neural Networks',
   ex1: 'EX L1: Introduction to Explainability & Interpretability',
-  ex2: 'EX L2: Local Explanations — LIME & ANCHOR'
+  ex2: 'EX L2: Local Explanations — LIME & ANCHOR',
+  ex3: 'EX L3: Global Explanations — Permutation Importance & SHAP'
 };
 
 const ALL_QUESTIONS = [
@@ -17200,6 +18216,15 @@ const ALL_QUESTIONS = [
   {t:'nn6', q:'The training accuracy of your CNN reaches 99.5% but validation accuracy plateaus at 93%. The training loss keeps falling while validation loss starts rising after epoch 8. What is happening and what is the best fix?', opts:['The model is underfitting — add more layers','The model is overfitting — it has memorised the training data. The growing gap between train and val performance, combined with rising val loss, is the classic signature. Best fixes: add Dropout layers, use data augmentation, or apply early stopping to recover the epoch-8 weights.','The learning rate is too high — reduce it by 10×','The batch size is too small — increase to 512'], ans:1, exp:'This is textbook overfitting: training performance improves while validation performance degrades. The model has moved past the generalisation sweet spot and started memorising training-specific details (noise, irrelevant patterns). Reducing the learning rate would slow training but would not address the fundamental problem. The correct treatments reduce the model\'s ability to memorise: Dropout randomly deactivates neurons (prevents co-adaptation), augmentation artificially increases training variety, and early stopping stops training before the generalisation gap grows too large. In this case, restoring weights from epoch 8 would likely give the best val accuracy.'},
   {t:'nn6', q:'What is the difference between precision and recall, and in what situation would you prioritise recall over precision?', opts:['Precision and recall are the same metric computed differently','Precision = TP/(TP+FP): of all predictions for class X, what fraction were actually X? Recall = TP/(TP+FN): of all true X examples, what fraction did the model catch? Prioritise recall when missing a true positive is very costly — e.g. medical diagnosis (missing cancer is worse than a false alarm), fraud detection, or security screening.','Precision measures training accuracy; recall measures test accuracy','Recall is only used for binary classification; precision works for multi-class'], ans:1, exp:'The precision-recall tradeoff: you can always improve recall by predicting positive more liberally (you catch more true cases), but this also increases false positives and reduces precision. For medical diagnosis (cancer detection), a missed case (false negative) is far more serious than a false alarm that leads to further testing — so you optimise for high recall even if precision is lower. For spam filtering, you might prioritise precision — having important emails mislabelled as spam (false positive) is worse than receiving some spam. F1 score is the harmonic mean of both and is useful when you want a single balanced metric.'},
   {t:'nn6', q:'In transfer learning with VGG16, you freeze all base layers and only train a new Dense head. After initial training, you unfreeze the last 4 layers for fine-tuning. Why must you use a much smaller learning rate (e.g. 1e-5 instead of 1e-3) for fine-tuning?', opts:['Smaller learning rate is only needed when training from scratch','The pretrained weights already contain high-quality, finely tuned representations. A large learning rate would destroy these representations with aggressive weight updates before the network adapts to the new task. A tiny learning rate makes small, careful adjustments that preserve most of the pretrained structure while adapting the last layers to your specific domain.','A smaller learning rate prevents the GPU from overheating','Keras requires learning rate below 1e-4 when base_model.trainable=True'], ans:1, exp:'This is the core intuition of fine-tuning: the pretrained weights are not random — they encode years of learning and represent the culmination of training on 1.2 million images. Large gradient steps would wipe this out. With lr=1e-5, each parameter update moves only a tiny amount — enough to shift the model toward your specific task while preserving the general feature detectors in earlier layers. Using the same lr=1e-3 as the initial head training would cause "catastrophic forgetting" — the fine-tuned layers would quickly forget what they learned on ImageNet and start learning from scratch, defeating the purpose of transfer learning.'},
+
+  // EX3: Global Explanations
+  {t:'ex3', q:'What is the difference between a global explanation and a local explanation, and why do you need both?', opts:['Global explanations are more accurate; local explanations are just approximations','Global: explains overall model behaviour across all predictions ("what does this model generally rely on?"). Local: explains one specific prediction ("why this decision for this person?"). You need both because a model can be globally sensible but locally wrong — and vice versa. An oncologist needs global explanations to trust a model; a patient needs local explanations to understand their diagnosis.','Global explanations only work for linear models; local explanations work for any model','They are the same thing computed at different scales'], ans:1, exp:'The distinction is about what question you are answering. Global explanations give you the model\'s "personality" — its systematic patterns and dependencies. Local explanations give you the model\'s reasoning for a single case. In high-stakes domains you typically need both: the oncologist needs to know the model generally relies on perimeter and concavity (clinically valid) before deploying it, AND a specific patient needs to know which of their measurements triggered the malignant prediction. Neither replaces the other.'},
+  {t:'ex3', q:'In permutation feature importance, what does it mean if a feature has an importance score of 0.08?', opts:['The feature has a 0.08% contribution to predictions','Shuffling (randomly scrambling) that feature\'s values caused model accuracy to drop by 0.08 — meaning the model was relying on that feature by an amount worth 8 percentage points of accuracy. A score of 0.08 is moderate; features near 0 are irrelevant.','The feature appears in 8% of the model\'s decision trees','The feature has a weight of 0.08 in the model\'s coefficients'], ans:1, exp:'Permutation importance = baseline_accuracy − accuracy_after_shuffling. If baseline is 94% and shuffling feature X gives 86%, importance = 0.08. The score tells you how much the model\'s performance degrades when the feature\'s signal is destroyed. This is a proxy for how much the model relies on that feature overall. An importance of 0 means the model doesn\'t use that feature at all (or can compensate perfectly with other features). An importance near 0 with high variance (wide box plot) means the feature is marginally useful and the measurement is noisy.'},
+  {t:'ex3', q:'You run permutation feature importance on the test set and find that "month" has a slightly negative importance score (−0.01). What does this tell you?', opts:['There is a bug in the code — importance cannot be negative','The model learned a spurious or overfitted relationship with "month" during training that actually hurts generalisation. Shuffling month accidentally improves test accuracy because it removes this harmful learned pattern. On the training set, importance is always ≥ 0 because the model was optimised there.','Negative importance means "month" is the most important feature — the sign indicates direction','The model correctly identified that month has no predictive value'], ans:1, exp:'Permutation importance on test data can go negative when a model overfit to a pattern that doesn\'t generalise. The model learned "calls in October → subscribe" from training data, but this relationship doesn\'t hold in test data. When you shuffle October values around, you accidentally break this bad pattern, improving test performance. This is actually valuable diagnostic information: a consistently negative test importance (across many random seeds) suggests you should remove that feature to improve generalisation. If the negative score has high variance (sometimes positive, sometimes negative), it\'s just noise — the feature has near-zero true importance.'},
+  {t:'ex3', q:'You add a "season" feature derived from "month" to the bank marketing dataset. After rerunning permutation importance, both "month" and "season" show lower importance scores than "month" did alone. What causes this and is it a problem?', opts:['The model is confused by having two similar features and performs worse','This is the correlated feature problem in permutation importance. When you shuffle "month", the model compensates by using "season" (which carries the same signal), so the accuracy drop is small — month looks unimportant. Same happens to season. Both are artificially undervalued because they can substitute for each other. The true importance of temporal information is split between the two correlated features.','Season is a better feature so month becomes irrelevant','The model should be retrained before computing importance'], ans:1, exp:'Permutation importance assumes that destroying one feature\'s signal fully removes its contribution. But correlated features violate this assumption — if features A and B carry similar information, shuffling A leaves B intact, and the model falls back on B. The accuracy drop is small not because A is unimportant, but because B compensates. This makes both A and B look less important than they actually are. SHAP handles this better by evaluating all feature coalitions (including ones where both A and B are excluded). This is one of the key limitations of permutation importance, and why SHAP is preferred when features are correlated.'},
+  {t:'ex3', q:'In the SHAP beeswarm plot for the adult income dataset, the "age" row shows blue dots on the left (negative SHAP values) and red dots on the right (positive SHAP values). What does this tell you about how the model uses age?', opts:['Blue means the feature is wrong; red means it is correct','Blue = low feature value, red = high feature value. Blue dots on the left (negative SHAP) means low age decreases the probability of earning >$50k. Red dots on the right (positive SHAP) means high age increases the probability. Together: age has a clear monotonic positive effect — older people are more likely to be predicted as high earners by the model. This matches real-world intuition about career progression.','The model is biased against young people and should be retrained','Age should be removed because its effect is too large'], ans:1, exp:'Reading a beeswarm row: colour tells you the feature value (red=high, blue=low), x-position tells you SHAP impact. Blue-left + red-right means: low values push the prediction down, high values push it up — a positive relationship. Compare this to "capital_loss" which shows a different pattern: blue near zero (low capital loss has little effect) but red spread in both directions (high capital loss can push either way). This suggests capital loss interacts with other features in complex ways. The beeswarm plot is uniquely powerful because it shows direction, magnitude, non-linearity, and distributional spread all at once.'},
+  {t:'ex3', q:'You compute SHAP values for a test sample and find: base_value = -1.5, SHAP(age) = +0.4, SHAP(education) = +0.6, SHAP(hours) = -0.2, SHAP(capital_gain) = +0.8. What is the model\'s prediction for this person in log-odds?', opts:['The prediction is -1.5 (the base value)','The prediction is -1.5 + 0.4 + 0.6 − 0.2 + 0.8 = 0.1 log-odds. This follows the local accuracy axiom: SHAP values always sum exactly to (prediction − base_value). Converting to probability: sigmoid(0.1) ≈ 52.5% chance of earning >$50k.','The prediction is 0.4 + 0.6 − 0.2 + 0.8 = 1.6 log-odds (ignoring base value)','SHAP values cannot be summed — each one is independent'], ans:1, exp:'The local accuracy property guarantees: f(x) = base_value + Σ SHAP_j. This is what makes SHAP unique — every single prediction can be fully decomposed. Nothing is unexplained. The base value (-1.5) represents the average model output across training data (the prior). Each SHAP value shows how much that specific feature moved the prediction for this specific person. Capital gain (+0.8) was the strongest positive push; hours worked (-0.2) slightly reduced the probability. The final prediction of 0.1 log-odds ≈ 52.5% is right on the boundary — this is an uncertain case. Compare to a person with SHAP sum of +3.0: that would give 5.3% → 97% probability, much more confident.'},
+  {t:'ex3', q:'You use SHAP\'s TreeExplainer on a Random Forest classifier. A colleague suggests using KernelExplainer instead because "it works for all models." Should you switch? Why or why not?', opts:['Yes — KernelExplainer is always more accurate','No — TreeExplainer uses the tree structure to compute exact SHAP values in polynomial time, making it very fast. KernelExplainer is model-agnostic but treats the model as a black box, requiring ~5,000 model calls per sample to estimate SHAP values by sampling. For a Random Forest, TreeExplainer gives the same values faster. Only use KernelExplainer when no optimised explainer exists for your model type (e.g. a custom sklearn model).','Yes — KernelExplainer always produces higher-quality explanations','It does not matter which explainer you use — they always produce identical output'], ans:1, exp:'The choice of explainer affects speed, not correctness in principle. TreeExplainer exploits the specific structure of tree ensembles — it can compute exact Shapley values by traversing the tree paths, without needing to sample thousands of feature coalitions. This makes it orders of magnitude faster than KernelExplainer for tree models. KernelExplainer treats any model as a black box and estimates SHAP values by generating many perturbed samples and fitting a weighted linear model (similar to LIME\'s approach). For a dataset with 10,000 samples and 12 features, TreeExplainer might take seconds; KernelExplainer could take hours. The rule: always use the most specific explainer available for your model type.'},
 
   // EX2: Local Explanations — LIME & ANCHOR
   {t:'ex2', q:'What does "perturbing" a data point mean in the context of LIME and ANCHOR?', opts:['Training a new model on modified data','Creating many slightly modified copies of the original point by randomly changing feature values, then getting the black-box model\'s predictions for each copy. This probes how the model behaves locally — which features, when changed, cause the prediction to change — without ever looking inside the model.','Normalising all feature values to the same scale before explanation','Removing outlier features that could bias the explanation'], ans:1, exp:'Perturbation is the core mechanism of both LIME and ANCHOR. Neither method inspects the model\'s internals — they treat it as a black box. Instead they generate a local dataset by perturbing the point of interest: randomly shifting continuous values, zeroing out words, or masking image super-pixels. Each perturbed sample is fed to the model to get a prediction. The collection of (perturbed_input, prediction) pairs forms the data LIME and ANCHOR use to build their explanations. The key insight: you don\'t need access to weights or gradients — you only need to be able to call the model.'},
@@ -17626,6 +18651,16 @@ const FLASHCARDS = [
   {t:'nn6', front:'Precision vs Recall — formulas and when to use each', back:'Precision = TP / (TP + FP)\n  "Of my predictions for class X, how many were right?"\n  Optimise when false alarms are costly (spam filter)\n\nRecall = TP / (TP + FN)\n  "Of all real class X examples, how many did I catch?"\n  Optimise when misses are costly (cancer detection)\n\nF1 = 2 × (P × R) / (P + R)\n  Harmonic mean — use when you want one balanced metric\n\nHigh P, low R: conservative — catches few, rarely wrong\nLow P, high R: aggressive — catches all, many false alarms\n\nsklearn: classification_report(y_true, y_pred)'},
   {t:'nn6', front:'Transfer learning — feature extraction vs fine-tuning', back:'Feature extraction (faster, less data needed):\n  base_model.trainable = False\n  → freeze all pretrained weights\n  → only new head is trained\n  Best when: small dataset, similar to ImageNet\n\nFine-tuning (better accuracy, more data needed):\n  Unfreeze last few blocks\n  Use TINY learning rate (1e-5, not 1e-3)\n  → small adjustments preserve pretrained features\n  "catastrophic forgetting" if lr too large\n\nRule of thumb:\n  Small dataset + similar domain → feature extraction\n  Large dataset + different domain → fine-tune all\n  In between → fine-tune last few blocks'},
 
+  // EX3: Global Explanations flashcards
+  {t:'ex3', front:'Permutation Feature Importance — algorithm & formula', back:'Algorithm:\n  1. Train model → record baseline accuracy A₀\n  2. Choose feature j → randomly shuffle its column\n  3. Re-evaluate → get accuracy Aⱼ\n  4. Importance(j) = A₀ − Aⱼ\n  5. Repeat n_repeats times (e.g. 20) → box plot\n  6. Repeat for every feature → rank\n\nInterpretation:\n  Large drop   → model heavily relied on this feature\n  Near zero    → feature is irrelevant\n  Negative     → model overfit to this feature\n                 (test set only — training can\'t go negative)\n\nCode:\n  from sklearn.inspection import permutation_importance\n  result = permutation_importance(\n      model, X_test, y_test,\n      n_repeats=20, scoring="balanced_accuracy"\n  )\n  result.importances_mean  # mean per feature\n  result.importances_std   # std per feature'},
+  {t:'ex3', front:'Permutation Importance — three limitations', back:'1. Instability (randomness)\n   Different shuffles → different scores\n   Fix: n_repeats=20, check box plot width\n   Wide box = unreliable, narrow box = stable\n\n2. Train vs Test\n   Training: importance always ≥ 0\n     (model was optimised here)\n   Test: can be negative\n     → model overfit to spurious pattern\n     → test set is better for real validation\n\n3. Correlated features\n   Shuffle feature A → model uses correlated B\n   → A looks unimportant (it\'s not)\n   → importance "split" between A and B\n   → both undervalued\n   Fix: use SHAP instead, or remove correlates\n\nBonus: random feature test\n  Add a random column → should get ~0 on test\n  If high on training → model overfit to noise'},
+  {t:'ex3', front:'Shapley Values — game theory to ML', back:'Game theory setup:\n  Players   = Features\n  Prize     = Model prediction f(x)\n  "In team" = Use feature\'s real value\n  "Out"     = Replace with E[feature] (mean)\n  Winning   = Difference in model output\n  φⱼ       = Feature j\'s fair contribution\n\nFormula:\n  φⱼ = Σ_{S⊆P\\{j}} |S|!(p-|S|-1)!/p! × (f(S∪{j}) - f(S))\n\nKey property (Local Accuracy):\n  Σⱼ φⱼ = f(x) - E[f(x)]\n  SHAP values sum to\n  (prediction − base value) — always, exactly\n\nBase value = E[f(x)] = average model output\n  over training data before knowing anything\n  (equivalent to £250k in house price example)'},
+  {t:'ex3', front:'SHAP explainer types — which to use when', back:'TreeExplainer:\n  For: Random Forest, XGBoost, LightGBM, CatBoost\n  Speed: Very fast (polynomial time, exact)\n  No training data needed — uses tree structure\n  Output: log-odds for classifiers\n  → Always use this for tree models\n\nDeepExplainer:\n  For: Neural networks (TF/PyTorch)\n  Speed: Fast (backpropagation-based)\n  Approximation — assumes feature independence\n\nKernelExplainer:\n  For: Any model (truly model-agnostic)\n  Speed: Slow (~5,000 calls per sample)\n  Same as LIME in approach\n  Use when no optimised explainer exists\n\nSetup:\n  import shap\n  shap.initjs()  # for notebook JS visualisations\n  explainer = shap.TreeExplainer(model)\n  shap_values = explainer.shap_values(X_test)\n  base_value  = explainer.expected_value'},
+  {t:'ex3', front:'Reading the SHAP beeswarm plot', back:'Each row = one feature\nEach dot = one data sample\n\nX-axis: SHAP value\n  negative → feature pushed prediction DOWN\n  positive → feature pushed prediction UP\n\nColour:\n  🔴 Red  = HIGH feature value\n  🔵 Blue = LOW feature value\n\nPatterns:\n  Blue-left, red-right:\n    → low value decreases, high value increases\n    → monotonic positive relationship\n    → e.g. age: older = higher income prediction\n\n  Mixed colours both sides:\n    → non-linear or interaction effect\n    → e.g. capital_loss: high loss can push either way\n\n  Narrow spread near zero:\n    → feature has little effect overall\n\nGlobal importance = order of rows\n  (sorted by mean |SHAP|)'},
+  {t:'ex3', front:'SHAP — local vs global, and the three plots', back:'Local SHAP (one prediction):\n  Force plot / waterfall\n  Shows: base value → SHAP contributions → final f(x)\n  shap.force_plot(base_val, shap_values[i], X[i])\n\nGlobal SHAP (all predictions):\n  1. Beeswarm plot\n     Every dot = one sample\n     Direction + magnitude + colour (feature value)\n     shap.summary_plot(shap_values, X_test)\n\n  2. Bar chart\n     mean(|SHAP values|) per feature\n     Shows magnitude only — no direction\n     Why |.|? Positive and negative SHAPs cancel\n     shap.summary_plot(shap_values, X, plot_type="bar")\n\n  3. Dependence plot\n     X-axis: feature value\n     Y-axis: SHAP value for that feature\n     Colour: second correlated feature\n     Shows non-linearity and interactions\n     shap.dependence_plot("age", shap_values, X)'},
+  {t:'ex3', front:'Permutation Importance vs SHAP — at a glance', back:'Permutation Importance:\n  Output: one score per feature (global only)\n  Direction: NO — just magnitude\n  Correlated features: BAD — splits importance\n  Speed: fast\n  Theory: heuristic, no guarantees\n  Code: sklearn.inspection.permutation_importance\n  Best for: quick sanity check, independent features\n\nSHAP:\n  Output: per-feature per-sample value (global+local)\n  Direction: YES — sign shows which way\n  Correlated features: handles better\n  Speed: fast (TreeSHAP) or slow (KernelSHAP)\n  Theory: 4 axioms — unique fair decomposition\n  Code: shap.TreeExplainer(model)\n  Best for: thorough analysis, mixed features, audits\n\nUse both:\n  Permutation → quick check which features matter\n  SHAP → understand HOW they matter and build trust'},
+  {t:'ex3', front:'SHAP word of warning — adversarial attacks', back:'Slack et al. 2020:\n"Fooling LIME and SHAP: Adversarial Attacks\n on Post hoc Explanation Methods"\n\nThe attack:\n  1. Model detects when it\'s being explained\n     (explanation queries look different from\n      real queries — different distributions)\n  2. Shows innocent-looking SHAP values\n     for explanation calls\n  3. Continues discriminating on real predictions\n\nWho this affects:\n  You explaining YOUR model: not a problem\n  You receiving SHAP from a THIRD PARTY: be careful\n    → vendor, regulatory submission, black-box API\n    → you cannot verify the explanations reflect\n       the model\'s true behaviour on real data\n\nPractical stance:\n  Treat SHAP as strong evidence, not ground truth\n  Cross-validate with other methods\n  For high-stakes: use model-specific audits too'},
+
   // EX2: Local Explanations flashcards
   {t:'ex2', front:'Local vs Global Explanation', back:'Local: explains ONE specific prediction\n  "Why was John\'s loan denied?"\n  Output specific to this data point\n  Audience: the individual, regulators, debuggers\n\nGlobal: explains the whole model\'s behaviour\n  "Age is the most important feature overall"\n  Output summarises all predictions\n  Audience: data scientists, business stakeholders\n\nBoth LIME and ANCHOR are LOCAL methods.\nSHAP can produce both.\n\nReal-world need for local:\n  GDPR: right to explanation of a specific decision\n  Medicine: explain THIS patient\'s diagnosis\n  Debugging: why did the model do THIS on THAT point'},
   {t:'ex2', front:'Perturbation — what it is and why it works', back:'Definition: create many slightly modified copies of\nthe point of interest, feed them to the black box,\nobserve how predictions change.\n\nFor tabular: randomly shift feature values\nFor images: randomly mask super-pixels (regions)\nFor text: randomly zero out words\n\nWhy it works:\n• Only needs black-box access (input → output)\n• No access to model weights/gradients needed\n• Local behaviour revealed by how output changes\n  when input features are varied\n\nLimitation: slow — 5,000+ model calls per point\n\nBoth LIME and ANCHOR use perturbation.\nDifference: what they do with the results.'},
@@ -17742,7 +18777,7 @@ function nav(page) {
   document.getElementById('main').scrollTop = 0;
   const navEl = document.querySelector(`[onclick="nav('${page}')"]`);
   if (navEl) navEl.classList.add('active');
-  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9','nn1','nn2','nn3','nn4','nn5','nn6','nn7','nn8','ex1','ex2'].includes(page)) {
+  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9','nn1','nn2','nn3','nn4','nn5','nn6','nn7','nn8','ex1','ex2','ex3'].includes(page)) {
     markVisited(page);
     renderInlineQuiz(page);
   }
