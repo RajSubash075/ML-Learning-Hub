@@ -238,10 +238,11 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
   <div class="progress-bar-wrap"><div class="progress-bar-fill" id="global-progress-bar" style="width:0%"></div></div>
   <div class="progress-label" id="global-progress-label">0 of 16 lessons visited</div>
 
+  <div class="nav-item active" onclick="nav('home')" id="nav-home"><span class="icon">🏠</span> Home</div>
   <div class="sidebar-section">Chapters</div>
   <div class="nav-item nav-item-chapter" onclick="toggleChapter('lessons')"><span class="icon">📚</span> Foundation<span class="chapter-arrow" id="arrow-lessons">▾</span></div>
   <div class="nav-chapter-items" id="chapter-lessons">
-    <div class="nav-item nav-item-sub active" onclick="nav('overview')"><span class="icon">🏠</span> Overview</div>
+    <div class="nav-item nav-item-sub" onclick="nav('overview')"><span class="icon">🏠</span> Overview</div>
     <div class="nav-item nav-item-sub" onclick="nav('w1')" id="nav-w1"><span class="icon">🧹</span> L1: Data Preprocessing<span class="check" id="check-w1"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('w2')" id="nav-w2"><span class="icon">⚙️</span> L2: Feature Engineering<span class="check" id="check-w2"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('w3')" id="nav-w3"><span class="icon">📉</span> L3: Linear Regression (GD)<span class="check" id="check-w3"></span></div>
@@ -342,8 +343,111 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
 
 <div id="main">
 
+<!-- HOME PAGE -->
+<div class="page active" id="page-home">
+  <div style="text-align:center; padding:24px 0 36px">
+    <div style="font-size:3rem; margin-bottom:14px">🧠</div>
+    <h2 style="font-size:2rem; margin-bottom:10px">ML Learning Hub</h2>
+    <p style="font-size:0.95rem; max-width:560px; margin:0 auto 28px">A structured, interactive course covering the full spectrum of machine learning — from data preprocessing to deep neural networks and model explainability.</p>
+    <button class="btn btn-primary" onclick="nav('overview')" style="font-size:0.95rem; padding:12px 32px">Get Started →</button>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <div class="key-concept">
+      <div class="label">What is this?</div>
+      <p>The ML Learning Hub is a self-contained interactive learning platform. It contains <strong>50+ lessons</strong> across 8 chapters, interactive quizzes, flashcards, and cheat sheets — all running in a single HTML file you can open in any browser, including on your phone. No install, no login, no internet required after the first load.</p>
+    </div>
+  </div>
+
+  <h3>How to use it</h3>
+  <div class="card-grid">
+    <div class="card">
+      <h4 style="margin-top:0">1. Navigate chapters</h4>
+      <p>Use the sidebar (☰ on mobile) to browse chapters. Each chapter has an Overview page showing all its lessons at a glance.</p>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0">2. Work through lessons</h4>
+      <p>Follow lessons in order — each builds on the last. A ✓ marks lessons you've visited. Progress is saved automatically in your browser.</p>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0">3. Review cheat sheets</h4>
+      <p>Every chapter ends with a Cheat Sheet — all key concepts, formulas, and decision rules summarised on one scrollable page.</p>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0">4. Test yourself</h4>
+      <p>Hit <strong>Start Quiz</strong> from any chapter overview to be quizzed only on that chapter, or use the full Quiz page to mix everything together.</p>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0">5. Drill with flashcards</h4>
+      <p>Flashcards let you rapidly revise key terms. Filter by individual lesson or select an entire chapter to focus your revision session.</p>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0">6. Track your progress</h4>
+      <p>The progress bar in the sidebar updates as you visit lessons. Check the Progress page for a chapter-by-chapter breakdown.</p>
+    </div>
+  </div>
+
+  <h3>What you'll learn</h3>
+  <div class="topic-grid">
+    <div class="topic-card" onclick="nav('overview')">
+      <div class="week-num">Chapter 1</div>
+      <h4>📚 Foundation</h4>
+      <p>Data preprocessing, linear regression, OLS, regularisation, sklearn, PCA</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">8 lessons</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('cov')">
+      <div class="week-num">Chapter 2</div>
+      <h4>🎯 Supervised Classification</h4>
+      <p>Naive Bayes, logistic regression, decision trees, random forests, SVM, KNN</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">10 lessons</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('enov')">
+      <div class="week-num">Chapter 3</div>
+      <h4>🧩 Ensemble Methods</h4>
+      <p>Bagging, boosting, AdaBoost, stacking, gradient boosting, XGBoost</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">4 lessons</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('peov')">
+      <div class="week-num">Chapter 4</div>
+      <h4>🏗️ Pragmatic Model Evaluation</h4>
+      <p>Hierarchical validation, pipelines, feature selection, hyperparameter tuning</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">5 lessons</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('ulov')">
+      <div class="week-num">Chapter 5</div>
+      <h4>🌐 Unsupervised Learning</h4>
+      <p>K-Means, hierarchical clustering, DBSCAN, t-SNE</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">5 lessons</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('tsov')">
+      <div class="week-num">Chapter 6</div>
+      <h4>📈 Time Series Analysis</h4>
+      <p>Stationarity, ARMA, exponential smoothing, Prophet, end-to-end forecasting</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">9 lessons</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('nnov')">
+      <div class="week-num">Chapter 7</div>
+      <h4>🧠 Neural Networks & Deep Learning</h4>
+      <p>Backpropagation, Keras, CNNs, RNNs, LSTMs, GNNs</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">8 lessons</span></div>
+    </div>
+    <div class="topic-card" onclick="nav('exov')">
+      <div class="week-num">Chapter 8</div>
+      <h4>🔍 Model Explainability</h4>
+      <p>LIME, ANCHOR, permutation importance, SHAP, Shapley values</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">3 lessons</span></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="nav('overview')">Start with Foundation →</button>
+    <button class="btn btn-outline" onclick="nav('quiz')">📝 Jump to Quiz</button>
+    <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcards</button>
+  </div>
+</div>
+
 <!-- OVERVIEW -->
-<div class="page active" id="page-overview">
+<div class="page" id="page-overview">
   <h2>Foundation of Machine Learning</h2>
   <p class="subtitle">Your complete guide to the foundations of machine learning. Build from data preprocessing through to dimensionality reduction. Work through each module, test yourself, and track your progress.</p>
 
