@@ -286,6 +286,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('nn5')" id="nav-nn5"><span class="icon">⚙️</span> L5: Training a Neural Network<span class="check" id="check-nn5"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('nn6')" id="nav-nn6"><span class="icon">🖼️</span> L6: Convolutional Neural Networks<span class="check" id="check-nn6"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('nn7')" id="nav-nn7"><span class="icon">🔄</span> L7: Recurrent Neural Networks<span class="check" id="check-nn7"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('nn8')" id="nav-nn8"><span class="icon">🕸️</span> L8: Graph Neural Networks<span class="check" id="check-nn8"></span></div>
   </div>
 
   <div class="sidebar-section" style="margin-top:10px">Practice</div>
@@ -1319,6 +1320,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
           <div class="topic-chip" id="chip-nn5" onclick="toggleChip('nn5')">L5: Training a NN</div>
           <div class="topic-chip" id="chip-nn6" onclick="toggleChip('nn6')">L6: CNNs</div>
           <div class="topic-chip" id="chip-nn7" onclick="toggleChip('nn7')">L7: RNNs</div>
+          <div class="topic-chip" id="chip-nn8" onclick="toggleChip('nn8')">L8: GNNs</div>
         </div>
       </div>
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
@@ -1453,6 +1455,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
           <div class="topic-chip" id="fc-chip-nn5" onclick="fcFilter('nn5')">L5: Training a NN</div>
           <div class="topic-chip" id="fc-chip-nn6" onclick="fcFilter('nn6')">L6: CNNs</div>
           <div class="topic-chip" id="fc-chip-nn7" onclick="fcFilter('nn7')">L7: RNNs</div>
+          <div class="topic-chip" id="fc-chip-nn8" onclick="fcFilter('nn8')">L8: GNNs</div>
         </div>
       </div>
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
@@ -13320,6 +13323,646 @@ days_ahead = 90
   <div class="btn-row">
     <button class="btn btn-primary" onclick="startTopicQuiz('nn7')">📝 Full Topic Quiz</button>
     <button class="btn btn-outline" onclick="nav('nn6')">← L6: CNNs</button>
+    <button class="btn btn-outline" onclick="nav('nn8')">L8: GNNs →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- NEURAL NETWORKS & DEEP LEARNING — L8: Graph Neural Networks  -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-nn8">
+  <div class="lesson-header">
+    <div class="breadcrumb">Neural Networks &amp; Deep Learning · L8</div>
+    <h1>🕸️ Graph Neural Networks</h1>
+    <p class="subtitle">From graph fundamentals to message passing — understand why graphs need their own deep learning architecture, how GCNs learn node embeddings through neighbourhood aggregation, and when GNNs outperform CNNs and RNNs</p>
+  </div>
+
+  <!-- ── PART 1: WHY GNNs ── -->
+  <h2>Part 1: Why Graphs? The Limits of Euclidean Deep Learning</h2>
+  <p>The networks you've built so far live in <strong>Euclidean space</strong>: a grid of pixels (CNNs), or a sequence of timesteps (RNNs). Both of these are <em>regular</em> structures — every pixel has exactly 8 neighbours, every timestep has exactly one predecessor. But much of the world's most important data is <strong>irregular</strong>.</p>
+
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">Euclidean Data — Regular Structure</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">Image (CNN):           Sequence (RNN):
+┌───┬───┬───┐          x1 → x2 → x3 → x4
+│ p │ p │ p │
+├───┼───┼───┤          Fixed 1D order.
+│ p │ p │ p │          Every step has
+├───┼───┼───┤          exactly 1 neighbour.
+│ p │ p │ p │
+└───┴───┴───┘
+Fixed 2D grid.
+Every pixel: 8 neighbours.</pre></div>
+    </div>
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">Non-Euclidean Data — Graph Structure</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">Social network / Molecule:
+      Alice
+     /     \
+  Bob      Carol
+   |      /    \
+ Dave  Eve    Frank
+
+Variable neighbours per node.
+No fixed coordinate system.
+No inherent ordering of nodes.</pre></div>
+    </div>
+  </div>
+
+  <div class="key-concept">
+    <div class="label">The Core Problem GNNs Solve</div>
+    <p>CNNs rely on a fixed grid to define "nearby." RNNs rely on a fixed sequence to define "before." Graphs have neither — each node can have any number of neighbours and there is no canonical ordering. <strong>GNNs are the generalisation of convolution and message passing to arbitrary graph topologies.</strong></p>
+  </div>
+
+  <h3>Where Graph Data Appears</h3>
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Domain</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Nodes</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Edges</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">GNN Task</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#60a5fa">Social Networks</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">People</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Friendships, follows</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Fake account detection, community detection</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#a78bfa">Drug Discovery</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Atoms</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Chemical bonds</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Molecular property prediction, drug effectiveness</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#34d399">Citation Networks</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Research papers</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Citations (paper A cites paper B)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Paper topic classification (CORA dataset)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#fbbf24">Knowledge Graphs</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Entities (Person, Location)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Relations (lives in, part of)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Link prediction (does this relation exist?)</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Traffic Networks</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Road intersections</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Roads</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Speed forecasting, congestion prediction</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── PART 2: GRAPH FUNDAMENTALS ── -->
+  <h2>Part 2: Graph Fundamentals — The Vocabulary</h2>
+
+  <h3>Vertices, Edges, and the Formal Definition</h3>
+  <p>A graph <strong>G = (V, E)</strong> consists of a set of <strong>vertices</strong> V (also called nodes) and a set of <strong>edges</strong> E (also called links). Each edge connects a pair of vertices, representing a relationship between them.</p>
+
+  <div class="card">
+    <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">Graph G = (V, E)
+
+     (A)────(B)           V = {A, B, C, D, E}  (5 nodes)
+      |    / |            E = {(A,B), (A,D), (B,C),
+      |   /  |                  (B,D), (C,E)}   (5 edges)
+     (D)  (C)─(E)
+
+Node features X: each node can carry a feature vector
+  A → [age=25, followers=1000, ...]
+  B → [age=31, followers=500, ...]</pre></div>
+  </div>
+
+  <h3>Types of Graphs</h3>
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Dimension</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Type A</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Type B</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Example</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Direction</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><strong>Undirected</strong>: A–B means both are connected equally (friendship)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><strong>Directed</strong>: A→B means A follows B, but B may not follow A (Twitter)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Citation: paper A cites B (directed)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Weight</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><strong>Unweighted</strong>: edge exists or not (binary)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><strong>Weighted</strong>: edge carries a strength (road distance, bond strength)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Road network: weight = distance</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Node types</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><strong>Homogeneous</strong>: all nodes same type (social network of people)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><strong>Heterogeneous</strong>: multiple node types (knowledge graph: Person, City, …)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">IMDB: Movie nodes + Actor nodes</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">Cycles</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><strong>Acyclic</strong>: no path that starts and ends at the same node (trees, hierarchies)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><strong>Cyclic</strong>: contains at least one loop (most social networks)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Organisational hierarchy = acyclic tree</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── PART 3: NUMERICAL REPRESENTATION ── -->
+  <h2>Part 3: Representing Graphs Numerically</h2>
+  <p>To apply neural networks to graphs, you need matrix representations. Two key matrices are used.</p>
+
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid var(--accent)">
+      <p style="margin:0 0 6px; font-weight:600; color:var(--accent)">Adjacency Matrix A — shape |V| × |V|</p>
+      <div class="code-block" style="margin:0 0 6px"><pre style="font-size:0.75rem">A[i][j] = 1  if edge (i, j) exists
+A[i][j] = 0  otherwise
+
+Graph:  A─B─C       Adjacency matrix:
+           |           A  B  C  D
+           D         A[0, 1, 0, 0]
+                     B[1, 0, 1, 1]
+                     C[0, 1, 0, 0]
+                     D[0, 1, 0, 0]
+Undirected → A is symmetric (A = Aᵀ)</pre></div>
+      <p style="margin:0; font-size:0.82rem; color:var(--text-muted)">For weighted graphs, A[i][j] = edge weight. For directed graphs, A is asymmetric.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #a78bfa">
+      <p style="margin:0 0 6px; font-weight:600; color:#a78bfa">Degree Matrix D — diagonal, shape |V| × |V|</p>
+      <div class="code-block" style="margin:0 0 6px"><pre style="font-size:0.75rem">D[i][i] = number of edges at node i
+          (= number of neighbours)
+
+From above graph:
+  A has 1 neighbour → D[0][0] = 1
+  B has 3 neighbours → D[1][1] = 3
+  C has 1 neighbour → D[2][2] = 1
+  D has 1 neighbour → D[3][3] = 1
+
+D = diag(1, 3, 1, 1)</pre></div>
+      <p style="margin:0; font-size:0.82rem; color:var(--text-muted)">Used for normalisation: ensures high-degree nodes don't dominate aggregation.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <p style="margin:0 0 6px; font-weight:600; color:var(--accent)">Node Feature Matrix X — shape |V| × d</p>
+    <p style="margin:0 0 8px; font-size:0.83rem; color:var(--text-muted)">Each row is the feature vector for one node. In the CORA citation network: X ∈ R^{2708 × 1433} — 2,708 papers, each described by a 1,433-word binary feature vector (is this word in the paper's abstract?).</p>
+    <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">Node features X ∈ R^{|V| × d}:
+  Row 0: [word_1_present, word_2_present, ..., word_1433_present]  ← paper 0
+  Row 1: [word_1_present, word_2_present, ..., word_1433_present]  ← paper 1
+  ...
+  Row 2707: ...                                                    ← paper 2707
+
+No node features? Use:
+  • Indicator / one-hot encoding (node identity)
+  • Constant vector of 1s (structural features only)</pre></div>
+  </div>
+
+  <div class="alert-box" style="margin-top:12px">
+    <strong>Why not just feed A into a Dense network?</strong> Two problems: (1) The adjacency matrix size is |V|² — for a graph with 1 million nodes that's 10¹² entries. (2) Permutation invariance: the prediction for node A shouldn't change if you renumber the nodes. Standard Dense layers are not permutation-invariant. GNNs solve both problems through local, shared-weight message passing.
+  </div>
+
+  <!-- ── PART 4: LEARNING TASKS ── -->
+  <h2>Part 4: Three Types of GNN Tasks</h2>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Task Level</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">What is predicted</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Training data</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Real-world example</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#60a5fa">Node-level</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">A label or embedding for each individual node</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Labels on some/all nodes in the graph</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">CORA: classify each paper into 7 research topics</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#a78bfa">Link-level</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Whether an edge exists, or its type/strength</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Known edges (positive) + sampled non-edges (negative)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Recommender system: will user buy this product?</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#34d399">Graph-level</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">A single label/value for an entire graph</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Each training example is a (graph, label) pair</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Drug discovery: is this molecule toxic?</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #60a5fa">
+      <p style="margin:0 0 6px; font-weight:600; color:#60a5fa">Node Classification</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.73rem">   (A:?)────(B:ML)
+    |      /
+   (C:AI)─(D:?)
+
+Learn embeddings for A and D using
+the graph structure + B, C features.
+Classify: A=ML? AI? Systems?</pre></div>
+    </div>
+    <div class="card" style="border-left:3px solid #a78bfa">
+      <p style="margin:0 0 6px; font-weight:600; color:#a78bfa">Link Prediction</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.73rem">   (Alice)──(Bob)
+      |
+   (Carol)    (Dave)
+
+Will Carol and Dave connect?
+Learn node embeddings, then:
+score(Carol, Dave) = z_C · z_D</pre></div>
+    </div>
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">Graph Classification</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.73rem">Molecule 1:  C─C─C─O  → Toxic
+Molecule 2:  C─N═C    → Safe
+Molecule 3:  ...
+
+Learn one embedding for each whole
+graph, then classify or regress.</pre></div>
+    </div>
+  </div>
+
+  <!-- ── PART 5: HOW GNNs WORK ── -->
+  <h2>Part 5: How GNNs Work — Message Passing</h2>
+  <p>The core idea of all GNNs is <strong>message passing</strong>: each node collects ("aggregates") information from its immediate neighbours, combines it with its own current state, and updates its embedding. Repeat for K layers, and each node's embedding reflects a K-hop neighbourhood.</p>
+
+  <h3>The Intuition — Layers as Hops</h3>
+  <div class="card">
+    <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">Graph:  A─B─C─D─E
+
+Layer 0 (initialisation):
+  Every node's embedding = its own feature vector
+  h_A⁰ = x_A,  h_B⁰ = x_B,  h_C⁰ = x_C, ...
+
+Layer 1 (1-hop neighbourhood):
+  h_C¹ = aggregate(h_B⁰, h_D⁰) + transform(h_C⁰)
+  Node C now knows about its direct neighbours B and D.
+
+Layer 2 (2-hop neighbourhood):
+  h_C² = aggregate(h_B¹, h_D¹) + transform(h_C¹)
+  h_B¹ already contains info from A and C.
+  So h_C² now knows about A, B, D, E — 2 hops away.
+
+→ K layers = K-hop receptive field (like depth in a CNN)</pre></div>
+  </div>
+
+  <h3>The Neighbour Averaging Formula (GCN Layer)</h3>
+  <div class="card" style="border-left:3px solid var(--accent); margin-bottom:12px">
+    <p style="margin:0 0 8px; font-weight:700; font-size:0.93rem; color:var(--text)">h<sub>v</sub><sup>k</sup> = σ( W<sub>k</sub> · <span style="color:#60a5fa">Σ<sub>u∈N(v)</sub> h<sub>u</sub><sup>k-1</sup> / |N(v)|</span> + B<sub>k</sub> · <span style="color:#f87171">h<sub>v</sub><sup>k-1</sup></span> )</p>
+    <ul style="margin:0; padding-left:18px; font-size:0.83rem; color:var(--text-muted)">
+      <li><strong>h<sub>v</sub><sup>0</sup> = x<sub>v</sub></strong>: initialise each node's embedding with its feature vector</li>
+      <li><span style="color:#60a5fa"><strong>Σ h<sub>u</sub><sup>k-1</sup> / |N(v)|</strong></span>: average embedding of all neighbours of v at the previous layer</li>
+      <li><span style="color:#f87171"><strong>h<sub>v</sub><sup>k-1</sup></strong></span>: the node's own embedding from the previous layer</li>
+      <li><strong>W<sub>k</sub>, B<sub>k</sub></strong>: <em>shared</em> learnable weight matrices (same for all nodes — like CNN weight sharing)</li>
+      <li><strong>σ</strong>: non-linear activation (ReLU or tanh)</li>
+      <li><strong>z<sub>v</sub> = h<sub>v</sub><sup>K</sup></strong>: final node embedding after K layers</li>
+    </ul>
+  </div>
+
+  <div class="key-concept">
+    <div class="label">Why Weight Sharing Matters</div>
+    <p>The same W<sub>k</sub> and B<sub>k</sub> are applied at <strong>every node</strong>, regardless of the node's degree or position. This is the graph equivalent of a CNN's filter being shared across all spatial positions — it gives the GNN the ability to generalise across graphs of different sizes and handle nodes with different numbers of neighbours.</p>
+  </div>
+
+  <!-- ── PART 6: GCN MATRIX FORM ── -->
+  <h2>Part 6: Graph Convolutional Network (GCN) — Matrix Form</h2>
+  <p>The per-node formula can be expressed compactly as a matrix operation that updates all node embeddings simultaneously:</p>
+
+  <div class="card" style="border-left:3px solid var(--accent); margin-bottom:12px">
+    <p style="margin:0 0 6px; font-weight:700; font-size:0.93rem; color:var(--text)">H<sup>k</sup> = σ( <span style="color:#34d399">Â</span> · H<sup>k-1</sup> · W<sub>k</sub> + H<sup>k-1</sup> · B<sub>k</sub> )</p>
+    <p style="margin:0 0 6px; font-size:0.83rem; color:var(--text-muted)">where <span style="color:#34d399"><strong>Â = D<sup>−½</sup> A D<sup>−½</sup></strong></span> is the <em>symmetrically normalised</em> adjacency matrix</p>
+    <ul style="margin:0; padding-left:18px; font-size:0.83rem; color:var(--text-muted)">
+      <li><strong>H<sup>k</sup> ∈ R<sup>|V| × d<sub>k</sub></sup></strong>: embedding matrix — all node embeddings at layer k stacked as rows</li>
+      <li><strong>A</strong>: adjacency matrix (|V| × |V|)</li>
+      <li><strong>D</strong>: degree matrix (diagonal) — D[i][i] = number of neighbours of node i</li>
+      <li><span style="color:#34d399"><strong>Â = D<sup>−½</sup> A D<sup>−½</sup></strong></span>: normalised adjacency — divides each row and column by √degree</li>
+    </ul>
+  </div>
+
+  <h3>Why Normalise with D<sup>−½</sup> A D<sup>−½</sup>?</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">Without normalisation (raw A)</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.73rem">Node B has 100 neighbours.
+Node A has 2 neighbours.
+
+B's aggregated embedding = sum of 100 embeddings
+A's aggregated embedding = sum of 2 embeddings
+
+B's value is 50× larger → B dominates
+gradient descent, A gets ignored.</pre></div>
+    </div>
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">With normalisation (Â = D⁻½AD⁻½)</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.73rem">Each neighbour's contribution is
+weighted by 1/√(deg_v × deg_u).
+
+High-degree nodes contribute less
+per connection.
+
+Result: aggregated embeddings have
+comparable scale regardless of degree.</pre></div>
+    </div>
+  </div>
+
+  <div class="alert-box" style="margin-top:8px">
+    <strong>Self-loops:</strong> In practice, add the identity matrix to A before normalising: Ã = A + I. This includes the node's own embedding in the aggregation, preventing a node from "forgetting itself" during message passing. Then Â = D̃<sup>−½</sup> Ã D̃<sup>−½</sup>.
+  </div>
+
+  <!-- ── PART 7: TRAINING ── -->
+  <h2>Part 7: Training GNNs</h2>
+
+  <h3>Supervised Training — Node Classification</h3>
+  <p>For node classification (e.g. CORA: classify each paper into one of 7 topics), the loss is cross-entropy over nodes with known labels:</p>
+
+  <div class="card" style="border-left:3px solid var(--accent); margin-bottom:12px">
+    <p style="margin:0 0 6px; font-size:0.9rem; font-family:monospace; color:var(--text)">L = Σ<sub>v∈V<sub>train</sub></sub> CrossEntropy( y<sub>v</sub>, softmax(z<sub>v</sub><sup>T</sup> θ) )</p>
+    <p style="margin:0; font-size:0.83rem; color:var(--text-muted)"><strong>y<sub>v</sub></strong>: true label of node v &nbsp;|&nbsp; <strong>z<sub>v</sub></strong>: learned embedding of node v &nbsp;|&nbsp; <strong>θ</strong>: classification head weights &nbsp;|&nbsp; Gradient descent backpropagates through the graph layers.</p>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Training Mode</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">What it requires</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Loss signal</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#60a5fa">Supervised</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Labels on training nodes</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Cross-entropy between predicted and true labels</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#34d399">Semi-supervised</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Labels on a few nodes; most unlabelled</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Loss only on labelled nodes; embeddings propagate to unlabelled (typical in CORA: 140 labelled / 2568 unlabelled)</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#a78bfa">Unsupervised</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">No labels — graph structure only</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Neighbouring nodes should have similar embeddings (node2vec, DeepWalk objective)</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="key-concept">
+    <div class="label">Semi-supervised Learning on Graphs</div>
+    <p>This is one of GNNs' most powerful properties. Because GCN layers aggregate information across the graph, labelling even a small fraction of nodes is enough to train the whole network. The GCN <em>propagates</em> label information through edges, so unlabelled nodes near labelled ones absorb useful signal. In CORA only ~5% of nodes (140/2708) are labelled during training — and the GCN still achieves ~80% accuracy on the rest.</p>
+  </div>
+
+  <!-- ── PART 8: IMPLEMENTATION ── -->
+  <h2>Part 8: Implementing GNNs in Python</h2>
+
+  <h3>Step 1: Working with Graphs — NetworkX</h3>
+  <div class="code-block"><pre><span class="kw">import</span> networkx <span class="kw">as</span> nx
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Build a graph</span>
+G = nx.Graph()
+G.add_nodes_from([<span class="str">'A'</span>, <span class="str">'B'</span>, <span class="str">'C'</span>, <span class="str">'D'</span>])
+G.add_edges_from([(<span class="str">'A'</span>, <span class="str">'B'</span>), (<span class="str">'B'</span>, <span class="str">'C'</span>), (<span class="str">'B'</span>, <span class="str">'D'</span>)])
+
+<span class="cm"># Get adjacency matrix</span>
+A = nx.to_numpy_array(G)   <span class="cm"># shape: (4, 4)</span>
+
+<span class="cm"># Compute degree matrix</span>
+degrees = np.array(A.sum(axis=1))
+D = np.diag(degrees)
+
+<span class="cm"># Normalised adjacency: D^{-1/2} A D^{-1/2}</span>
+D_inv_sqrt = np.diag(1.0 / np.sqrt(degrees + 1e-8))
+A_hat = D_inv_sqrt @ A @ D_inv_sqrt   <span class="cm"># normalised, shape: (4, 4)</span>
+
+print(f"Nodes: {G.number_of_nodes()}, Edges: {G.number_of_edges()}")
+print(f"Adjacency matrix shape: {A.shape}")
+print(f"Degree of B: {G.degree('B')}")</pre></div>
+
+  <h3>Step 2: Building a GCN — Spektral (Keras-based)</h3>
+  <div class="code-block"><pre><span class="kw">from</span> spektral.data <span class="kw">import</span> Dataset, Graph
+<span class="kw">from</span> spektral.layers <span class="kw">import</span> GCNConv
+<span class="kw">from</span> spektral.transforms <span class="kw">import</span> GCNFilter
+<span class="kw">from</span> tensorflow.keras <span class="kw">import</span> Model
+<span class="kw">from</span> tensorflow.keras.layers <span class="kw">import</span> Input, Dropout, Dense
+
+<span class="cm"># Load CORA: 2708 papers, 1433 word features, 7 classes</span>
+<span class="kw">from</span> spektral.datasets <span class="kw">import</span> Citation
+dataset = Citation(<span class="str">'cora'</span>, transforms=[GCNFilter()])
+graph = dataset[0]
+X, A, y = graph.x, graph.a, graph.y  <span class="cm"># features, adjacency, labels</span>
+
+<span class="cm"># Build a 2-layer GCN using Functional API</span>
+X_in = Input(shape=(X.shape[1],))   <span class="cm"># node features: (None, 1433)</span>
+A_in = Input(shape=(None,), sparse=<span class="kw">True</span>)  <span class="cm"># adjacency matrix</span>
+
+h = GCNConv(64, activation=<span class="str">'relu'</span>)([X_in, A_in])   <span class="cm"># layer 1</span>
+h = Dropout(0.5)(h)
+h = GCNConv(7,  activation=<span class="str">'softmax'</span>)([h, A_in])    <span class="cm"># layer 2 (7 classes)</span>
+
+model = Model(inputs=[X_in, A_in], outputs=h)
+model.compile(
+    optimizer=<span class="str">'adam'</span>,
+    loss=<span class="str">'categorical_crossentropy'</span>,
+    weighted_metrics=[<span class="str">'accuracy'</span>]
+)
+
+<span class="cm"># Train — only labelled nodes contribute to loss via sample_weight</span>
+model.fit(
+    [X, A], y,
+    sample_weight=train_mask,   <span class="cm"># 1 for labelled nodes, 0 otherwise</span>
+    epochs=200, batch_size=graph.n_nodes
+)</pre></div>
+
+  <h3>Baseline: Dense Network vs GCN on CORA</h3>
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Model</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Uses graph structure?</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Typical CORA accuracy</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Dense (MLP)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">No — uses only node features X</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">~55–60%</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#34d399">2-layer GCN</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Yes — uses X + adjacency matrix A</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">~81%</td>
+      </tr>
+    </table>
+  </div>
+  <p style="font-size:0.83rem; color:var(--text-muted)">The GCN beats the MLP by ~20 percentage points by exploiting the citation graph — papers that cite each other tend to be in the same research area. The graph structure is a powerful signal that node features alone can't capture.</p>
+
+  <!-- ── PART 9: TAXONOMY ── -->
+  <h2>Part 9: Taxonomy of GNNs</h2>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Type</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Core idea</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Key examples</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#60a5fa">Convolutional GNN (ConvGNN)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Generalises convolution to graphs — aggregates neighbour features with shared weights. The GCN above is this type.</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">GCN, GraphSAGE, ChebNet</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#a78bfa">Graph Attention Networks (GAT)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Instead of averaging all neighbours equally, learn attention weights — some neighbours are more important than others. α<sub>uv</sub> = importance of u to v.</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">GAT, GATv2</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#34d399">Recurrent GNN (RecGNN)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Uses RNN-style gating to exchange information with neighbours iteratively (like an LSTM per node). Applied until convergence.</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Original GNN (2005), Gated Graph NN</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#fbbf24">Graph Autoencoder (GAE)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Unsupervised: encode nodes into embeddings, then reconstruct the adjacency matrix. Trained without labels.</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">VGAE, node2vec (random-walk variant)</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Spatial-Temporal GNN (STGNN)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Combines GNN (spatial — graph topology) with RNN or CNN (temporal — time dimension). For data that evolves on a graph over time.</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">DCRNN, Graph WaveNet — traffic speed forecasting</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>GCN vs Graph Attention Networks — Key Difference</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #60a5fa">
+      <p style="margin:0 0 6px; font-weight:600; color:#60a5fa">GCN — equal-weight aggregation</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.73rem">h_v = σ( W · avg(neighbours) + B·h_v )
+
+All neighbours weighted equally
+(divided by degree).
+
+Fast, simple, effective for
+homogeneous graph data.</pre></div>
+    </div>
+    <div class="card" style="border-left:3px solid #a78bfa">
+      <p style="margin:0 0 6px; font-weight:600; color:#a78bfa">GAT — attention-weighted aggregation</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.73rem">h_v = σ( Σ α_uv · W · h_u )
+
+α_uv = softmax( attn(h_u, h_v) )
+Learned: how important is u to v?
+
+More expressive; works better when
+neighbours vary in relevance.</pre></div>
+    </div>
+  </div>
+
+  <!-- ── PART 10: CHALLENGES AND WHEN TO USE ── -->
+  <h2>Part 10: Challenges and When to Use GNNs</h2>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Challenge</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">The Problem</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Current Approaches</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Scalability</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Full-graph training requires the entire A and H<sup>k</sup> in memory. A Facebook-scale graph has billions of nodes — impossible to store all at once.</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Mini-batch sampling (GraphSAGE), cluster-based methods (Cluster-GCN)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Dynamic Graphs</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Real graphs change over time — new nodes, deleted edges. Static GCNs must be retrained as the graph changes.</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Temporal GNNs, incremental training, streaming graph methods</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Over-smoothing</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Too many GCN layers → all node embeddings converge to the same value (information washes out). More layers ≠ always better.</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Residual connections, DropEdge, PairNorm</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Adversarial Attacks</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Adding a few carefully placed edges can cause a GCN to misclassify many nodes. GNNs are surprisingly vulnerable to graph structure attacks.</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Robust GNN training, certified defences, graph purification</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600; color:var(--accent)">Use GNNs when:</p>
+      <ul style="margin:0; padding-left:16px; font-size:0.83rem; color:var(--text-muted)">
+        <li>Data has explicit relational structure (graphs, trees)</li>
+        <li>Neighbourhood context improves predictions (social, citation)</li>
+        <li>Variable-size irregular inputs (molecules with different atom counts)</li>
+        <li>Link existence or quality is the prediction target</li>
+        <li>You need to transfer knowledge from graph structure to unlabelled nodes</li>
+      </ul>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">Don't force GNNs when:</p>
+      <ul style="margin:0; padding-left:16px; font-size:0.83rem; color:var(--text-muted)">
+        <li>Data is naturally grid-like → use CNNs</li>
+        <li>Data is naturally sequential → use RNNs / Transformers</li>
+        <li>Data is independent tabular rows → use gradient-boosted trees</li>
+        <li>You have no meaningful relationships between data points</li>
+        <li>Graph is extremely sparse and nodes are nearly independent</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <h2>Summary</h2>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Concept</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Key Point</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Why GNNs</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">CNNs need grids, RNNs need sequences. Graphs are irregular — variable-size neighbourhoods, no fixed coordinate system. GNNs generalise deep learning to graph-structured data.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Graph = (V, E)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Vertices (nodes) + Edges (links). Represented numerically as adjacency matrix A and degree matrix D. Node features X ∈ R^{|V| × d}.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Message Passing</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">h_v^k = σ( W_k · avg_neighbours + B_k · h_v^{k-1} ). K layers = K-hop receptive field. Same weights at every node (like CNN filter sharing across space).</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Normalised Adjacency</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Â = D<sup>−½</sup>AD<sup>−½</sup> prevents high-degree nodes from dominating aggregation. Vectorised: H<sup>k</sup> = σ(Â H<sup>k-1</sup> W<sub>k</sub> + H<sup>k-1</sup> B<sub>k</sub>).</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Three Task Levels</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Node-level (classify each node), Link-level (predict edges), Graph-level (classify whole graphs). Semi-supervised: label a few nodes, GCN propagates signal to the rest.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Key GNN Types</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">ConvGNN (GCN, GraphSAGE), Graph Attention (GAT — learned weights), GAE (unsupervised), STGNN (space + time). GAT improves on GCN by weighting neighbours differently.</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">Challenges</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Scalability (billion-node graphs), dynamic graphs, over-smoothing with many layers, adversarial attacks on graph structure.</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-nn8"></div></div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('nn8')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('nn7')">← L7: RNNs</button>
   </div>
 </div>
 
@@ -14786,7 +15429,8 @@ const TOPICS = {
   nn4: 'NN L4: Classification with Gradient Descent',
   nn5: 'NN L5: Training a Neural Network',
   nn6: 'NN L6: Convolutional Neural Networks',
-  nn7: 'NN L7: Recurrent Neural Networks'
+  nn7: 'NN L7: Recurrent Neural Networks',
+  nn8: 'NN L8: Graph Neural Networks'
 };
 
 const ALL_QUESTIONS = [
@@ -15171,6 +15815,15 @@ const ALL_QUESTIONS = [
   {t:'nn6', q:'The training accuracy of your CNN reaches 99.5% but validation accuracy plateaus at 93%. The training loss keeps falling while validation loss starts rising after epoch 8. What is happening and what is the best fix?', opts:['The model is underfitting — add more layers','The model is overfitting — it has memorised the training data. The growing gap between train and val performance, combined with rising val loss, is the classic signature. Best fixes: add Dropout layers, use data augmentation, or apply early stopping to recover the epoch-8 weights.','The learning rate is too high — reduce it by 10×','The batch size is too small — increase to 512'], ans:1, exp:'This is textbook overfitting: training performance improves while validation performance degrades. The model has moved past the generalisation sweet spot and started memorising training-specific details (noise, irrelevant patterns). Reducing the learning rate would slow training but would not address the fundamental problem. The correct treatments reduce the model\'s ability to memorise: Dropout randomly deactivates neurons (prevents co-adaptation), augmentation artificially increases training variety, and early stopping stops training before the generalisation gap grows too large. In this case, restoring weights from epoch 8 would likely give the best val accuracy.'},
   {t:'nn6', q:'What is the difference between precision and recall, and in what situation would you prioritise recall over precision?', opts:['Precision and recall are the same metric computed differently','Precision = TP/(TP+FP): of all predictions for class X, what fraction were actually X? Recall = TP/(TP+FN): of all true X examples, what fraction did the model catch? Prioritise recall when missing a true positive is very costly — e.g. medical diagnosis (missing cancer is worse than a false alarm), fraud detection, or security screening.','Precision measures training accuracy; recall measures test accuracy','Recall is only used for binary classification; precision works for multi-class'], ans:1, exp:'The precision-recall tradeoff: you can always improve recall by predicting positive more liberally (you catch more true cases), but this also increases false positives and reduces precision. For medical diagnosis (cancer detection), a missed case (false negative) is far more serious than a false alarm that leads to further testing — so you optimise for high recall even if precision is lower. For spam filtering, you might prioritise precision — having important emails mislabelled as spam (false positive) is worse than receiving some spam. F1 score is the harmonic mean of both and is useful when you want a single balanced metric.'},
   {t:'nn6', q:'In transfer learning with VGG16, you freeze all base layers and only train a new Dense head. After initial training, you unfreeze the last 4 layers for fine-tuning. Why must you use a much smaller learning rate (e.g. 1e-5 instead of 1e-3) for fine-tuning?', opts:['Smaller learning rate is only needed when training from scratch','The pretrained weights already contain high-quality, finely tuned representations. A large learning rate would destroy these representations with aggressive weight updates before the network adapts to the new task. A tiny learning rate makes small, careful adjustments that preserve most of the pretrained structure while adapting the last layers to your specific domain.','A smaller learning rate prevents the GPU from overheating','Keras requires learning rate below 1e-4 when base_model.trainable=True'], ans:1, exp:'This is the core intuition of fine-tuning: the pretrained weights are not random — they encode years of learning and represent the culmination of training on 1.2 million images. Large gradient steps would wipe this out. With lr=1e-5, each parameter update moves only a tiny amount — enough to shift the model toward your specific task while preserving the general feature detectors in earlier layers. Using the same lr=1e-3 as the initial head training would cause "catastrophic forgetting" — the fine-tuned layers would quickly forget what they learned on ImageNet and start learning from scratch, defeating the purpose of transfer learning.'},
+
+  // NN8: Graph Neural Networks
+  {t:'nn8', q:'Why can\'t you apply a standard CNN or Dense network directly to a graph like a social network or molecular graph?', opts:['CNNs and Dense networks are too slow for graph data','Graphs have variable-size, irregular neighbourhoods with no fixed coordinate system and no canonical node ordering. CNNs require a fixed grid (same number of neighbours per position). Dense networks require fixed-size inputs and are not permutation-invariant — renaming the nodes changes the output. GNNs solve this with local, shared-weight message passing that works on any graph topology.','CNNs cannot handle node features, only pixel values','Dense networks require labelled data, but graphs are always unsupervised'], ans:1, exp:'The key problems are irregularity and permutation invariance. In an image, every pixel has exactly 8 neighbours in a fixed spatial arrangement — CNNs exploit this regularity. In a graph, a node can have 1 or 1000 neighbours in any arrangement. You cannot flatten the adjacency matrix and feed it to Dense layers because: (1) the matrix size varies with the number of nodes, (2) shuffling node indices changes the matrix but not the graph — the model should give the same output either way. GNNs address this by learning the same message-passing function applied locally at every node, regardless of its degree.'},
+  {t:'nn8', q:'What do the adjacency matrix A and degree matrix D represent, and how is the normalised adjacency Â = D⁻½AD⁻½ computed?', opts:['A is the feature matrix; D is the label matrix','A[i][j] = 1 if an edge exists between nodes i and j (0 otherwise). D is diagonal: D[i][i] = the number of neighbours of node i (its degree). Â = D⁻½AD⁻½ divides each entry A[i][j] by √(deg_i × deg_j), ensuring nodes with many connections don\'t dominate aggregation more than low-degree nodes.','A is the activation matrix at each layer; D is the dropout rate','A contains node features; D is a distance matrix between nodes'], ans:1, exp:'A encodes graph connectivity: a 1 means "these two nodes are connected." D encodes node connectivity strength: its diagonal values are the node degrees. When you compute H_new = A · H_old, each node\'s new embedding is the sum of its neighbours\' embeddings — but a node with 100 neighbours gets a sum 50× larger than a node with 2 neighbours. Normalising by D⁻½ on both sides scales each contribution by 1/√(deg_i × deg_j), making aggregated embeddings have comparable magnitude regardless of node degree. In practice you also add the identity (A + I) so each node includes its own embedding: Ã = A + I, Â = D̃⁻½ÃD̃⁻½.'},
+  {t:'nn8', q:'What are the three levels of GNN tasks, and what is an example of each?', opts:['Input-level, hidden-level, output-level — these correspond to layers of the GNN','Node-level: predict a label for each individual node (e.g. classify CORA papers into research topics). Link-level: predict whether an edge exists or its type (e.g. recommend products to users). Graph-level: predict a single label for an entire graph (e.g. is this molecule toxic?).','Supervised, semi-supervised, and unsupervised — the three training modes','Vertex tasks, edge tasks, and path tasks — classifying different graph components'], ans:1, exp:'The three task levels correspond to three granularities of prediction. Node-level: each node gets its own label — the GNN learns per-node embeddings. Link-level: for each pair of nodes, predict whether an edge should exist or its properties — embeddings of both nodes are combined to score the edge. Graph-level: summarise the entire graph into one embedding (via pooling), then classify or regress on that. Each task level has different loss functions and different readout mechanisms. CORA is the canonical node classification benchmark; drug-toxicity prediction is the canonical graph classification benchmark.'},
+  {t:'nn8', q:'In the GCN neighbour averaging formula, what does adding more layers do? Is more always better?', opts:['More layers always improve performance — deeper is always better for neural networks','Each layer aggregates one additional hop of neighbourhood information. Layer 1: sees 1-hop neighbours. Layer 2: sees 2-hop neighbours (including information already aggregated from their neighbours). However, too many layers causes over-smoothing: all node embeddings converge to the same value as information washes out across the whole graph. 2–3 layers is typically optimal for most graph tasks.','More layers reduce the receptive field, making the model more local and accurate','More layers are needed only for directed graphs; undirected graphs need only 1 layer'], ans:1, exp:'The K-hop receptive field analogy to CNNs is key: a 1-layer GCN is like a 1×1 convolution (no context), a 2-layer GCN sees 2-hop neighbours (like a 3×3 conv), and a 3-layer sees 3-hop (like a 5×5 conv). But unlike CNNs, over-smoothing is a serious problem: repeatedly averaging neighbours causes all embeddings to converge toward the global mean of the graph — nodes become indistinguishable. This is why GCNs with 2–3 layers consistently outperform deeper ones on node classification. Residual connections and normalisation layers can mitigate this for deeper architectures.'},
+  {t:'nn8', q:'In the CORA dataset, only 140 of 2708 papers are labelled during training (~5%), yet a 2-layer GCN achieves ~81% classification accuracy on unlabelled papers. How?', opts:['The GCN memorises all 2708 papers during training','The GCN propagates label information through the citation graph structure. Unlabelled papers that cite (or are cited by) labelled papers absorb their signal through message passing. This is semi-supervised learning on graphs — graph structure acts as a regulariser, letting a tiny fraction of labels train the whole network. Papers in the same research area tend to cite each other, so the graph topology carries rich label information.','The 81% accuracy is achieved by ignoring unlabelled nodes entirely','140 labelled papers is actually 100% in CORA — the rest are test papers, not unlabelled'], ans:1, exp:'This is one of GNNs\' most powerful properties. In a GCN, each node\'s embedding is computed from its features AND its neighbours\' embeddings, which in turn depend on their neighbours. This propagation allows labelled nodes to influence unlabelled nodes through shared edges. Papers in machine learning tend to cite other machine learning papers — the citation topology encodes topic similarity. The GCN exploits this: even though most papers are unlabelled, their embeddings are shaped by the labelled papers they connect to. A 3-layer GCN allows label signal to flow 3 hops away from any labelled node. Compare to a Dense MLP (which ignores the graph): only ~55–60% accuracy on the same 140 labels.'},
+  {t:'nn8', q:'What is the key difference between a Graph Convolutional Network (GCN) and a Graph Attention Network (GAT)?', opts:['GCN uses relu activation; GAT uses sigmoid','GCN aggregates all neighbours with equal weight (divided by degree). GAT learns attention weights α_uv = how important is neighbour u to node v, using a learned attention function. GAT can assign high weight to relevant neighbours and low weight to irrelevant ones, making it more expressive — but also more computationally expensive.','GCN is for undirected graphs; GAT is for directed graphs only','GCN uses the adjacency matrix; GAT ignores the graph structure entirely'], ans:1, exp:'GCN: h_v = σ(W · Σ_{u∈N(v)} h_u/√(deg_v·deg_u)). Every neighbour u contributes equally (scaled only by degree). GAT: h_v = σ(Σ_{u∈N(v)} α_uv · W · h_u) where α_uv = softmax(attn(h_u, h_v)). The attention coefficients are learned jointly with the network — some neighbours are deemed more informative and get higher weights. This is directly analogous to the Transformer attention mechanism, except applied to graph neighbourhoods rather than sequence positions. GAT improves over GCN on heterogeneous tasks where not all neighbours are equally relevant (e.g. a person in a social graph might be strongly influenced by their close friends but weakly by distant acquaintances).'},
+  {t:'nn8', q:'You want to predict whether two users in a social network will become friends (link prediction). Describe the GNN approach from node embeddings to final prediction.', opts:['Train a separate binary classifier on each potential edge using only the two nodes\' raw features','Train a GNN to produce embeddings z_u and z_v for each node using message passing. Then score the potential edge using the similarity of the two embeddings: score(u,v) = σ(z_u · z_v) or a learned MLP(z_u, z_v). Train with positive examples (existing edges) and negative samples (randomly sampled non-edges). The GNN embeddings encode neighbourhood context, so nodes in similar communities get similar embeddings — even if they haven\'t connected yet.','Use the adjacency matrix directly as input to a Dense network for each pair','Link prediction requires a separate RNN model, not a GNN'], ans:1, exp:'Link prediction is a two-step process. Step 1: Run GNN message passing to produce node embeddings z_u and z_v. These embeddings encode not just the node\'s own features, but also its local graph neighbourhood — giving rich structural information. Step 2: Score the candidate edge. Simple approach: inner product z_u · z_v (high if the nodes have similar representations). Better approach: a small MLP that takes (z_u, z_v) or (z_u ⊕ z_v) as input. Training: treat existing edges as positive examples; sample random non-edges as negatives; minimise binary cross-entropy. The GNN is the key component — it encodes structural similarity so nodes in the same community get embeddings that are close in embedding space, making it easy to predict future connections.'},
 
   // NN7: Recurrent Neural Networks
   {t:'nn7', q:'What is the fundamental structural difference between a feedforward network and an RNN?', opts:['RNNs use convolutional filters instead of dense weights','RNNs maintain a hidden state h_t that is passed from one timestep to the next. Each output depends on both the current input and the previous hidden state, creating an implicit memory of past inputs. Feedforward networks are stateless — each input is processed independently.','RNNs can only process fixed-length inputs','RNNs use a different activation function (tanh instead of relu)'], ans:1, exp:'The hidden state is the defining feature of an RNN. At each step t, h_t = tanh(W_h · h_{t-1} + W_x · x_t + b). The same weight matrices W_h and W_x are reused at every timestep (weight sharing in time). This is analogous to how a CNN reuses the same filter weights at every spatial position. The hidden state carries a compressed summary of all previous inputs, enabling the network to use context from earlier in the sequence.'},
@@ -15570,6 +16223,15 @@ const FLASHCARDS = [
   {t:'nn6', front:'Precision vs Recall — formulas and when to use each', back:'Precision = TP / (TP + FP)\n  "Of my predictions for class X, how many were right?"\n  Optimise when false alarms are costly (spam filter)\n\nRecall = TP / (TP + FN)\n  "Of all real class X examples, how many did I catch?"\n  Optimise when misses are costly (cancer detection)\n\nF1 = 2 × (P × R) / (P + R)\n  Harmonic mean — use when you want one balanced metric\n\nHigh P, low R: conservative — catches few, rarely wrong\nLow P, high R: aggressive — catches all, many false alarms\n\nsklearn: classification_report(y_true, y_pred)'},
   {t:'nn6', front:'Transfer learning — feature extraction vs fine-tuning', back:'Feature extraction (faster, less data needed):\n  base_model.trainable = False\n  → freeze all pretrained weights\n  → only new head is trained\n  Best when: small dataset, similar to ImageNet\n\nFine-tuning (better accuracy, more data needed):\n  Unfreeze last few blocks\n  Use TINY learning rate (1e-5, not 1e-3)\n  → small adjustments preserve pretrained features\n  "catastrophic forgetting" if lr too large\n\nRule of thumb:\n  Small dataset + similar domain → feature extraction\n  Large dataset + different domain → fine-tune all\n  In between → fine-tune last few blocks'},
 
+  // NN8: Graph Neural Networks flashcards
+  {t:'nn8', front:'Graph vocabulary — the essential terms', back:'G = (V, E):  V = vertices (nodes),  E = edges (links)\n\nAdjacency matrix A  [|V| × |V|]:\n  A[i][j] = 1 if edge (i,j) exists, else 0\n  Symmetric for undirected graphs\n\nDegree matrix D  [|V| × |V|, diagonal]:\n  D[i][i] = number of neighbours of node i\n\nNode feature matrix X  [|V| × d]:\n  Each row = feature vector for one node\n  CORA: X ∈ R^{2708×1433}\n\nNormalised adjacency:\n  Â = D^{-½} A D^{-½}\n  → degree-invariant aggregation\n  (add self-loops: Ã = A+I first)'},
+  {t:'nn8', front:'Three levels of GNN tasks', back:'Node-level:\n  Predict a label/value for each node\n  Training: (node, label) pairs\n  Example: CORA paper topic classification\n  Output: per-node embedding z_v\n\nLink-level:\n  Predict edge existence or type\n  Training: known edges + sampled non-edges\n  Example: recommend products to users\n  Score: σ(z_u · z_v) or MLP(z_u, z_v)\n\nGraph-level:\n  Predict one label for the whole graph\n  Training: (graph, label) pairs\n  Example: molecular toxicity prediction\n  Readout: pool all z_v → one graph embedding\n\nSemi-supervised: label few nodes,\n  GCN propagates signal to unlabelled ones\n  CORA: 140 labels → 81% on 2568 unlabelled'},
+  {t:'nn8', front:'GCN neighbour averaging — the core formula', back:'Initialise:  h_v^0 = x_v  (node\'s own features)\n\nUpdate (layer k):\n  h_v^k = σ(\n    W_k · Σ_{u∈N(v)} h_u^{k-1} / |N(v)|\n         +\n    B_k · h_v^{k-1}\n  )\n\nFinal embedding:  z_v = h_v^K\n\nKey points:\n  • Same W_k, B_k at every node (weight sharing)\n  • K layers = K-hop receptive field\n  • More layers → over-smoothing risk\n    (all embeddings → same value)\n  • 2–3 layers is typically optimal\n\nVectorised (all nodes at once):\n  H^k = σ( Â · H^{k-1} · W_k + H^{k-1} · B_k )\n  where Â = D^{-½} A D^{-½}'},
+  {t:'nn8', front:'Why normalise the adjacency? D⁻½AD⁻½ explained', back:'Problem without normalisation:\n  H_new = A · H_old\n  Node with 100 neighbours gets sum of 100 rows\n  Node with 2 neighbours gets sum of 2 rows\n  → 100-neighbour node 50× larger → dominates\n  → gradient descent ignores low-degree nodes\n\nSolution: Â = D^{-½} A D^{-½}\n  Entry Â[i][j] = A[i][j] / √(deg_i × deg_j)\n  → each neighbour contribution weighted by\n     1/√(deg_source × deg_target)\n  → comparable embedding scales for all nodes\n\nWith self-loops (standard practice):\n  Ã = A + I   (include own embedding)\n  D̃ = degree matrix of Ã\n  Â = D̃^{-½} Ã D̃^{-½}'},
+  {t:'nn8', front:'GCN vs GAT — aggregation strategy', back:'GCN (Graph Convolutional Network):\n  Equal-weight aggregation\n  h_v = σ( W · Σ_{u∈N(v)} h_u / √(deg_v·deg_u) )\n  • Simple, fast, effective\n  • All neighbours equally important\n  • Best for homogeneous graphs\n\nGAT (Graph Attention Network):\n  Learned attention weights\n  h_v = σ( Σ_{u∈N(v)} α_uv · W · h_u )\n  α_uv = softmax( attn(h_u, h_v) )  ← learned\n  • More expressive: some neighbours matter more\n  • Similar to Transformer self-attention\n  • Better when neighbour relevance varies\n  • Computationally more expensive\n\nRule of thumb:\n  Homogeneous, similar-relevance neighbours → GCN\n  Heterogeneous, variable-relevance → GAT'},
+  {t:'nn8', front:'Taxonomy of GNNs — 5 types', back:'1. ConvGNN  (Convolutional)\n   Generalises convolution to graphs\n   Examples: GCN, GraphSAGE, ChebNet\n\n2. GAT  (Graph Attention)\n   Attention-weighted aggregation\n   Examples: GAT, GATv2\n\n3. RecGNN  (Recurrent)\n   RNN-style gating per node, iterated to convergence\n   Examples: Original GNN (2005), Gated Graph NN\n\n4. GAE  (Graph Autoencoder)\n   Unsupervised: encode → reconstruct adjacency\n   Examples: VGAE, node2vec\n\n5. STGNN  (Spatial-Temporal)\n   GNN (space) + RNN/CNN (time)\n   For graphs that evolve over time\n   Examples: DCRNN, Graph WaveNet\n   Use case: traffic speed forecasting'},
+  {t:'nn8', front:'When to use GNNs vs other architectures', back:'Use GNNs when:\n  ✓ Data has explicit relational structure (graphs)\n  ✓ Neighbourhood context improves predictions\n  ✓ Variable-size irregular inputs (molecules)\n  ✓ Predicting edges (link prediction, recommendations)\n  ✓ Semi-supervised: label a few, propagate to many\n\nUse CNNs instead when:\n  ✗ Data is a fixed 2D/3D grid (images, video)\n\nUse RNNs/Transformers instead when:\n  ✗ Data is a 1D sequence (text, time series)\n\nUse GBMs/Dense instead when:\n  ✗ Independent tabular rows (no graph structure)\n\nKey GNN challenges:\n  • Scalability (billion-node graphs → mini-batch sampling)\n  • Over-smoothing (too many layers → all embeddings same)\n  • Dynamic graphs (nodes/edges added/removed over time)\n  • Adversarial attacks on graph topology'},
+
   // NN7: Recurrent Neural Networks flashcards
   {t:'nn7', front:'RNN hidden state — the core equation', back:'h_t = tanh( W_h · h_{t-1}  +  W_x · x_t  +  b )\n\nW_h  = weight matrix for previous hidden state\nW_x  = weight matrix for current input\nb    = bias\ntanh = squash to [−1, +1]\n\nKey properties:\n• Same W_h and W_x reused at every timestep\n  (weight sharing in time)\n• h_t carries memory of all previous inputs\n• Initial h_0 is usually all zeros\n\nProblem: multiply by W_h at every step\n→ |W_h| < 1: vanishing gradient\n→ |W_h| > 1: exploding gradient\nSolution: LSTM'},
   {t:'nn7', front:'LSTM — two pathways and three gates', back:'Two pathways:\n  C_t  = cell state  (long-term memory highway)\n  h_t  = hidden state (short-term output)\n\nCell state update:\n  C_t = f_t × C_{t-1}  +  i_t × Ĉ_t\n  (addition → gradients don\'t vanish)\n\nThree gates (all sigmoid → output 0–1):\n  Forget gate f_t: what to erase from C\n    → 0 = forget, 1 = keep\n  Input gate  i_t: what new info to write to C\n    (combined with Ĉ_t = tanh(...))\n  Output gate o_t: what part of C to expose\n    h_t = o_t × tanh(C_t)\n\nWhy it works: additive update to C prevents\ngradient from shrinking over long sequences'},
@@ -15649,7 +16311,7 @@ function nav(page) {
   document.getElementById('main').scrollTop = 0;
   const navEl = document.querySelector(`[onclick="nav('${page}')"]`);
   if (navEl) navEl.classList.add('active');
-  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9','nn1','nn2','nn3','nn4','nn5','nn6','nn7'].includes(page)) {
+  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9','nn1','nn2','nn3','nn4','nn5','nn6','nn7','nn8'].includes(page)) {
     markVisited(page);
     renderInlineQuiz(page);
   }
