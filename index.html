@@ -289,6 +289,12 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('nn8')" id="nav-nn8"><span class="icon">🕸️</span> L8: Graph Neural Networks<span class="check" id="check-nn8"></span></div>
   </div>
 
+  <div class="nav-item nav-item-chapter" onclick="toggleChapter('explainability')"><span class="icon">📚</span> Model Explainability<span class="chapter-arrow" id="arrow-explainability">▾</span></div>
+  <div class="nav-chapter-items" id="chapter-explainability">
+    <div class="nav-item nav-item-sub" onclick="nav('ex1')" id="nav-ex1"><span class="icon">🧭</span> L1: Introduction to Explainability<span class="check" id="check-ex1"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('ex2')" id="nav-ex2"><span class="icon">🔎</span> L2: Local Explanations<span class="check" id="check-ex2"></span></div>
+  </div>
+
   <div class="sidebar-section" style="margin-top:10px">Practice</div>
   <div class="nav-item" onclick="nav('quiz')"><span class="icon">📝</span> Quiz</div>
   <div class="nav-item" onclick="nav('flashcards')"><span class="icon">🃏</span> Flashcards</div>
@@ -1323,6 +1329,13 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
           <div class="topic-chip" id="chip-nn8" onclick="toggleChip('nn8')">L8: GNNs</div>
         </div>
       </div>
+      <div class="chip-chapter">
+        <div class="chip-chapter-label">🔍 Model Explainability</div>
+        <div class="topic-chips">
+          <div class="topic-chip" id="chip-ex1" onclick="toggleChip('ex1')">L1: Intro to Explainability</div>
+          <div class="topic-chip" id="chip-ex2" onclick="toggleChip('ex2')">L2: Local Explanations</div>
+        </div>
+      </div>
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
           <div class="topic-chip" id="chip-ts1" onclick="toggleChip('ts1')">L1: Intro to Time Series</div>
@@ -1456,6 +1469,13 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
           <div class="topic-chip" id="fc-chip-nn6" onclick="fcFilter('nn6')">L6: CNNs</div>
           <div class="topic-chip" id="fc-chip-nn7" onclick="fcFilter('nn7')">L7: RNNs</div>
           <div class="topic-chip" id="fc-chip-nn8" onclick="fcFilter('nn8')">L8: GNNs</div>
+        </div>
+      </div>
+      <div class="chip-chapter">
+        <div class="chip-chapter-label">🔍 Model Explainability</div>
+        <div class="topic-chips">
+          <div class="topic-chip" id="fc-chip-ex1" onclick="fcFilter('ex1')">L1: Intro to Explainability</div>
+          <div class="topic-chip" id="fc-chip-ex2" onclick="fcFilter('ex2')">L2: Local Explanations</div>
         </div>
       </div>
       <div class="chip-chapter-label">📚 Time Series Analysis</div>
@@ -13967,6 +13987,1369 @@ neighbours vary in relevance.</pre></div>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════ -->
+<!-- MODEL EXPLAINABILITY — L1: Introduction                       -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-ex1">
+  <div class="lesson-header">
+    <div class="breadcrumb">Model Explainability &amp; Interpretability · L1</div>
+    <h1>🧭 Introduction to Explainability &amp; Interpretability</h1>
+    <p class="subtitle">Understand why black-box models are a problem, what interpretability and explainability actually mean, the fundamental trade-offs, and a complete map of every technique in this field</p>
+  </div>
+
+  <!-- ── PART 1: THE CORE PROBLEM ── -->
+  <h2>Part 1: The Black Box Problem</h2>
+  <p>You've built models that achieve 95% accuracy. But accuracy alone is not enough for the real world. Consider these scenarios:</p>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Scenario</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">The model says…</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">The critical question</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Medical diagnosis</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">"This patient needs urgent surgery."</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Surgeon: <em>"Why? Which findings led to this?"</em></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Loan application</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">"This person's loan is denied."</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Applicant: <em>"Why was I rejected? Is this fair?"</em></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Criminal sentencing</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">"High re-offending risk."</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Defendant: <em>"What features put me in the high-risk group?"</em></td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Your own model</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">"Accuracy: 94% on test set."</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">You: <em>"Is it learning real signal or a data artefact?"</em></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="key-concept">
+    <div class="label">The Classic Cautionary Tale</div>
+    <p>A neural network trained on chest X-rays to detect pneumonia achieved high test accuracy — but it was partly learning to identify <strong>which scanner was used</strong>. Sicker patients were scanned on older machines in the intensive care unit, so the scanner model became a proxy for severity. The model was accurate on test data, would fail catastrophically when deployed on new equipment, and nobody knew — because nobody looked inside the model.</p>
+  </div>
+
+  <!-- ── PART 2: THE KEY DISTINCTION ── -->
+  <h2>Part 2: Interpretability vs Explainability — The Distinction</h2>
+  <p>These words are used interchangeably but they mean different things. The distinction matters because it affects which tools you reach for.</p>
+
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #60a5fa">
+      <p style="margin:0 0 6px; font-weight:600; font-size:1rem; color:#60a5fa">Interpretability</p>
+      <p style="margin:0 0 8px; font-size:0.83rem; color:var(--text-muted)">An <strong>intrinsic property of the model itself</strong>. An interpretable model can be understood directly from its structure — no extra tools needed.</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.73rem">y = 3.2×age − 0.8×cholesterol + 12.1
+
+You can read this directly:
+• Age has a positive effect (+3.2 per year)
+• Cholesterol has a negative effect (−0.8)
+• Relative importance: age > cholesterol</pre></div>
+    </div>
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; font-size:1rem; color:#f87171">Explainability</p>
+      <p style="margin:0 0 8px; font-size:0.83rem; color:var(--text-muted)">A <strong>post-hoc technique applied to a black-box model</strong>. The model itself is opaque; a separate method generates a human-readable approximation of its behaviour.</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.73rem">Neural network: f(age, ...) → 0.87  ← opaque
+     ↓ apply SHAP
+"For this patient:
+  age=67 contributed +0.31
+  cholesterol contributed −0.12"
+The explanation ≠ the model.</pre></div>
+    </div>
+  </div>
+
+  <div class="alert-box" style="margin-top:12px">
+    <strong>Key insight:</strong> An explanation of a black-box model is always an <em>approximation</em> — it simplifies the model's true behaviour to something human-readable. Interpretability gives you the truth about how the model works. Explainability gives you a useful but potentially imperfect story about it.
+  </div>
+
+  <!-- ── PART 3: THE SPECTRUM VISUALISATION ── -->
+  <h2>Part 3: The Complexity–Interpretability Spectrum</h2>
+  <p>Every model sits somewhere on a spectrum between "fully readable" and "fully opaque." The more complex the model, the higher the accuracy ceiling — but the harder it is to understand.</p>
+
+  <!-- SPECTRUM VISUALISATION -->
+  <div class="card" style="padding:24px 20px; margin-bottom:16px">
+    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); margin-bottom:4px">
+      <span style="font-weight:700; color:var(--text)">← Less Complexity</span>
+      <span style="font-weight:700; color:var(--text)">More Complexity →</span>
+    </div>
+    <!-- Arrow bar -->
+    <div style="position:relative; height:28px; border-radius:14px; background:linear-gradient(to right, #1d4ed8 0%, #3b82f6 25%, #7c3aed 50%, #dc2626 75%, #991b1b 100%); margin-bottom:0"></div>
+    <!-- Model labels row -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr 1fr; margin-top:8px; gap:4px">
+      <div style="text-align:center">
+        <div style="width:2px; height:12px; background:var(--text-muted); margin:0 auto 4px"></div>
+        <div style="font-size:0.72rem; color:var(--text-muted); font-weight:600">Decision<br>Tree</div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:2px; height:12px; background:var(--text-muted); margin:0 auto 4px"></div>
+        <div style="font-size:0.72rem; color:var(--text-muted); font-weight:600">Linear<br>Regression</div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:2px; height:12px; background:var(--text-muted); margin:0 auto 4px"></div>
+        <div style="font-size:0.72rem; color:var(--text-muted); font-weight:600">Logistic<br>Regression</div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:2px; height:12px; background:var(--text-muted); margin:0 auto 4px"></div>
+        <div style="font-size:0.72rem; color:var(--text-muted); font-weight:600">Random<br>Forest</div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:2px; height:12px; background:var(--text-muted); margin:0 auto 4px"></div>
+        <div style="font-size:0.72rem; color:var(--text-muted); font-weight:600">Deep<br>Neural Net</div>
+      </div>
+    </div>
+    <!-- Interpretable / Explainable brackets -->
+    <div style="display:flex; margin-top:16px; gap:8px">
+      <div style="flex:0 0 55%; border:2px solid #3b82f6; border-radius:8px; padding:8px 12px; text-align:center">
+        <span style="font-size:0.78rem; font-weight:700; color:#3b82f6">🔵 Interpretable Models</span>
+        <p style="margin:4px 0 0; font-size:0.72rem; color:var(--text-muted)">Structure is directly human-readable.<br>No extra tools needed.</p>
+      </div>
+      <div style="flex:0 0 43%; border:2px solid #dc2626; border-radius:8px; padding:8px 12px; text-align:center">
+        <span style="font-size:0.78rem; font-weight:700; color:#dc2626">🔴 Explainable Models</span>
+        <p style="margin:4px 0 0; font-size:0.72rem; color:var(--text-muted)">Too complex to read directly.<br>Need post-hoc explanation tools.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Model</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Why interpretable / not</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">How to understand it</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#60a5fa">Decision Tree (shallow)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">A short tree can be printed and followed by a human</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Read the decision path directly</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#60a5fa">Linear Regression</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Each feature has one coefficient — magnitude = importance, sign = direction</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Read the coefficients (after standardisation)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#60a5fa">Logistic Regression</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Same as linear, but predicts probabilities via sigmoid</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Coefficients → log-odds; exp(coef) → odds ratio</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Random Forest</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Hundreds of trees — no single readable structure</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">SHAP, permutation importance, partial dependence plots</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Deep Neural Network</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Millions of weights with non-linear interactions — fundamentally opaque</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">SHAP, LIME, Grad-CAM, attention visualisation</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">CNN / LSTM / GNN</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Complex learned representations of images, sequences, graphs</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Grad-CAM (images), attention maps (sequences), node importance (graphs)</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── PART 4: WHY IT MATTERS ── -->
+  <h2>Part 4: Why Explainability Matters — Four Concrete Reasons</h2>
+
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #60a5fa">
+      <p style="margin:0 0 6px; font-weight:600; color:#60a5fa">1. Debugging &amp; Validation</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Models learn <em>whatever pattern predicts training labels</em> — not necessarily the right one. Explainability lets you verify: <strong>is the model using real causal signals or data artefacts?</strong> (e.g., scanner type, background colour, hospital ID)</p>
+    </div>
+    <div class="card" style="border-left:3px solid #a78bfa">
+      <p style="margin:0 0 6px; font-weight:600; color:#a78bfa">2. Trust &amp; Adoption</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">A doctor won't act on a recommendation they can't verify. A loan officer won't approve decisions they can't defend. <strong>Interpretability is the price of admission</strong> in medicine, law, and finance.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">3. Fairness &amp; Bias</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">A model may encode historical discrimination — predicting loan default risk while also penalising certain postcodes or demographics. <strong>Explainability reveals which features drive decisions for which groups.</strong></p>
+    </div>
+    <div class="card" style="border-left:3px solid #fbbf24">
+      <p style="margin:0 0 6px; font-weight:600; color:#fbbf24">4. Regulatory Compliance</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)"><strong>GDPR Article 22</strong>: right to explanation for automated decisions. <strong>FDA</strong>: requires explainability for AI medical devices. <strong>Financial regulators</strong>: model documentation for credit decisioning. No explanation = no deployment in many industries.</p>
+    </div>
+  </div>
+
+  <!-- ── PART 5: THREE AXES ── -->
+  <h2>Part 5: Three Dimensions to Classify Every Method</h2>
+  <p>Every explainability technique can be placed on three axes. Understanding these dimensions lets you quickly identify which tool fits your situation.</p>
+
+  <h3>Axis 1: Global vs Local</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #60a5fa">
+      <p style="margin:0 0 6px; font-weight:600; color:#60a5fa">Global — "How does the model behave overall?"</p>
+      <div class="code-block" style="margin:0 0 6px"><pre style="font-size:0.73rem">Feature       Importance
+age           ████████████████  0.41
+income        ████████████      0.28
+credit_score  ████████          0.19
+zip_code      █████             0.12</pre></div>
+      <p style="margin:0; font-size:0.82rem; color:var(--text-muted)">Summarises behaviour across all predictions. Good for: auditing, understanding the model, communicating to stakeholders.</p>
+    </div>
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">Local — "Why THIS prediction for THIS instance?"</p>
+      <div class="code-block" style="margin:0 0 6px"><pre style="font-size:0.73rem">Patient #472 — Prediction: HIGH RISK (0.87)
+Base value:         0.50
+age=67:           + 0.18 ────────►
+income=low:       + 0.14 ──────►
+credit=poor:      + 0.11 ────►
+employment=yes:   − 0.04 ◄</pre></div>
+      <p style="margin:0; font-size:0.82rem; color:var(--text-muted)">Explains one specific prediction. Good for: explaining decisions to users, debugging individual cases.</p>
+    </div>
+  </div>
+
+  <h3>Axis 2: Model-Specific vs Model-Agnostic</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">Model-Specific — exploits internal structure</p>
+      <p style="margin:0 0 6px; font-size:0.83rem; color:var(--text-muted)">Only works for one model type, but is exact and efficient.</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.73rem">Linear model:   read coefficients directly
+Decision tree:  follow the decision path
+Neural net:     gradient-based saliency
+CNN:            Grad-CAM activation maps
+Transformer:    attention weight visualisation</pre></div>
+    </div>
+    <div class="card" style="border-left:3px solid #fbbf24">
+      <p style="margin:0 0 6px; font-weight:600; color:#fbbf24">Model-Agnostic — treats model as black box</p>
+      <p style="margin:0 0 6px; font-size:0.83rem; color:var(--text-muted)">Works on ANY model using only input/output pairs. Slower (requires many model calls), but universal.</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.73rem">SHAP:   works on XGBoost, NN, SVM, anything
+LIME:   fits a local linear model around any prediction
+PDP:    sweeps input values, records output changes
+Perm:   shuffles features, measures accuracy drop</pre></div>
+    </div>
+  </div>
+
+  <h3>Axis 3: Intrinsic vs Post-hoc</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #a78bfa">
+      <p style="margin:0 0 4px; font-weight:600; color:#a78bfa">Intrinsic — interpretable by design</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">The model itself is the explanation. You don't need a separate tool — the structure <em>is</em> the insight.<br><br><strong>Examples:</strong> Linear/Logistic Regression, Shallow Decision Tree, Rule Lists, GAMs (Generalised Additive Models)</p>
+    </div>
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 4px; font-weight:600; color:#f87171">Post-hoc — explained after training</p>
+      <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Train any black-box model, then apply an explanation technique as a separate step. Flexible — works with the best-performing models.<br><br><strong>Examples:</strong> SHAP on XGBoost, LIME on a neural network, Grad-CAM on a CNN</p>
+    </div>
+  </div>
+
+  <!-- ── PART 6: ACCURACY TRADEOFF ── -->
+  <h2>Part 6: The Interpretability–Accuracy Trade-off</h2>
+
+  <div class="card" style="margin-bottom:16px; padding:20px">
+    <!-- Row 1: axis labels -->
+    <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:2px">
+      <span style="color:var(--text-muted)">Interpretability</span>
+      <span style="color:var(--text-muted)">Accuracy</span>
+    </div>
+    <!-- Row 2: double arrow bar -->
+    <div style="display:flex; align-items:center; gap:6px; margin-bottom:16px">
+      <span style="font-size:0.75rem; font-weight:700; color:var(--text); white-space:nowrap">HIGH ◄</span>
+      <div style="flex:1; height:6px; border-radius:3px; background:linear-gradient(to right,#1d4ed8,#7c3aed,#dc2626)"></div>
+      <span style="font-size:0.75rem; font-weight:700; color:var(--text); white-space:nowrap">► HIGH</span>
+    </div>
+    <!-- Row 3: model columns -->
+    <div style="display:grid; grid-template-columns:repeat(6,1fr); width:100%; gap:4px">
+      <!-- Linear Regression -->
+      <div style="text-align:center">
+        <div style="font-size:0.72rem; font-weight:600; color:#60a5fa; margin-bottom:6px; min-height:2.2em; display:flex; align-items:center; justify-content:center">Linear<br>Regression</div>
+        <div style="width:2px; height:16px; background:var(--text-muted); margin:0 auto 6px"></div>
+        <div style="font-size:0.68rem; color:var(--text-muted); line-height:1.4">Read the<br>coefficients</div>
+      </div>
+      <!-- Logistic Regression -->
+      <div style="text-align:center">
+        <div style="font-size:0.72rem; font-weight:600; color:#60a5fa; margin-bottom:6px; min-height:2.2em; display:flex; align-items:center; justify-content:center">Logistic<br>Regression</div>
+        <div style="width:2px; height:16px; background:var(--text-muted); margin:0 auto 6px"></div>
+        <div style="font-size:0.68rem; color:var(--text-muted); line-height:1.4">Read the<br>coefficients</div>
+      </div>
+      <!-- Decision Tree -->
+      <div style="text-align:center">
+        <div style="font-size:0.72rem; font-weight:600; color:#818cf8; margin-bottom:6px; min-height:2.2em; display:flex; align-items:center; justify-content:center">Decision<br>Tree</div>
+        <div style="width:2px; height:16px; background:var(--text-muted); margin:0 auto 6px"></div>
+        <div style="font-size:0.68rem; color:var(--text-muted); line-height:1.4">Follow<br>the path</div>
+      </div>
+      <!-- Random Forest -->
+      <div style="text-align:center">
+        <div style="font-size:0.72rem; font-weight:600; color:#f87171; margin-bottom:6px; min-height:2.2em; display:flex; align-items:center; justify-content:center">Random<br>Forest</div>
+        <div style="width:2px; height:16px; background:var(--text-muted); margin:0 auto 6px"></div>
+        <div style="font-size:0.68rem; color:var(--text-muted); line-height:1.4">Need SHAP<br>or PDP</div>
+      </div>
+      <!-- Gradient Boosting -->
+      <div style="text-align:center">
+        <div style="font-size:0.72rem; font-weight:600; color:#f87171; margin-bottom:6px; min-height:2.2em; display:flex; align-items:center; justify-content:center">Gradient<br>Boosting</div>
+        <div style="width:2px; height:16px; background:var(--text-muted); margin:0 auto 6px"></div>
+        <div style="font-size:0.68rem; color:var(--text-muted); line-height:1.4">Need SHAP<br>or PDP</div>
+      </div>
+      <!-- Deep Network -->
+      <div style="text-align:center">
+        <div style="font-size:0.72rem; font-weight:600; color:#ef4444; margin-bottom:6px; min-height:2.2em; display:flex; align-items:center; justify-content:center">Deep<br>Network</div>
+        <div style="width:2px; height:16px; background:var(--text-muted); margin:0 auto 6px"></div>
+        <div style="font-size:0.68rem; color:var(--text-muted); line-height:1.4">Grad-CAM<br>LIME/SHAP</div>
+      </div>
+    </div>
+    <!-- Row 4: interpretable / explainable brackets -->
+    <div style="display:flex; gap:8px; margin-top:16px; width:100%">
+      <div style="flex:0 0 calc(50% - 4px); border:1.5px solid #3b82f6; border-radius:6px; padding:6px 10px; text-align:center">
+        <span style="font-size:0.75rem; font-weight:700; color:#3b82f6">🔵 Interpretable Models</span>
+        <p style="margin:3px 0 0; font-size:0.7rem; color:var(--text-muted)">Structure is directly readable — no extra tools</p>
+      </div>
+      <div style="flex:0 0 calc(50% - 4px); border:1.5px solid #dc2626; border-radius:6px; padding:6px 10px; text-align:center">
+        <span style="font-size:0.75rem; font-weight:700; color:#dc2626">🔴 Explainable Models</span>
+        <p style="margin:3px 0 0; font-size:0.7rem; color:var(--text-muted)">Require post-hoc explanation tools</p>
+      </div>
+    </div>
+    <p style="margin:12px 0 0; font-size:0.83rem; color:var(--text-muted)">The trade-off is <strong>real but shrinking</strong> for tabular data. Modern interpretable models like Explainable Boosting Machines (EBMs/GAMs) often match gradient-boosted tree accuracy while remaining fully interpretable. The gap is largest for unstructured data: images, text, audio — where deep networks still dominate.</p>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Situation</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Recommendation</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; color:var(--text-muted)">High-stakes decision (medical, legal, financial)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Prefer intrinsically interpretable model <em>or</em> use black-box with robust post-hoc explanations that have been validated</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; color:var(--text-muted)">Regulated industry (GDPR, FDA, finance)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Mandatory: document feature importances, produce per-decision explanations on request</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; color:var(--text-muted)">Internal tool / data science exploration</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Use black-box for accuracy + SHAP/PDP to understand and debug during development</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; color:var(--text-muted)">Image / text classification</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Deep learning is necessary; use Grad-CAM or attention maps to validate the model is looking at the right things</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── PART 7: THE METHODS MAP ── -->
+  <h2>Part 7: A Complete Map of Explainability Methods</h2>
+  <p>Here is everything in this field, organised so you know where each technique lives and what it answers.</p>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="code-block" style="margin:0"><pre style="font-size:0.76rem">EXPLAINABILITY &amp; INTERPRETABILITY METHODS
+│
+├── 🔵 INTRINSIC (Interpretable by design)
+│   ├── Linear / Logistic Regression    → read coefficients
+│   ├── Decision Tree (shallow)         → follow decision path
+│   ├── Rule Lists / Rule Sets          → if-then rules
+│   └── GAMs / EBMs                     → shape functions per feature
+│
+└── 🔴 POST-HOC (Explaining black boxes)
+    │
+    ├── 📊 GLOBAL (whole-model behaviour)
+    │   ├── Feature Importance
+    │   │   ├── Permutation Importance   → shuffle feature, measure accuracy drop
+    │   │   └── Tree gain / Gini         → tree-specific, fast
+    │   ├── Partial Dependence Plots (PDP)
+    │   │   └── vary one feature, average over all others
+    │   └── Individual Conditional Expectation (ICE)
+    │       └── PDP but one line per data point (reveals interactions)
+    │
+    ├── 🎯 LOCAL (per-prediction)
+    │   ├── SHAP  ★ gold standard
+    │   │   └── game-theory based, exact attribution per feature
+    │   ├── LIME
+    │   │   └── fit a local linear model around the prediction
+    │   └── Counterfactual Explanations
+    │       └── "what minimal change flips the decision?"
+    │
+    └── 🖼️ NEURAL NETWORK SPECIFIC
+        ├── Saliency Maps (gradient of output w.r.t. input)
+        ├── Grad-CAM (which image region matters — for CNNs)
+        ├── Integrated Gradients (more stable than raw gradient)
+        └── Attention Visualisation (Transformers, BERT)</pre></div>
+  </div>
+
+  <!-- ── PART 8: QUICK INTUITIONS ── -->
+  <h2>Part 8: Quick Intuition for Each Major Method</h2>
+
+  <div class="card" style="margin-bottom:12px">
+    <p style="margin:0 0 6px; font-weight:600; color:#60a5fa">Permutation Feature Importance — "What if I broke this feature?"</p>
+    <div class="code-block" style="margin:0 0 6px"><pre style="font-size:0.75rem">1. Train model → record baseline accuracy (e.g. 92%)
+2. Shuffle feature "age" randomly (breaking its signal)
+3. Re-evaluate → accuracy drops to 84%
+4. Importance of "age" = 92% − 84% = 8 percentage points
+
+Repeat for every feature. Larger drop = more important feature.</pre></div>
+    <p style="margin:0; font-size:0.82rem; color:var(--text-muted)">Global, model-agnostic. Simple and reliable. Tells you <em>how much the model relies on each feature</em> but not the direction of the effect.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <p style="margin:0 0 6px; font-weight:600; color:#a78bfa">Partial Dependence Plot — "How does prediction change as I vary this feature?"</p>
+    <div class="code-block" style="margin:0 0 6px"><pre style="font-size:0.75rem">For each value of "age" from 18 to 80:
+  → fix age=x, average prediction over all other features
+  → plot (age=x, avg_prediction)
+
+Prediction
+ 0.9 │              ___________
+ 0.7 │          ___/
+ 0.5 │         /
+ 0.3 │________/
+     └──────────────────────── Age
+        20   30   40   50   60   70</pre></div>
+    <p style="margin:0; font-size:0.82rem; color:var(--text-muted)">Global, model-agnostic. Reveals the direction and shape of a feature's effect. Limitation: assumes feature independence (may be misleading when features are correlated).</p>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <p style="margin:0 0 6px; font-weight:600; color:#34d399">SHAP — "How much did each feature contribute to this specific prediction?"</p>
+    <div class="code-block" style="margin:0 0 6px"><pre style="font-size:0.75rem">Based on Shapley values from cooperative game theory.
+"Fairly distribute the model's prediction among all features."
+
+Prediction = base_value + Σ SHAP_i(feature_i)
+           = 0.50 + 0.18 + 0.14 + 0.11 − 0.04 + ...
+           = 0.87
+
+→ Exact decomposition: every credit/blame is accounted for
+→ Works globally (SHAP summary plot) AND locally (per-prediction)
+→ Currently the gold standard in industry</pre></div>
+    <p style="margin:0; font-size:0.82rem; color:var(--text-muted)">Both global and local, model-agnostic (also has exact tree-specific algorithms). The most principled and widely used explanation method.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <p style="margin:0 0 6px; font-weight:600; color:#fbbf24">LIME — "Fit a simple model near this prediction"</p>
+    <div class="code-block" style="margin:0 0 6px"><pre style="font-size:0.75rem">1. Take a prediction point x
+2. Generate nearby perturbed samples (add noise to x)
+3. Get model predictions for all perturbed samples
+4. Fit a linear model on the perturbed points (weighted by distance to x)
+5. The linear model's coefficients = local explanation
+
+Result: "Near this point, the model behaves roughly like:
+         y ≈ 0.3×age + 0.2×income − 0.1×credit_score"</pre></div>
+    <p style="margin:0; font-size:0.82rem; color:var(--text-muted)">Local, model-agnostic. Fast and intuitive but can be unstable — small changes to the perturbation scheme can change the explanation. SHAP is generally preferred when you can afford it.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <p style="margin:0 0 6px; font-weight:600; color:#f87171">Counterfactual Explanations — "What would flip the decision?"</p>
+    <div class="code-block" style="margin:0 0 6px"><pre style="font-size:0.75rem">"Your loan application was DENIED."
+  ↓ Counterfactual:
+"If your annual income were £42,000 instead of £38,000,
+ your application would have been APPROVED."
+
+Constraints:
+  • Minimise number of changes (parsimony)
+  • Only change actionable features (not age, postcode)
+  • Stay realistic (don't suggest income = £10 million)</pre></div>
+    <p style="margin:0; font-size:0.82rem; color:var(--text-muted)">Local, model-agnostic. The most <em>actionable</em> explanation — tells users what they can do differently. Required by GDPR for some applications. Does not explain the model, but explains the <em>decision boundary near this point</em>.</p>
+  </div>
+
+  <!-- ── PART 9: CHOOSING THE RIGHT TOOL ── -->
+  <h2>Part 9: Choosing the Right Method</h2>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Audience / Goal</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Best method(s)</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Why</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Data scientist debugging</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">SHAP summary plot, PDP, permutation importance</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">See which features the model relies on globally; catch data leakage and spurious signals</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Business stakeholder</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Global feature importance, decision rules</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Simple ranking that communicates model logic without technical detail</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">End user (loan/medical decision)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Local SHAP, LIME, Counterfactual</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Explain this specific outcome; counterfactuals give actionable path forward</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Regulator / auditor</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">SHAP fairness plots, model card, PDP by group</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Systematic evidence of non-discrimination and documented feature effects</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">Computer vision model</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Grad-CAM, saliency maps</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Visualise <em>which image regions</em> drove the classification</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- SUMMARY -->
+  <h2>Summary</h2>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Concept</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Key Point</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Interpretability</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Intrinsic model property — structure is directly human-readable (linear regression, decision tree). No extra tools needed.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Explainability</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Post-hoc approximation of a black-box model's behaviour using a separate technique (SHAP, LIME). The explanation ≠ the model.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">The Spectrum</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Decision tree → Linear → Logistic → Random Forest → DNN. Left = interpretable. Right = needs post-hoc explanation. Higher complexity = higher accuracy ceiling.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Three Axes</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Global vs Local · Model-specific vs Model-agnostic · Intrinsic vs Post-hoc. Every method sits on all three.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Why It Matters</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Debugging spurious correlations · Trust and adoption · Fairness and bias detection · Regulatory compliance (GDPR, FDA)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Key Methods</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Permutation importance (global) · PDP/ICE (effect plots) · SHAP (gold standard, both) · LIME (local approximation) · Counterfactuals (actionable) · Grad-CAM (images)</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">Choose Based On</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Who the explanation is for: data scientist (SHAP + PDP), business (importance), end user (local SHAP + counterfactual), regulator (fairness plots).</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-ex1"></div></div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('ex1')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('ex2')">L2: Local Explanations →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- MODEL EXPLAINABILITY — L2: Local Explanations (LIME & ANCHOR) -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-ex2">
+  <div class="lesson-header">
+    <div class="breadcrumb">Model Explainability &amp; Interpretability · L2</div>
+    <h1>🔎 Local Explanations — LIME &amp; ANCHOR</h1>
+    <p class="subtitle">Explain individual predictions from any black-box model — understand how LIME approximates decision boundaries locally, how ANCHOR finds sufficient rules, and how to interpret and choose between them</p>
+  </div>
+
+  <!-- ── PART 1: WHAT IS A LOCAL EXPLANATION ── -->
+  <h2>Part 1: What is a Local Explanation?</h2>
+  <p>A <strong>local explanation</strong> explains a <strong>single prediction</strong> from a model — not how the model behaves overall. The question shifts from "what does this model generally do?" to "why did it make <em>this specific decision</em> for <em>this specific person</em>?"</p>
+
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #60a5fa">
+      <p style="margin:0 0 6px; font-weight:600; color:#60a5fa">Global Explanation</p>
+      <p style="margin:0 0 6px; font-size:0.83rem; color:var(--text-muted)">"Age is the most important feature across all loan decisions in this model."</p>
+      <p style="margin:0; font-size:0.78rem; color:var(--text-muted)">→ Useful for data scientists, auditors, business stakeholders</p>
+    </div>
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">Local Explanation</p>
+      <p style="margin:0 0 6px; font-size:0.83rem; color:var(--text-muted)">"<em>Your</em> loan was denied because your debt ratio (0.82) was too high and your income (£28k) was below average."</p>
+      <p style="margin:0; font-size:0.78rem; color:var(--text-muted)">→ Useful for the individual, for regulators, for debugging specific cases</p>
+    </div>
+  </div>
+
+  <h3>Real Scenarios That Need Local Explanations</h3>
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Scenario</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">The model decision</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Why local explanation is needed</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Medical diagnosis</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">"Patient needs urgent surgery"</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Surgeon needs to know which findings drove this — not statistics about all patients</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Loan rejection</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">"Application denied"</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">GDPR Article 22: applicant has the right to know why <em>their specific application</em> was refused</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#f87171">Criminal sentencing</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">"High re-offending risk"</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Defendant and judge need specific reasons, not aggregate model behaviour</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#fbbf24">Model debugging</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">"Surprising outlier prediction"</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Developer needs to understand what drove a specific anomalous output</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── PART 2: THREE TYPES ── -->
+  <h2>Part 2: Three Types of Local Explanation</h2>
+  <p>All model-agnostic local methods explain predictions in terms of <strong>input features</strong>. They differ in <em>how</em> they present that information.</p>
+
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px">
+      <div>
+        <p style="margin:0 0 6px; font-weight:700; color:#60a5fa; font-size:0.85rem">1. Feature Weighting</p>
+        <div class="code-block" style="margin:0 0 6px"><pre style="font-size:0.7rem">debt_ratio  +0.28 ████►
+age         +0.11 ███►
+income      +0.09 ██►
+employed    -0.06 ◄██</pre></div>
+        <p style="margin:0; font-size:0.75rem; color:var(--text-muted)">Every feature gets a signed weight. Positive = pushed toward this prediction. Used by <strong>LIME &amp; SHAP</strong>.</p>
+      </div>
+      <div>
+        <p style="margin:0 0 6px; font-weight:700; color:#a78bfa; font-size:0.85rem">2. Feature Subsets</p>
+        <div class="code-block" style="margin:0 0 6px"><pre style="font-size:0.7rem">Top features:
+• debt_ratio
+• age
+• income</pre></div>
+        <p style="margin:0; font-size:0.75rem; color:var(--text-muted)">Only returns the most important features. Simpler but loses direction — no context on <em>why</em> they matter.</p>
+      </div>
+      <div>
+        <p style="margin:0 0 6px; font-weight:700; color:#34d399; font-size:0.85rem">3. Rule-Based</p>
+        <div class="code-block" style="margin:0 0 6px"><pre style="font-size:0.7rem">IF debt_ratio > 0.7
+AND age < 30
+→ DENY (97%)</pre></div>
+        <p style="margin:0; font-size:0.75rem; color:var(--text-muted)">If-then rules with thresholds. Immediately readable by non-technical people. Used by <strong>ANCHOR</strong>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PART 3: PERTURBATION ── -->
+  <h2>Part 3: The Key Idea — Perturbation</h2>
+  <p>Both LIME and ANCHOR are <strong>perturbation-based</strong>. Rather than looking inside the model, they probe it by generating many slightly modified copies of the point of interest and observing how the predictions change.</p>
+
+  <div class="key-concept">
+    <div class="label">What "Perturbing" Means</div>
+    <p>Take your original data point and create hundreds of slightly modified versions of it — small random changes to each feature. Feed all of them to the black-box model. By seeing how the output changes as inputs vary, you can infer which features matter most <em>locally</em>.</p>
+  </div>
+
+  <!-- INTERACTIVE PERTURBATION DEMO -->
+  <div class="card" style="margin-bottom:16px">
+    <p style="margin:0 0 10px; font-weight:600; color:var(--accent)">Interactive: Perturbation around a point</p>
+    <p style="margin:0 0 12px; font-size:0.83rem; color:var(--text-muted)">Click <strong>Perturb</strong> to generate perturbed samples around the red point. Closer samples (darker) get higher weight in LIME's local model.</p>
+    <div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap">
+      <canvas id="perturbCanvas" width="340" height="260" style="border:1px solid var(--card-border); border-radius:8px; background:#0f172a; cursor:pointer"></canvas>
+      <div style="flex:1; min-width:200px">
+        <div style="margin-bottom:10px">
+          <label style="font-size:0.78rem; color:var(--text-muted)">Kernel width σ (how wide is "local")</label>
+          <input type="range" id="sigmaSlider" min="20" max="120" value="50" style="width:100%; margin-top:4px">
+          <div style="font-size:0.75rem; color:var(--accent)" id="sigmaVal">σ = 50</div>
+        </div>
+        <div style="margin-bottom:10px">
+          <label style="font-size:0.78rem; color:var(--text-muted)">Number of samples</label>
+          <input type="range" id="nSamplesSlider" min="20" max="200" value="80" style="width:100%; margin-top:4px">
+          <div style="font-size:0.75rem; color:var(--accent)" id="nSamplesVal">n = 80</div>
+        </div>
+        <button onclick="runPerturbDemo()" style="background:var(--accent); color:#fff; border:none; padding:8px 18px; border-radius:6px; cursor:pointer; font-size:0.83rem; width:100%; margin-bottom:8px">▶ Perturb</button>
+        <button onclick="resetPerturbDemo()" style="background:transparent; color:var(--accent); border:1px solid var(--accent); padding:8px 18px; border-radius:6px; cursor:pointer; font-size:0.83rem; width:100%">Reset</button>
+        <div style="margin-top:12px; padding:10px; background:var(--card-bg); border-radius:6px; font-size:0.75rem; color:var(--text-muted); line-height:1.5">
+          <strong style="color:var(--text)">Notice:</strong><br>
+          • Wider σ → more points are "local" → less precise fit<br>
+          • Narrower σ → fewer close points → noisier estimate<br>
+          • LIME uses these weighted samples to fit a linear model
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function() {
+    const canvas = document.getElementById('perturbCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const cx = 170, cy = 130;
+    let samples = [];
+    function drawBase() {
+      ctx.clearRect(0,0,340,260);
+      // draw moon-ish boundary
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(99,102,241,0.4)';
+      ctx.lineWidth = 1.5;
+      for (let x = 0; x <= 340; x += 2) {
+        const nx = (x-170)/80, y = Math.sin(nx*Math.PI)*60 + 130;
+        x===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+      // label regions
+      ctx.font = '11px monospace'; ctx.fillStyle = 'rgba(99,102,241,0.5)';
+      ctx.fillText('Class 0', 20, 80); ctx.fillText('Class 1', 20, 200);
+    }
+    function drawPoint() {
+      ctx.beginPath();
+      ctx.arc(cx, cy, 7, 0, Math.PI*2);
+      ctx.fillStyle = '#ef4444'; ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.font = '11px monospace'; ctx.fillStyle = '#ef4444';
+      ctx.fillText('point of interest', cx+10, cy-10);
+    }
+    function drawSamples(sigma) {
+      samples.forEach(s => {
+        const d = Math.sqrt((s.x-cx)**2+(s.y-cy)**2);
+        const w = Math.exp(-(d*d)/(sigma*sigma));
+        const alpha = 0.15 + w*0.75;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 3, 0, Math.PI*2);
+        ctx.fillStyle = s.y < (Math.sin((s.x-170)/80*Math.PI)*60+130) ? `rgba(139,92,246,${alpha})` : `rgba(52,211,153,${alpha})`;
+        ctx.fill();
+        // draw weight ring
+        if (w > 0.6) { ctx.beginPath(); ctx.arc(s.x,s.y,3+w*3,0,Math.PI*2); ctx.strokeStyle=`rgba(255,255,255,${w*0.3})`; ctx.lineWidth=1; ctx.stroke(); }
+      });
+    }
+    window.runPerturbDemo = function() {
+      const n = parseInt(document.getElementById('nSamplesSlider').value);
+      const sigma = parseInt(document.getElementById('sigmaSlider').value);
+      samples = [];
+      for (let i = 0; i < n; i++) {
+        samples.push({ x: cx + (Math.random()-0.5)*sigma*3, y: cy + (Math.random()-0.5)*sigma*3 });
+      }
+      drawBase(); drawSamples(sigma); drawPoint();
+    };
+    window.resetPerturbDemo = function() { samples=[]; drawBase(); drawPoint(); };
+    document.getElementById('sigmaSlider').oninput = function() {
+      document.getElementById('sigmaVal').textContent = 'σ = '+this.value;
+      if(samples.length) { drawBase(); drawSamples(parseInt(this.value)); drawPoint(); }
+    };
+    document.getElementById('nSamplesSlider').oninput = function() {
+      document.getElementById('nSamplesVal').textContent = 'n = '+this.value;
+    };
+    drawBase(); drawPoint();
+  })();
+  </script>
+
+  <!-- ── PART 4: LIME ── -->
+  <h2>Part 4: LIME — Local Interpretable Model-agnostic Explanations</h2>
+
+  <div class="key-concept">
+    <div class="label">The Core Intuition</div>
+    <p>Even if the global decision boundary is wildly complex, the boundary near any <em>single point</em> is approximately linear. LIME exploits this: <strong>fit a simple linear model in the local neighbourhood of the point you want to explain. The linear model's weights become the explanation.</strong></p>
+  </div>
+
+  <!-- LOCAL LINEAR VIZ -->
+  <div class="card" style="margin-bottom:16px">
+    <p style="margin:0 0 8px; font-weight:600; color:var(--accent)">Local Linear Approximation — the LIME idea</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+      <div>
+        <p style="margin:0 0 6px; font-size:0.78rem; color:#f87171; font-weight:600">Global boundary — too complex to explain</p>
+        <div class="code-block" style="margin:0"><pre style="font-size:0.72rem">        Class 1 (yellow)
+    ╭──────────────────╮
+    │  ×   ×   ×   ×  │  boundary is
+    │× Class 0 (purple)│  non-linear and
+    │  ×   ×   ×   ×  │  complex globally
+    ╰──────────────────╯
+No single line separates them</pre></div>
+      </div>
+      <div>
+        <p style="margin:0 0 6px; font-size:0.78rem; color:#34d399; font-weight:600">Local view around point ✦ — approximately linear</p>
+        <div class="code-block" style="margin:0"><pre style="font-size:0.72rem">  ○ ○
+    ○  ○  ○           Zoom in near ✦:
+      ○  ✦  ●  ●      boundary looks
+        ●  ●  ●       like a straight line
+          ●  ●
+LIME fits this local line → weights = explanation</pre></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>The LIME Algorithm — Step by Step</h3>
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left; width:5%">Step</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left; width:30%">What happens</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Concrete example (loan applicant)</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:700; color:#60a5fa; text-align:center">1</td>
+        <td style="padding:8px 14px; font-weight:600; color:var(--text)">Perturb the point</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Generate ~5,000 slightly modified versions. age=35→38, income=£42k→£39k, etc.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:700; color:#60a5fa; text-align:center">2</td>
+        <td style="padding:8px 14px; font-weight:600; color:var(--text)">Get model predictions</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Feed each perturbed sample to the black box → get <code>predict_proba</code> for each</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:700; color:#60a5fa; text-align:center">3</td>
+        <td style="padding:8px 14px; font-weight:600; color:var(--text)">Weight by distance</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Samples close to original get high weight. Far away → low weight. Uses: π(z) = exp(−D² / σ²)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:700; color:#60a5fa; text-align:center">4</td>
+        <td style="padding:8px 14px; font-weight:600; color:var(--text)">Fit a linear model</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Train a weighted Ridge regression on the perturbed samples. Minimise: Σ π(z) × (f(z) − g(z))²</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:700; color:#60a5fa; text-align:center">5</td>
+        <td style="padding:8px 14px; font-weight:600; color:var(--text)">Return the weights</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">The linear model's coefficients = LIME explanation. Positive = pushed toward prediction. Negative = pushed against.</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>LIME in Code — Tabular Data</h3>
+  <div class="code-block"><pre><span class="kw">import</span> lime
+<span class="kw">import</span> lime.lime_tabular
+<span class="kw">from</span> matplotlib <span class="kw">import</span> cm
+<span class="kw">import</span> sklearn.ensemble, sklearn.model_selection
+
+<span class="cm"># 1. Train any black-box model (Random Forest here)</span>
+clf = sklearn.ensemble.RandomForestClassifier(n_estimators=200)
+clf.fit(X_train, y_train)
+
+<span class="cm"># 2. Initialise the LIME explainer with the training data</span>
+<span class="cm">#    LIME uses train data to learn feature distributions for perturbation</span>
+explainer = lime.lime_tabular.LimeTabularExplainer(
+    X_train,
+    feature_names=feature_names,     <span class="cm"># e.g. ['age', 'income', 'debt_ratio']</span>
+    class_names=class_names,          <span class="cm"># e.g. ['deny', 'approve']</span>
+    discretize_continuous=<span class="kw">False</span>      <span class="cm"># keep features continuous</span>
+)
+
+<span class="cm"># 3. Explain a single prediction</span>
+<span class="cm">#    Pass predict_proba (not predict) — LIME needs probabilities</span>
+exp = explainer.explain_instance(
+    X_test[0],           <span class="cm"># the specific point to explain</span>
+    clf.predict_proba    <span class="cm"># pointer only — no () — LIME calls it many times</span>
+)
+
+<span class="cm"># 4. Read the explanation</span>
+print(exp.as_list())
+<span class="cm"># [('debt_ratio', 0.31), ('income', -0.18), ('age', 0.12)]</span>
+
+<span class="cm"># 5. Visualise as a bar chart</span>
+exp.as_pyplot_figure()
+plt.tight_layout()</pre></div>
+
+  <h3>Why predict_proba and Not predict?</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 4px; font-weight:600; color:#f87171">predict — binary, no gradient</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.73rem">Perturbed samples → predict:
+[0, 1, 1, 0, 1, 1, 0, 1]
+Only jumps — LIME can't fit
+a meaningful linear model
+to these discrete values</pre></div>
+    </div>
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 4px; font-weight:600; color:#34d399">predict_proba — smooth surface</p>
+      <div class="code-block" style="margin:0"><pre style="font-size:0.73rem">Perturbed samples → predict_proba:
+[0.12, 0.88, 0.93, 0.21, 0.79]
+Smooth values → LIME can fit
+a linear model that properly
+captures local changes</pre></div>
+    </div>
+  </div>
+
+  <h3>Interpreting LIME Output</h3>
+  <!-- LIME OUTPUT INTERACTIVE -->
+  <div class="card" style="margin-bottom:16px">
+    <p style="margin:0 0 8px; font-weight:600; color:var(--accent)">Interactive: LIME Feature Weights</p>
+    <p style="margin:0 0 12px; font-size:0.83rem; color:var(--text-muted)">Drag the sliders to change feature values and see how LIME weights shift. This simulates what LIME reports for a loan applicant.</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start">
+      <div>
+        <div style="margin-bottom:10px">
+          <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:var(--text-muted); margin-bottom:3px"><span>Debt Ratio</span><span id="lv1">0.82</span></div>
+          <input type="range" id="ls1" min="0" max="100" value="82" style="width:100%" oninput="updateLimeViz()">
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:var(--text-muted); margin-bottom:3px"><span>Income (£k)</span><span id="lv2">28</span></div>
+          <input type="range" id="ls2" min="15" max="100" value="28" style="width:100%" oninput="updateLimeViz()">
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:var(--text-muted); margin-bottom:3px"><span>Credit Score</span><span id="lv3">580</span></div>
+          <input type="range" id="ls3" min="300" max="850" value="580" style="width:100%" oninput="updateLimeViz()">
+        </div>
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:var(--text-muted); margin-bottom:3px"><span>Employment (yrs)</span><span id="lv4">2</span></div>
+          <input type="range" id="ls4" min="0" max="30" value="2" style="width:100%" oninput="updateLimeViz()">
+        </div>
+      </div>
+      <div>
+        <div id="limeBarChart" style="font-size:0.78rem"></div>
+        <div style="margin-top:12px; padding:10px; border-radius:6px; background:var(--card-bg); font-size:0.75rem; color:var(--text-muted)">
+          <div id="limePrediction" style="font-weight:600; margin-bottom:4px; color:var(--text)"></div>
+          <div>Bars show each feature's contribution.<br>🔴 Red = pushes toward DENY &nbsp; 🟢 Green = pushes toward APPROVE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+  function updateLimeViz() {
+    const dr = parseInt(document.getElementById('ls1').value)/100;
+    const inc = parseInt(document.getElementById('ls2').value);
+    const cr = parseInt(document.getElementById('ls3').value);
+    const emp = parseInt(document.getElementById('ls4').value);
+    document.getElementById('lv1').textContent = dr.toFixed(2);
+    document.getElementById('lv2').textContent = inc;
+    document.getElementById('lv3').textContent = cr;
+    document.getElementById('lv4').textContent = emp;
+    const w1 = +(dr - 0.5) * 0.6;
+    const w2 = -((inc - 50) / 100) * 0.4;
+    const w3 = -((cr - 580) / 700) * 0.35;
+    const w4 = -(emp / 40) * 0.25;
+    const score = 0.5 + w1 + w2 + w3 + w4;
+    const clampedScore = Math.max(0.05, Math.min(0.95, score));
+    const features = [
+      {name:'debt_ratio', w: +w1.toFixed(3)},
+      {name:'income', w: +w2.toFixed(3)},
+      {name:'credit_score', w: +w3.toFixed(3)},
+      {name:'employment', w: +w4.toFixed(3)}
+    ].sort((a,b)=>Math.abs(b.w)-Math.abs(a.w));
+    const maxW = Math.max(...features.map(f=>Math.abs(f.w)), 0.01);
+    let html = '';
+    features.forEach(f => {
+      const pct = Math.round((Math.abs(f.w)/maxW)*100);
+      const col = f.w > 0 ? '#f87171' : '#34d399';
+      const dir = f.w > 0 ? '►' : '◄';
+      html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span style="font-size:0.7rem;color:var(--text-muted);width:80px;flex-shrink:0">${f.name}</span>
+        <div style="flex:1;background:var(--card-border);border-radius:3px;height:14px;position:relative">
+          <div style="position:absolute;${f.w>0?'left:50%':'right:50%'};width:${pct/2}%;height:100%;background:${col};border-radius:3px"></div>
+          <div style="position:absolute;left:50%;top:0;width:1px;height:100%;background:var(--text-muted)"></div>
+        </div>
+        <span style="font-size:0.7rem;color:${col};width:50px;text-align:right">${dir} ${Math.abs(f.w).toFixed(3)}</span>
+      </div>`;
+    });
+    document.getElementById('limeBarChart').innerHTML = html;
+    const isDeny = clampedScore > 0.5;
+    document.getElementById('limePrediction').innerHTML =
+      `Prediction: <span style="color:${isDeny?'#f87171':'#34d399'}">${isDeny?'DENY':'APPROVE'}</span> (score: ${clampedScore.toFixed(2)})`;
+  }
+  updateLimeViz();
+  </script>
+
+  <h3>Classes vs Features — The Key Distinction</h3>
+  <p>This is one of the most common points of confusion when reading LIME output. The bar chart title says <em>"Local explanation for class 1"</em> — but the bars are labelled <em>feature 0</em> and <em>feature 1</em>. These are completely different things.</p>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left"></th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">What it is</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">In the half-moons practical</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">In a loan model</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#60a5fa">Class 0 / 1</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><strong>What the model predicts</strong> — the outcome label</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Class 0 = purple moon &nbsp; Class 1 = yellow moon</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Class 0 = Deny &nbsp; Class 1 = Approve</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#a78bfa">Feature 0 / 1</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><strong>The inputs the model uses</strong> — the evidence</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Feature 0 = x coordinate &nbsp; Feature 1 = y coordinate</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Feature 0 = age &nbsp; Feature 1 = income &nbsp; Feature 2 = debt…</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="key-concept">
+    <div class="label">The Question LIME is Answering</div>
+    <p>The model looked at all the features and made a prediction (a class). LIME's job is to answer: <strong>"Which features were responsible for that prediction, and by how much?"</strong> The bars show the features (the evidence). The title tells you which class was predicted (the verdict).</p>
+  </div>
+
+  <h3>Reading the Bar Chart — Complete Guide</h3>
+  <div class="card" style="margin-bottom:16px">
+    <div class="code-block" style="margin:0 0 12px"><pre style="font-size:0.75rem">Title: "Local explanation for class 1"
+          → class 1 is the PREDICTED class for this point
+
+Feature 1  [████████████████████████████]  −0.30   ← RED bar, extends LEFT
+Feature 0                    [████████]   +0.10   ← GREEN bar, extends RIGHT
+                   0.0
+                    ↑
+                  centre</pre></div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+      <div style="padding:12px; background:rgba(248,113,113,0.08); border-radius:8px; border-left:3px solid #f87171">
+        <p style="margin:0 0 6px; font-weight:600; color:#f87171">🔴 Red bar — extends LEFT (negative weight)</p>
+        <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">This feature is <strong>arguing against</strong> the predicted class.<br><br>
+        Feature 1 weight = −0.30 means: <em>"This point's y position strongly suggests it does NOT belong to class 1"</em><br><br>
+        In the half-moons dataset: a high y coordinate puts you in the upper moon — which is class 0, not class 1. So high y argues against class 1.</p>
+      </div>
+      <div style="padding:12px; background:rgba(52,211,153,0.08); border-radius:8px; border-left:3px solid #34d399">
+        <p style="margin:0 0 6px; font-weight:600; color:#34d399">🟢 Green bar — extends RIGHT (positive weight)</p>
+        <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">This feature is <strong>arguing for</strong> the predicted class.<br><br>
+        Feature 0 weight = +0.10 means: <em>"This point's x position weakly suggests it belongs to class 1"</em><br><br>
+        The x coordinate places it in a region slightly more associated with class 1 — but this signal is weak (short bar).</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>So What Was the Actual Prediction?</h3>
+  <div class="card" style="margin-bottom:16px">
+    <div class="code-block" style="margin:0 0 10px"><pre style="font-size:0.75rem">LIME's local linear model says:
+  P(class 1) ≈ intercept + (−0.30 × feature_1) + (+0.10 × feature_0)
+
+Feature 1 pulls DOWN strongly: −0.30
+Feature 0 pulls UP weakly:     +0.10
+Net effect: prediction leans toward class 0
+
+→ Model predicted: CLASS 0  (purple moon)</pre></div>
+    <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">Even though the title says "Local explanation for class 1" — LIME always labels the chart by the class it's explaining. The large red bar tells you feature 1 was strongly arguing <em>against</em> class 1, which means the model's actual verdict was <strong>class 0</strong>. Verify with: <code>clf.predict([z[59]])</code> → should return <code>[0]</code>.</p>
+  </div>
+
+  <h3>Bar Length = How Much? &nbsp; Bar Direction = Which Way?</h3>
+  <div class="card" style="margin-bottom:16px">
+    <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">Longer bar = stronger influence on this prediction
+Shorter bar = weaker influence
+
+Extends LEFT  (negative) = arguing AGAINST the predicted class
+Extends RIGHT (positive) = arguing FOR the predicted class
+
+In the half-moons example:
+  Feature 1 (y coord):  long red bar   → main reason for the prediction
+  Feature 0 (x coord):  short green bar → minor, opposing signal
+
+Real-world equivalent (loan model):
+  debt_ratio:   long red bar    → main reason loan was DENIED
+  income:       short green bar → partially arguing for approval
+  credit_score: medium red bar  → also arguing for denial</pre></div>
+  </div>
+
+  <div class="alert-box">
+    <strong>Analogy — think of it like a courtroom:</strong> The <em>class</em> is the verdict (guilty / not guilty). The <em>features</em> are the evidence. LIME's bar chart shows you which pieces of evidence argued for the verdict (green) and which argued against it (red), and how strongly each one spoke.
+  </div>
+
+  <h3>LIME Pros &amp; Cons</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">Pros</p>
+      <ul style="margin:0; padding-left:16px; font-size:0.83rem; color:var(--text-muted)">
+        <li>Works on <strong>any</strong> model (only needs predict_proba)</li>
+        <li>Works on tabular, image, and text data</li>
+        <li>Consistent explanation format across all model types</li>
+        <li>Mature Python library with good support</li>
+      </ul>
+    </div>
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">Cons</p>
+      <ul style="margin:0; padding-left:16px; font-size:0.83rem; color:var(--text-muted)">
+        <li><strong>Unstable</strong> — two adjacent points can give very different explanations</li>
+        <li>Kernel width σ is hard to justify — bad choice breaks the explanation</li>
+        <li>Assumes <em>local linearity</em> — fails near sharp, curved boundaries</li>
+        <li>Slow — ~5,000 model calls per explanation</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── PART 5: ANCHOR ── -->
+  <h2>Part 5: ANCHOR — Rule-Based Local Explanations</h2>
+
+  <div class="key-concept">
+    <div class="label">The Core Intuition</div>
+    <p>ANCHOR finds the <strong>minimum set of if-then rules</strong> that are sufficient to guarantee the prediction — no matter what the other features do. The rules "anchor" the prediction: as long as they hold, the output is locked in with high confidence.</p>
+  </div>
+
+  <h3>The Four Components</h3>
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Component</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">What it is</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Example</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#60a5fa">Predicate</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">A single condition on a feature — true or false</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><code>debt_ratio &gt; 0.70</code> &nbsp;|&nbsp; <code>age &lt; 30</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#a78bfa">Anchor A</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">A set of predicates that must ALL be true. A(x)=1 if all hold, else 0.</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><code>debt_ratio &gt; 0.70 AND age &lt; 30</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600; color:#34d399">Coverage</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Fraction of the training data where all predicates are true. Higher = more general rule.</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">0.23 → rule applies to 23% of applicants</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600; color:#fbbf24">Precision</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Of all perturbed samples where the anchor holds, what fraction get the same prediction as x?</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">0.97 → rule is correct 97% of the time</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ANCHOR COVERAGE DIAGRAM -->
+  <div class="card" style="margin-bottom:16px">
+    <p style="margin:0 0 8px; font-weight:600; color:var(--accent)">Interactive: Coverage &amp; Precision Visualised</p>
+    <p style="margin:0 0 12px; font-size:0.83rem; color:var(--text-muted)">Adjust the anchor rules and see how coverage (size of the blue region) and precision (fraction of points with the same prediction inside that region) change.</p>
+    <div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap">
+      <canvas id="anchorCanvas" width="300" height="240" style="border:1px solid var(--card-border); border-radius:8px; background:#0f172a"></canvas>
+      <div style="flex:1; min-width:200px">
+        <div style="margin-bottom:10px">
+          <label style="font-size:0.78rem; color:var(--text-muted)">Rule 1: debt_ratio &gt; threshold</label>
+          <input type="range" id="aSlider1" min="0" max="100" value="60" style="width:100%; margin-top:4px" oninput="updateAnchorViz()">
+          <div style="font-size:0.75rem; color:var(--accent)" id="aVal1">debt_ratio > 0.60</div>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:0.78rem; color:var(--text-muted)">Rule 2: credit_score &lt; threshold</label>
+          <input type="range" id="aSlider2" min="400" max="800" value="640" style="width:100%; margin-top:4px" oninput="updateAnchorViz()">
+          <div style="font-size:0.75rem; color:var(--accent)" id="aVal2">credit_score &lt; 640</div>
+        </div>
+        <div style="padding:12px; background:var(--card-bg); border-radius:6px; font-size:0.78rem">
+          <div style="margin-bottom:6px; font-weight:600; color:var(--text)">Anchor results:</div>
+          <div id="anchorCoverage" style="color:#34d399; margin-bottom:3px"></div>
+          <div id="anchorPrecision" style="color:#60a5fa; margin-bottom:3px"></div>
+          <div id="anchorVerdict" style="color:var(--text-muted); font-size:0.73rem; margin-top:6px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function() {
+    const canvas = document.getElementById('anchorCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W=300, H=240;
+    // Generate synthetic points: x=debt_ratio(0-1), y=credit_score(400-800)
+    const pts = [];
+    for(let i=0;i<200;i++){
+      const dr = Math.random();
+      const cs = 400 + Math.random()*400;
+      const deny = (dr > 0.55 + (Math.random()-0.5)*0.1) || (cs < 600 + (Math.random()-0.5)*60);
+      pts.push({dr,cs,deny});
+    }
+    window.updateAnchorViz = function() {
+      const t1 = parseInt(document.getElementById('aSlider1').value)/100;
+      const t2 = parseInt(document.getElementById('aSlider2').value);
+      document.getElementById('aVal1').textContent = `debt_ratio > ${t1.toFixed(2)}`;
+      document.getElementById('aVal2').textContent = `credit_score < ${t2}`;
+      ctx.clearRect(0,0,W,H);
+      // axes labels
+      ctx.font='9px monospace'; ctx.fillStyle='rgba(148,163,184,0.6)';
+      ctx.fillText('debt_ratio →',5,H-5);
+      ctx.save(); ctx.translate(10,H-20); ctx.rotate(-Math.PI/2);
+      ctx.fillText('credit_score →',0,0); ctx.restore();
+      // coverage rectangle
+      const rx = t1*W, ry = 0, rw = W-rx, rh = (1-(t2-400)/400)*H;
+      ctx.fillStyle='rgba(59,130,246,0.15)';
+      ctx.fillRect(rx,ry,rw,rh);
+      ctx.strokeStyle='rgba(59,130,246,0.6)'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+      ctx.strokeRect(rx,ry,rw,rh); ctx.setLineDash([]);
+      // points
+      pts.forEach(p => {
+        const px = p.dr*W, py = H-(p.cs-400)/400*H;
+        const inAnchor = p.dr>t1 && p.cs<t2;
+        ctx.beginPath(); ctx.arc(px,py,3,0,Math.PI*2);
+        if(p.deny) { ctx.fillStyle = inAnchor ? '#f87171':'rgba(248,113,113,0.25)'; }
+        else { ctx.fillStyle = inAnchor ? '#34d399':'rgba(52,211,153,0.25)'; }
+        ctx.fill();
+      });
+      // point of interest
+      const poiDr=0.75, poiCs=560;
+      ctx.beginPath(); ctx.arc(poiDr*W,H-(poiCs-400)/400*H,6,0,Math.PI*2);
+      ctx.fillStyle='#ef4444'; ctx.fill();
+      ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+      // stats
+      const inAnchor = pts.filter(p=>p.dr>t1&&p.cs<t2);
+      const coverage = (inAnchor.length/pts.length).toFixed(2);
+      const denyInAnchor = inAnchor.filter(p=>p.deny).length;
+      const precision = inAnchor.length>0 ? (denyInAnchor/inAnchor.length).toFixed(2) : '0.00';
+      document.getElementById('anchorCoverage').textContent = `Coverage: ${coverage} (${inAnchor.length} of ${pts.length} points)`;
+      document.getElementById('anchorPrecision').textContent = `Precision: ${precision}`;
+      const valid = parseFloat(precision)>=0.8;
+      document.getElementById('anchorVerdict').textContent = valid
+        ? `✓ Valid anchor (precision ≥ 0.80). Larger coverage = more general explanation.`
+        : `✗ Precision below threshold (0.80) — too many exceptions inside this region.`;
+    };
+    updateAnchorViz();
+  })();
+  </script>
+
+  <h3>ANCHOR in Code — Tabular Data</h3>
+  <div class="code-block"><pre><span class="kw">from</span> anchor <span class="kw">import</span> utils
+<span class="kw">from</span> anchor <span class="kw">import</span> anchor_tabular
+<span class="cm"># pip install anchor-exp  (not the 'anchor' package — different library!)</span>
+
+<span class="cm"># 1. Train any black-box model</span>
+clf = sklearn.ensemble.RandomForestClassifier(n_estimators=200)
+clf.fit(X_train, y_train)
+
+<span class="cm"># 2. Initialise the ANCHOR explainer</span>
+explainer = anchor_tabular.AnchorTabularExplainer(
+    class_names,       <span class="cm"># e.g. ['malignant', 'benign']</span>
+    feature_names,     <span class="cm"># e.g. ['radius error', 'worst concave points', ...]</span>
+    X_train            <span class="cm"># used to learn feature distributions for perturbation</span>
+)
+
+<span class="cm"># 3. Explain a single prediction</span>
+exp = explainer.explain_instance(
+    X_test[0],          <span class="cm"># the specific point to explain</span>
+    clf.predict,        <span class="cm"># predict (not predict_proba) — ANCHOR uses hard labels</span>
+    threshold=0.95      <span class="cm"># minimum precision required (τ)</span>
+)
+
+<span class="cm"># 4. Read the explanation</span>
+print('Anchor: %s' % (' AND '.join(exp.names())))
+print('Precision: %.2f' % exp.precision())
+print('Coverage: %.2f' % exp.coverage())</pre></div>
+
+  <div class="alert-box" style="margin-top:8px">
+    <strong>ANCHOR uses predict, not predict_proba.</strong> Unlike LIME, ANCHOR only needs to know whether the prediction is the same or different — it doesn't need the probability value. Hard class labels (0/1) are sufficient for estimating precision.
+  </div>
+
+  <h3>Interpreting ANCHOR Output — Worked Example</h3>
+  <div class="card" style="margin-bottom:16px; border-left:3px solid #34d399">
+    <p style="margin:0 0 10px; font-size:0.9rem; font-family:monospace; color:var(--text)">Anchor: radius_error &gt; 0.32 AND worst_concave_points &lt;= 0.06<br>Precision: 0.99 &nbsp;&nbsp; Coverage: 0.09</p>
+    <div class="card" style="margin:0; padding:0; overflow:hidden">
+      <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+        <tr style="border-bottom:1px solid var(--card-border)">
+          <td style="padding:8px 14px; font-weight:600; color:#34d399; width:120px">The rule</td>
+          <td style="padding:8px 14px; color:var(--text-muted)">Two conditions must both be true: radius error is high AND worst concave points are low. Both together are sufficient to guarantee the prediction.</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--card-border)">
+          <td style="padding:8px 14px; font-weight:600; color:#60a5fa">Precision 0.99</td>
+          <td style="padding:8px 14px; color:var(--text-muted)">Of all perturbed samples where both conditions hold, 99% received the same prediction as this patient. The rule is almost a guarantee — far above the 0.95 threshold requested.</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--card-border)">
+          <td style="padding:8px 14px; font-weight:600; color:#a78bfa">Coverage 0.09</td>
+          <td style="padding:8px 14px; color:var(--text-muted)">These two conditions hold for ~9% of patients in the training data. The explanation is specific — not a broad rule, but a precise one for this type of case.</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 14px; font-weight:600; color:#fbbf24">Clinical sense</td>
+          <td style="padding:8px 14px; color:var(--text-muted)">Low <em>worst concave points</em> = smooth, regular cell boundaries → benign. This is the medically meaningful signal. The anchor confirms the model is using legitimate features.</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>Why Two Conditions and Not One?</h3>
+  <div class="card" style="margin-bottom:16px">
+    <div class="code-block" style="margin:0"><pre style="font-size:0.75rem">ANCHOR searches for rules with precision ≥ τ AND highest coverage:
+
+Single-condition candidates:
+  {worst_concave_pts &lt;= 0.06}          precision=0.84  coverage=0.27  ← valid but imprecise
+  {radius_error &gt; 0.32}               precision=0.76  coverage=0.31  ← below threshold
+
+Two-condition combinations:
+  {worst_concave_pts&lt;=0.06, radius_error&gt;0.32}  precision=0.99  coverage=0.09 ✓ chosen
+  {worst_concave_pts&lt;=0.06, texture&lt;=18}        precision=0.91  coverage=0.06 ✓ lower coverage
+
+Result: ANCHOR picks the two-condition rule because it's the most general
+        (highest coverage) that still meets precision ≥ 0.95.
+Tip:    Lower the threshold to get simpler, more general rules.</pre></div>
+  </div>
+
+  <h3>ANCHOR Pros &amp; Cons</h3>
+  <div class="card-grid">
+    <div class="card" style="border-left:3px solid #34d399">
+      <p style="margin:0 0 6px; font-weight:600; color:#34d399">Pros</p>
+      <ul style="margin:0; padding-left:16px; font-size:0.83rem; color:var(--text-muted)">
+        <li>Human-readable if-then rules — no stats knowledge needed</li>
+        <li>Coverage quantifies how general the rule is</li>
+        <li>High precision gives confidence the rule is correct</li>
+        <li>More stable than LIME — discrete rules change less with sampling</li>
+      </ul>
+    </div>
+    <div class="card" style="border-left:3px solid #f87171">
+      <p style="margin:0 0 6px; font-weight:600; color:#f87171">Cons</p>
+      <ul style="margin:0; padding-left:16px; font-size:0.83rem; color:var(--text-muted)">
+        <li>Best support only for tabular data (not images/text)</li>
+        <li>Very complex boundaries → tiny coverage (unhelpful rules)</li>
+        <li>Slow — needs many model calls to estimate precision of each candidate</li>
+        <li>Doesn't tell you <em>which</em> rule feature matters most (no weights)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── PART 6: LIME vs ANCHOR ── -->
+  <h2>Part 6: LIME vs ANCHOR — Side by Side</h2>
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:16px">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left"></th>
+        <th style="padding:9px 14px; color:#60a5fa; text-align:left">LIME</th>
+        <th style="padding:9px 14px; color:#34d399; text-align:left">ANCHOR</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Output</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Feature weights: <code>[('debt', 0.31), ('income', -0.18)]</code></td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Rules: <code>"IF debt &gt; 0.7 AND age &lt; 30 → DENY"</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Question answered</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">"How much did each feature contribute?"</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">"What conditions are sufficient to guarantee this prediction?"</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Model call</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><code>predict_proba</code> — needs probabilities</td>
+        <td style="padding:8px 14px; color:var(--text-muted)"><code>predict</code> — hard labels sufficient</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Stability</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Low — sensitive to random seed and kernel width</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Higher — discrete rules are less sensitive to sampling noise</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Data types</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Tabular, image (super-pixels), text (words)</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Primarily tabular</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Best audience</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Data scientists, technical users</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Business, regulators, individuals affected by the decision</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">Use when</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">You want to see all feature contributions with signed directions</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">You want sufficient conditions with a confidence guarantee</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- SUMMARY -->
+  <h2>Summary</h2>
+  <div class="card" style="padding:0; overflow:hidden">
+    <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
+      <tr style="background:var(--card-bg); border-bottom:1px solid var(--card-border)">
+        <th style="padding:9px 14px; color:var(--accent); text-align:left">Concept</th>
+        <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Key Point</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Local explanation</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Explains one specific prediction. Answers "why this decision for this person?" — not general model behaviour.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Perturbation</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Create hundreds of slightly modified versions of the point, get the model's predictions for all of them, use the pattern to explain the local behaviour.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">LIME</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Fits a local linear model on weighted perturbed samples. Output: feature weights. Use predict_proba. Works on tabular, image, text.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">ANCHOR</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">Finds if-then rules with precision ≥ τ and maximum coverage. Output: rules. Use predict. Primarily tabular.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Precision</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">How reliable the anchor is: 0.99 = the rule gives the same prediction 99% of the time when it applies.</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--card-border)">
+        <td style="padding:8px 14px; font-weight:600">Coverage</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">How general the anchor is: 0.09 = rule applies to 9% of the dataset. Higher = more general explanation.</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 14px; font-weight:600">Choose based on audience</td>
+        <td style="padding:8px 14px; color:var(--text-muted)">LIME for data scientists (weighted contributions). ANCHOR for business/legal/end users (readable rules with confidence levels).</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="inline-quiz"><h3>🧪 Quick Check</h3><div id="inline-q-ex2"></div></div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="startTopicQuiz('ex2')">📝 Full Topic Quiz</button>
+    <button class="btn btn-outline" onclick="nav('ex1')">← L1: Introduction</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
 <!-- NEURAL NETWORKS & DEEP LEARNING — L2: MNIST Practical (Keras) -->
 <!-- ══════════════════════════════════════════════════════════════ -->
 <div class="page" id="page-nn2">
@@ -15430,7 +16813,9 @@ const TOPICS = {
   nn5: 'NN L5: Training a Neural Network',
   nn6: 'NN L6: Convolutional Neural Networks',
   nn7: 'NN L7: Recurrent Neural Networks',
-  nn8: 'NN L8: Graph Neural Networks'
+  nn8: 'NN L8: Graph Neural Networks',
+  ex1: 'EX L1: Introduction to Explainability & Interpretability',
+  ex2: 'EX L2: Local Explanations — LIME & ANCHOR'
 };
 
 const ALL_QUESTIONS = [
@@ -15815,6 +17200,24 @@ const ALL_QUESTIONS = [
   {t:'nn6', q:'The training accuracy of your CNN reaches 99.5% but validation accuracy plateaus at 93%. The training loss keeps falling while validation loss starts rising after epoch 8. What is happening and what is the best fix?', opts:['The model is underfitting — add more layers','The model is overfitting — it has memorised the training data. The growing gap between train and val performance, combined with rising val loss, is the classic signature. Best fixes: add Dropout layers, use data augmentation, or apply early stopping to recover the epoch-8 weights.','The learning rate is too high — reduce it by 10×','The batch size is too small — increase to 512'], ans:1, exp:'This is textbook overfitting: training performance improves while validation performance degrades. The model has moved past the generalisation sweet spot and started memorising training-specific details (noise, irrelevant patterns). Reducing the learning rate would slow training but would not address the fundamental problem. The correct treatments reduce the model\'s ability to memorise: Dropout randomly deactivates neurons (prevents co-adaptation), augmentation artificially increases training variety, and early stopping stops training before the generalisation gap grows too large. In this case, restoring weights from epoch 8 would likely give the best val accuracy.'},
   {t:'nn6', q:'What is the difference between precision and recall, and in what situation would you prioritise recall over precision?', opts:['Precision and recall are the same metric computed differently','Precision = TP/(TP+FP): of all predictions for class X, what fraction were actually X? Recall = TP/(TP+FN): of all true X examples, what fraction did the model catch? Prioritise recall when missing a true positive is very costly — e.g. medical diagnosis (missing cancer is worse than a false alarm), fraud detection, or security screening.','Precision measures training accuracy; recall measures test accuracy','Recall is only used for binary classification; precision works for multi-class'], ans:1, exp:'The precision-recall tradeoff: you can always improve recall by predicting positive more liberally (you catch more true cases), but this also increases false positives and reduces precision. For medical diagnosis (cancer detection), a missed case (false negative) is far more serious than a false alarm that leads to further testing — so you optimise for high recall even if precision is lower. For spam filtering, you might prioritise precision — having important emails mislabelled as spam (false positive) is worse than receiving some spam. F1 score is the harmonic mean of both and is useful when you want a single balanced metric.'},
   {t:'nn6', q:'In transfer learning with VGG16, you freeze all base layers and only train a new Dense head. After initial training, you unfreeze the last 4 layers for fine-tuning. Why must you use a much smaller learning rate (e.g. 1e-5 instead of 1e-3) for fine-tuning?', opts:['Smaller learning rate is only needed when training from scratch','The pretrained weights already contain high-quality, finely tuned representations. A large learning rate would destroy these representations with aggressive weight updates before the network adapts to the new task. A tiny learning rate makes small, careful adjustments that preserve most of the pretrained structure while adapting the last layers to your specific domain.','A smaller learning rate prevents the GPU from overheating','Keras requires learning rate below 1e-4 when base_model.trainable=True'], ans:1, exp:'This is the core intuition of fine-tuning: the pretrained weights are not random — they encode years of learning and represent the culmination of training on 1.2 million images. Large gradient steps would wipe this out. With lr=1e-5, each parameter update moves only a tiny amount — enough to shift the model toward your specific task while preserving the general feature detectors in earlier layers. Using the same lr=1e-3 as the initial head training would cause "catastrophic forgetting" — the fine-tuned layers would quickly forget what they learned on ImageNet and start learning from scratch, defeating the purpose of transfer learning.'},
+
+  // EX2: Local Explanations — LIME & ANCHOR
+  {t:'ex2', q:'What does "perturbing" a data point mean in the context of LIME and ANCHOR?', opts:['Training a new model on modified data','Creating many slightly modified copies of the original point by randomly changing feature values, then getting the black-box model\'s predictions for each copy. This probes how the model behaves locally — which features, when changed, cause the prediction to change — without ever looking inside the model.','Normalising all feature values to the same scale before explanation','Removing outlier features that could bias the explanation'], ans:1, exp:'Perturbation is the core mechanism of both LIME and ANCHOR. Neither method inspects the model\'s internals — they treat it as a black box. Instead they generate a local dataset by perturbing the point of interest: randomly shifting continuous values, zeroing out words, or masking image super-pixels. Each perturbed sample is fed to the model to get a prediction. The collection of (perturbed_input, prediction) pairs forms the data LIME and ANCHOR use to build their explanations. The key insight: you don\'t need access to weights or gradients — you only need to be able to call the model.'},
+  {t:'ex2', q:'LIME uses predict_proba instead of predict when calling the black-box model. Why?', opts:['predict_proba is faster to compute than predict','LIME fits a linear model to the perturbed samples. If you use predict (which returns binary 0/1), the target values jump discontinuously and the linear model cannot capture gradual changes in the decision boundary. predict_proba returns continuous probability values (e.g. 0.12, 0.87) that form a smooth surface — exactly what a linear model needs to find meaningful local weights.','predict_proba is required by the LIME library and cannot be changed','ANCHOR also uses predict_proba for the same reason'], ans:1, exp:'This is a critical practical point. A linear model fitted on binary 0/1 targets would essentially be fitting to noise — a small perturbation near the decision boundary could flip the label from 0 to 1 with no smooth intermediate values. The linear model\'s weights would be dominated by these random jumps rather than the true local structure. With probabilities, a small perturbation away from a confident region produces a small probability change; a perturbation toward the boundary produces a large change. This gradient is exactly what LIME needs to determine which features matter locally. ANCHOR, by contrast, uses predict (hard labels) because it only needs to know whether the perturbed point got the same prediction — not by how much.'},
+  {t:'ex2', q:'A LIME explanation returns: [("debt_ratio", 0.31), ("income", -0.18), ("age", 0.12)]. The prediction was DENY. How do you interpret these three numbers?', opts:['The feature values themselves (debt_ratio=0.31, income=-0.18, age=0.12)','These are the local linear model\'s coefficients. debt_ratio=+0.31 means it pushed the prediction toward DENY (positive = toward predicted class). income=-0.18 means income pushed against DENY (i.e. toward APPROVE). age=+0.12 also pushed toward DENY. The magnitudes indicate relative importance: debt_ratio was the strongest driver of this denial.','The percentage of training data where each feature was important','The SHAP values for each feature — LIME and SHAP produce identical output'], ans:1, exp:'LIME output is a vector of coefficients from the locally-fitted linear model. Each coefficient has a sign (direction) and magnitude (importance). Positive = pushed toward the predicted class label, negative = pushed against it. In this case debt_ratio was the dominant reason for denial (+0.31), income was actually working against denial (-0.18, this applicant\'s income was pushing toward approval), and age contributed modestly (+0.12). These are local effects — they describe the model\'s behaviour near this specific point. A different applicant with different feature values would get different LIME coefficients even from the same model. SHAP uses a completely different algorithm (Shapley values) and is more theoretically grounded, but LIME\'s output has the same format.'},
+  {t:'ex2', q:'An ANCHOR explanation for a breast cancer prediction returns: "radius_error > 0.32 AND worst_concave_points <= 0.06 — Precision: 0.99, Coverage: 0.09". What does each component tell you?', opts:['Precision = model accuracy; Coverage = fraction of correct predictions','The rule: whenever both conditions hold, the model gives this same prediction. Precision 0.99 = among all perturbed samples where the rule holds, 99% got the same prediction — the rule is almost a guarantee. Coverage 0.09 = the rule applies to 9% of the training data — it\'s a specific rule, not a general one. High precision is good for trust. Low coverage means the rule is tailored to this type of case.','Precision = feature importance; Coverage = number of features used in the rule','Precision 0.99 means 99% of all test predictions are correct; Coverage means 9% of features were used'], ans:1, exp:'These three components together tell a complete story. The rule (two predicates) gives the sufficient conditions: if a patient has high radius error AND low concave points, the model will predict benign — regardless of all other features. Precision tells you how reliable that guarantee is: 0.99 is excellent — only 1% of cases where the rule holds get a different prediction. Coverage tells you how general the rule is: 0.09 means it applies to a narrow slice of patients. ANCHOR always tries to maximise coverage among all rules with precision ≥ threshold — so 0.09 means no simpler, broader rule could achieve 0.99 precision. If you lower the threshold (e.g. to 0.80), you might get a single-condition rule with coverage of 0.27 — less precise but more general.'},
+  {t:'ex2', q:'You run LIME twice on the same data point, same model, same code — and get noticeably different feature weights each time. What causes this and is it a problem?', opts:['A bug in the LIME library — it should always return the same result','LIME randomly samples perturbed points and uses a random kernel. Different random seeds produce different sets of perturbed samples, leading to a different locally-fitted linear model and different coefficients. This instability is a genuine limitation: for points near complex or sharply curved decision boundaries, the local linear approximation varies significantly depending on which random samples are drawn. It means LIME explanations should be treated as approximate guides, not exact attributions — especially for borderline cases.','The model itself is non-deterministic, causing different LIME results','The instability only occurs when discretize_continuous=True'], ans:1, exp:'LIME\'s instability is one of its most frequently cited weaknesses. Every call to explain_instance generates a fresh random set of perturbed samples. If the local decision boundary is relatively smooth and linear, different random samples will give similar coefficients. But near sharp boundaries or in high-dimensional spaces, the local linear approximation depends heavily on which specific perturbed points were sampled — and this varies with the random seed. Practical mitigation: run LIME multiple times and look for stable patterns (features that consistently get large weights). SHAP is more stable because it uses a principled mathematical formula (Shapley values) rather than random sampling and linear fitting. ANCHOR is more stable because discrete rules change less with sampling than continuous weights.'},
+  {t:'ex2', q:'You want to explain a loan denial to the applicant for GDPR compliance. They want to know what they could change to get approved. Should you use LIME, ANCHOR, or a counterfactual explanation?', opts:['LIME — it gives the most technically precise explanation','A counterfactual explanation is most appropriate: "Your loan was denied. If your income were £42k instead of £38k, it would be approved." Counterfactuals directly answer "what is the minimum change that would flip the decision?" ANCHOR gives a rule that locks in the denial (useful for understanding why), and LIME gives feature weights (useful for a data scientist), but neither directly answers "what can I do differently?"','ANCHOR — because it meets GDPR requirements by default','LIME and ANCHOR are equivalent for this purpose'], ans:1, exp:'Each method serves a different purpose. LIME gives the data scientist a weighted breakdown of why the model made this decision. ANCHOR gives a rule that guarantees the denial — useful for understanding the sufficient conditions. A counterfactual gives the actionable path: the minimum change that would flip the outcome. For the applicant, the counterfactual is most valuable — they don\'t need a statistical weight, they need to know what to do. GDPR requires "meaningful information about the logic involved" and the "envisaged consequences" — counterfactuals directly satisfy this by specifying what would change the outcome. In practice, good GDPR compliance combines all three: a local SHAP/LIME breakdown, an ANCHOR rule for the general principle, and at least one counterfactual for actionability.'},
+  {t:'ex2', q:'The half-moons LIME practical generates a quiver plot (arrows at each data point). Points far from the decision boundary have long consistent arrows, while points near the boundary have short, inconsistent arrows. What does this reveal about LIME?', opts:['LIME gives longer arrows for more important features regardless of position','LIME works best where the decision boundary is genuinely locally linear. Far from the boundary, the local region is clearly all one class — LIME\'s linear approximation is accurate and produces consistent, confident weights (long arrows). Near the curved boundary, the model\'s behaviour changes rapidly in a non-linear way. LIME\'s linear approximation is poor here — different perturbed samples suggest different local directions — so the weights are small and inconsistent.','The arrows represent the gradient of the model, which is larger far from the boundary','Long arrows indicate high model confidence; short arrows indicate uncertainty in the training data'], ans:1, exp:'This is the visual demonstration of LIME\'s core limitation. LIME assumes that the true decision boundary is approximately linear in the local neighbourhood. This assumption holds well in regions that are comfortably inside one class — the boundary is far away and the local slope is clear. But near the actual decision boundary, and especially where it curves, the assumption breaks down. Different random perturbed samples land on different sides of the non-linear boundary, producing contradictory gradients. The local linear model has to average across these contradictions — the result is a small, noisy weight vector (short arrow). This is why LIME explanations should be treated with more caution for points near class boundaries, and why quantifying explanation quality (e.g. measuring the linear model\'s R² fit to the perturbed samples) is important.'},
+
+  // EX1: Introduction to Explainability & Interpretability
+  {t:'ex1', q:'What is the key difference between an "interpretable" model and an "explainable" model?', opts:['They are the same — both terms mean you can understand the model\'s predictions','Interpretability is an intrinsic property: the model\'s structure is directly human-readable (e.g. a linear regression with readable coefficients). Explainability is post-hoc: you apply a separate technique to approximate and describe a black-box model\'s behaviour. An explanation is always an approximation — it simplifies the model\'s true behaviour.','Interpretable models are always more accurate than explainable ones','Explainability only applies to neural networks; interpretability only applies to linear models'], ans:1, exp:'The distinction matters because it affects what tools you reach for. An interpretable model IS the explanation — you just read its coefficients or follow its decision path. An explainable model requires a separate step: you train the black box, then apply SHAP, LIME, or another technique to generate a human-readable approximation. Critically, that approximation is not the same as the model — it may simplify or miss some interactions. When you read a SHAP value, you are reading an approximation of what the model did, not the model\'s actual internal computation.'},
+  {t:'ex1', q:'A data scientist trains a neural network on hospital chest X-rays that achieves 93% test accuracy for detecting pneumonia. The model is deployed and performs poorly. Explainability analysis reveals it was relying heavily on the scanner ID feature. What does this illustrate?', opts:['The model was undertrained and needed more epochs','The model learned a spurious correlation — sicker patients were scanned on older machines in the ICU, so the scanner model became a proxy for severity. This is a data artefact, not a real medical signal. It had high test accuracy because the test data had the same spurious pattern. Explainability tools (like SHAP showing high importance for scanner ID) would have caught this before deployment.','The model correctly identified that scanner type affects diagnostic quality','This is expected — neural networks always learn the most predictive features, even indirect ones'], ans:1, exp:'This is the classic cautionary tale of unexplained ML. A model optimises for training label prediction — it doesn\'t know or care whether the signal is causal or spurious. If "ICU scanner" correlates with "severe pneumonia" in the training data, the model will use it. Test accuracy won\'t reveal this if the test set has the same correlation. Only by inspecting feature importances (SHAP, permutation importance) would you discover that scanner ID was the model\'s top feature — a red flag that the model is not learning actual medical patterns. This is why explainability is essential before deployment, not just after problems emerge.'},
+  {t:'ex1', q:'Which of the following correctly classifies permutation importance, PDP, SHAP, and Grad-CAM on the Global/Local and Model-agnostic/Specific axes?', opts:['All four are local and model-specific','Permutation importance: Global, Agnostic. PDP: Global, Agnostic. SHAP: Both global and local, Agnostic (also has tree-specific exact version). Grad-CAM: Local, Specific to CNNs — it uses the gradient of the class score with respect to the last convolutional layer\'s activations.','Permutation importance: Local, Specific. PDP: Local, Agnostic. SHAP: Global only. Grad-CAM: Global, Agnostic','SHAP and LIME are identical in both methodology and output'], ans:1, exp:'Understanding where each method sits on these axes determines when to use it. Permutation importance and PDP give you a global picture of the whole model but cannot explain individual predictions. SHAP is the versatile tool: it produces both per-prediction explanations (local SHAP waterfall plots) and global summaries (SHAP beeswarm/bar plots) and works on any model. For tree models, it has an exact polynomial-time algorithm; for black boxes it uses sampling. Grad-CAM is inherently local (it explains one image\'s prediction) and model-specific (requires access to CNN convolutional layer gradients — it doesn\'t work on non-CNN models).'},
+  {t:'ex1', q:'A loan applicant was denied credit by a machine learning model. Under GDPR, the applicant has a right to an explanation. Which type of explanation is most directly appropriate, and what would it contain?', opts:['A global feature importance plot showing which features matter most across all loan applications','A local, per-prediction counterfactual explanation: "Your application was denied because your annual income (£38k) is below the threshold. If your income were £42k, your application would be approved." This is actionable, specific to their case, and satisfies the GDPR requirement for meaningful automated decision explanations.','The model\'s confusion matrix and ROC curve, demonstrating its overall accuracy','A technical description of the model architecture (number of layers, learning rate, etc.)'], ans:1, exp:'GDPR Article 22 requires "meaningful information about the logic involved" and the "significance and envisaged consequences" of automated decisions — not just a global feature ranking. A global importance plot tells the applicant that "income is the most important feature across all applications" — this doesn\'t explain their specific denial. A local explanation (SHAP values for their application) shows exactly which of their features drove the decision. A counterfactual explanation goes further by showing the minimum change that would flip the outcome — directly actionable. In practice, good GDPR compliance uses all three: a local SHAP explanation plus at least one counterfactual.'},
+  {t:'ex1', q:'What is the interpretability–accuracy trade-off, and when is it acceptable to use a black-box model?', opts:['There is no trade-off — interpretable models always match black-box accuracy if tuned correctly','More complex models (neural networks, gradient boosting ensembles) generally achieve higher accuracy on complex problems but have opaque internal structure. Simpler models (linear regression, shallow decision trees) are fully readable but have lower accuracy on complex non-linear problems. The trade-off is real but shrinking for tabular data — modern GAMs/EBMs can often match gradient boosting accuracy. Black-box models are acceptable when: you have robust post-hoc explanation tools, the domain is lower stakes, or no interpretable model achieves sufficient accuracy.','Black-box models should never be used in production systems','The trade-off only matters for classification, not regression'], ans:1, exp:'The trade-off is not absolute and context-dependent. For structured tabular data, interpretable models like Explainable Boosting Machines (EBMs) increasingly match gradient boosted trees — making the trade-off less severe. The gap is largest for unstructured data: images, text, audio, where deep learning is essential and no simple model comes close. When using black-box models, the answer is not to abandon explainability but to apply post-hoc tools rigorously: validate that SHAP top features make domain sense, use PDP to verify monotonicity where expected, check for discriminatory patterns in SHAP values across demographic groups. The key principle is: you should be able to defend every significant model decision with an explanation, regardless of which architecture you chose.'},
+  {t:'ex1', q:'A data scientist uses permutation importance and finds that "postcode" is the second most important feature in a loan default prediction model. Why is this a concern, and what should be done?', opts:['Postcode is a valid feature — it correlates with wealth, so it should have high importance','Postcode is a proxy for protected characteristics (race, ethnicity, socioeconomic background vary strongly by geographic area). High postcode importance suggests the model may be making decisions that discriminate based on demographic group, even if race is not explicitly in the feature set. This is indirect discrimination. The next steps: decompose SHAP values by demographic group, check whether removal of postcode significantly reduces accuracy, consider replacing postcode with economically meaningful features like regional unemployment rate.','This is expected and not a concern — all features with predictive power should be used','Permutation importance is unreliable for geographic features and should be ignored here'], ans:1, exp:'This is the proxy discrimination problem. Models don\'t need to include protected attributes (race, gender, religion) to discriminate — they can learn to use correlated proxies. Postcode encodes race, ethnicity, and socioeconomic status in many datasets, so a model that heavily weights postcode may effectively discriminate by those attributes. Explainability tools reveal this: if SHAP shows that "postcode = inner city" consistently decreases credit scores, that\'s a signal of potential discrimination. The regulatory test in many jurisdictions is disparate impact — does the model\'s outcome differ significantly by protected group? Explainability is the diagnostic tool that surfaces this before deployment.'},
+  {t:'ex1', q:'What is the core mechanism of LIME, and what is its main limitation compared to SHAP?', opts:['LIME uses the model\'s gradient to compute exact feature attributions; SHAP uses sampling','LIME generates perturbed samples near the prediction point, gets model predictions for them, then fits a weighted linear model to those local samples. The linear coefficients become the explanation: "near this point, feature X has coefficient 0.3." The main limitation: the explanation is sensitive to how you generate perturbations — small changes in sampling strategy can produce very different coefficients, making LIME unstable. SHAP has stronger theoretical guarantees (uniquely satisfies four desirable axioms) and is generally more stable.','LIME is more accurate than SHAP but requires more computational resources','LIME and SHAP produce identical explanations — they are just different implementations of the same underlying method'], ans:1, exp:'LIME\'s local approximation approach is intuitive: if the black box is locally linear around your point, fitting a linear model there gives you the local effect of each feature. The weights in the sampling process (closer perturbed points get higher weight) ensure the linear model captures the local neighbourhood. The instability problem is real: LIME\'s output depends on the random seed for perturbation, the kernel width (how large "local" is), and the number of samples. Different runs can give qualitatively different explanations for the same prediction. SHAP is preferred because it satisfies mathematical axioms (local accuracy, missingness, consistency) that guarantee the explanations are well-behaved — and for tree models, exact computation is available in O(TLD²) time without sampling.'},
 
   // NN8: Graph Neural Networks
   {t:'nn8', q:'Why can\'t you apply a standard CNN or Dense network directly to a graph like a social network or molecular graph?', opts:['CNNs and Dense networks are too slow for graph data','Graphs have variable-size, irregular neighbourhoods with no fixed coordinate system and no canonical node ordering. CNNs require a fixed grid (same number of neighbours per position). Dense networks require fixed-size inputs and are not permutation-invariant — renaming the nodes changes the output. GNNs solve this with local, shared-weight message passing that works on any graph topology.','CNNs cannot handle node features, only pixel values','Dense networks require labelled data, but graphs are always unsupervised'], ans:1, exp:'The key problems are irregularity and permutation invariance. In an image, every pixel has exactly 8 neighbours in a fixed spatial arrangement — CNNs exploit this regularity. In a graph, a node can have 1 or 1000 neighbours in any arrangement. You cannot flatten the adjacency matrix and feed it to Dense layers because: (1) the matrix size varies with the number of nodes, (2) shuffling node indices changes the matrix but not the graph — the model should give the same output either way. GNNs address this by learning the same message-passing function applied locally at every node, regardless of its degree.'},
@@ -16223,6 +17626,25 @@ const FLASHCARDS = [
   {t:'nn6', front:'Precision vs Recall — formulas and when to use each', back:'Precision = TP / (TP + FP)\n  "Of my predictions for class X, how many were right?"\n  Optimise when false alarms are costly (spam filter)\n\nRecall = TP / (TP + FN)\n  "Of all real class X examples, how many did I catch?"\n  Optimise when misses are costly (cancer detection)\n\nF1 = 2 × (P × R) / (P + R)\n  Harmonic mean — use when you want one balanced metric\n\nHigh P, low R: conservative — catches few, rarely wrong\nLow P, high R: aggressive — catches all, many false alarms\n\nsklearn: classification_report(y_true, y_pred)'},
   {t:'nn6', front:'Transfer learning — feature extraction vs fine-tuning', back:'Feature extraction (faster, less data needed):\n  base_model.trainable = False\n  → freeze all pretrained weights\n  → only new head is trained\n  Best when: small dataset, similar to ImageNet\n\nFine-tuning (better accuracy, more data needed):\n  Unfreeze last few blocks\n  Use TINY learning rate (1e-5, not 1e-3)\n  → small adjustments preserve pretrained features\n  "catastrophic forgetting" if lr too large\n\nRule of thumb:\n  Small dataset + similar domain → feature extraction\n  Large dataset + different domain → fine-tune all\n  In between → fine-tune last few blocks'},
 
+  // EX2: Local Explanations flashcards
+  {t:'ex2', front:'Local vs Global Explanation', back:'Local: explains ONE specific prediction\n  "Why was John\'s loan denied?"\n  Output specific to this data point\n  Audience: the individual, regulators, debuggers\n\nGlobal: explains the whole model\'s behaviour\n  "Age is the most important feature overall"\n  Output summarises all predictions\n  Audience: data scientists, business stakeholders\n\nBoth LIME and ANCHOR are LOCAL methods.\nSHAP can produce both.\n\nReal-world need for local:\n  GDPR: right to explanation of a specific decision\n  Medicine: explain THIS patient\'s diagnosis\n  Debugging: why did the model do THIS on THAT point'},
+  {t:'ex2', front:'Perturbation — what it is and why it works', back:'Definition: create many slightly modified copies of\nthe point of interest, feed them to the black box,\nobserve how predictions change.\n\nFor tabular: randomly shift feature values\nFor images: randomly mask super-pixels (regions)\nFor text: randomly zero out words\n\nWhy it works:\n• Only needs black-box access (input → output)\n• No access to model weights/gradients needed\n• Local behaviour revealed by how output changes\n  when input features are varied\n\nLimitation: slow — 5,000+ model calls per point\n\nBoth LIME and ANCHOR use perturbation.\nDifference: what they do with the results.'},
+  {t:'ex2', front:'LIME algorithm — 5 steps', back:'1. Perturb the point x\n   → generate ~5000 slightly modified copies\n\n2. Get black-box predictions for all copies\n   → use predict_proba (not predict)\n   → need probabilities for smooth linear fit\n\n3. Weight samples by distance from x\n   → π(z) = exp(−D(x,z)² / σ²)\n   → closer samples get higher weight\n   → σ (kernel width) controls "local" size\n\n4. Fit a weighted linear model\n   → minimise: Σ π(z) × (f(z) − g(z))²\n   → linear model g fitted to local region\n\n5. Return the linear model\'s coefficients\n   → [("debt_ratio", +0.31), ("income", −0.18)]\n   → positive = pushed toward predicted class\n   → negative = pushed against predicted class'},
+  {t:'ex2', front:'ANCHOR components — predicates, coverage, precision', back:'Predicate: a single condition on a feature\n  e.g. debt_ratio > 0.70  |  age < 30\n\nAnchor A: a SET of predicates (all must be true)\n  A = {debt_ratio > 0.70 AND age < 30}\n  A(x) = 1 if all hold, else 0\n\nCoverage: fraction of training data where A holds\n  coverage=0.23 → rule applies to 23% of data\n  Higher coverage = more general explanation\n\nPrecision: of perturbed samples where A holds,\n  what fraction get the same prediction as x?\n  precision=0.97 → rule correct 97% of the time\n\nANCHOR picks: highest coverage rule with\n              precision ≥ τ (your threshold)\n\nτ = 0.95 → strict guarantee\nτ = 0.80 → simpler, more general rules'},
+  {t:'ex2', front:'LIME vs ANCHOR — key differences', back:'LIME:\n  Output: feature weights [("x1", 0.31), ("x2", -0.18)]\n  Asks: "how much did each feature contribute?"\n  Model call: predict_proba (needs probabilities)\n  Type: feature weighting\n  Stability: low (sensitive to random seed)\n  Data: tabular, image (super-pixels), text\n  Best for: data scientists, technical audiences\n\nANCHOR:\n  Output: "IF debt>0.7 AND age<30 → DENY (97%)"\n  Asks: "what conditions guarantee this prediction?"\n  Model call: predict (hard labels only)\n  Type: rule-based\n  Stability: higher (discrete rules more robust)\n  Data: primarily tabular\n  Best for: business, legal, individuals, regulators\n\nBoth: model-agnostic, perturbation-based, local'},
+  {t:'ex2', front:'Interpreting LIME output', back:'exp.as_list() returns:\n  [("feature_name", weight), ...]\n\nWeight sign:\n  positive (+) → feature pushed TOWARD predicted class\n  negative (−) → feature pushed AGAINST predicted class\n\nWeight magnitude:\n  larger = stronger local influence on this prediction\n\nExample — prediction: DENY loan\n  debt_ratio = +0.31  →  high debt pushed toward DENY\n  income     = −0.18  →  income pushed toward APPROVE\n  age        = +0.12  →  age pushed toward DENY\n\nCritical: these are LOCAL weights for THIS point only.\nA different data point will have different weights\neven from the same model.\n\nLimitation: unstable — run twice, get different weights\nNear decision boundaries: short, inconsistent arrows'},
+  {t:'ex2', front:'Interpreting ANCHOR output', back:'anchor.explain_instance() prints:\n  Anchor: [rule]\n  Precision: x.xx\n  Coverage: x.xx\n\nExample:\n  Anchor: radius_error > 0.32\n          AND worst_concave_pts <= 0.06\n  Precision: 0.99\n  Coverage: 0.09\n\nHow to read it:\n  Rule → the sufficient conditions for this prediction\n  Precision 0.99 → rule holds with 99% reliability\n    (1% exceptions in local neighbourhood)\n  Coverage 0.09 → rule applies to 9% of training data\n    → specific rule, not general\n\nMore conditions = lower coverage, higher precision\nFewer conditions = higher coverage, lower precision\n\nLower threshold (e.g. 0.80) → simpler, broader rules\nHigher threshold (e.g. 0.95) → stricter, narrower rules'},
+  {t:'ex2', front:'LIME instability — cause and mitigation', back:'Cause: LIME uses random sampling.\n  Different random seeds → different perturbed sets\n  → different locally-fitted linear model\n  → different coefficients\n\nWorst near sharp, curved decision boundaries:\n  Local linear approximation breaks down\n  Perturbed points land on inconsistent sides\n  → small, noisy weights\n\nVisualization: quiver plot on half-moons dataset\n  Far from boundary: long, consistent arrows\n  Near boundary: short, inconsistent arrows\n  → visual proof of the instability problem\n\nMitigation:\n  • Run LIME multiple times, look for stable features\n  • Use num_samples=5000+ (more = more stable)\n  • Check the linear model R² as a quality metric\n  • Prefer SHAP for high-stakes decisions\n    (more stable, theoretically grounded)\n  • Use ANCHOR for high-stakes rules\n    (discrete rules are more robust to sampling)'},
+
+  // EX1: Introduction to Explainability flashcards
+  {t:'ex1', front:'Interpretability vs Explainability', back:'Interpretability — intrinsic property of the model:\n  Model structure IS the explanation\n  No extra tools needed\n  Examples: linear regression, decision tree\n  "Read the coefficients directly"\n\nExplainability — post-hoc, applied to black boxes:\n  Separate technique generates an approximation\n  The explanation ≠ the model\n  Examples: SHAP on XGBoost, LIME on neural net\n  "Apply SHAP to describe what the model does"\n\nKey: an explanation is always an APPROXIMATION\nof the true model behaviour — useful, but\nnot the same as actually understanding the model'},
+  {t:'ex1', front:'The complexity–interpretability spectrum', back:'← Less Complex              More Complex →\n\nDecision  Linear  Logistic  Random  Gradient  Deep\n  Tree    Regr.   Regr.    Forest  Boosting  Network\n\n|←────── INTERPRETABLE ──────|── EXPLAINABLE ──►|\n\nLeft side: read the model directly\n  • Decision tree: follow the path\n  • Linear: read coefficients (after standardising)\n  • Logistic: exp(coef) = odds ratio\n\nRight side: need post-hoc tools\n  • Random Forest → SHAP, PDP, perm. importance\n  • Neural Network → SHAP, LIME, Grad-CAM\n\nTrade-off: shrinking for tabular data\n  GAMs/EBMs can match gradient boosting accuracy\n  while remaining fully interpretable'},
+  {t:'ex1', front:'Three axes to classify every XAI method', back:'Axis 1: Global vs Local\n  Global: how does the model behave overall?\n    → feature importance, PDP, SHAP summary\n  Local: why THIS prediction for THIS instance?\n    → SHAP waterfall, LIME, counterfactuals\n\nAxis 2: Model-agnostic vs Model-specific\n  Agnostic: black-box, input/output only\n    → SHAP (KernelSHAP), LIME, PDP, perm. importance\n  Specific: exploits model internals\n    → linear coefficients, tree path,\n      Grad-CAM (CNN), attention (Transformer)\n\nAxis 3: Intrinsic vs Post-hoc\n  Intrinsic: model itself is explanation\n    → linear, logistic, decision tree, GAM\n  Post-hoc: explanation applied after training\n    → SHAP on any model, LIME on any model'},
+  {t:'ex1', front:'Permutation Feature Importance — how it works', back:'Algorithm:\n  1. Train model → record baseline metric (e.g. 92% acc)\n  2. Shuffle one feature column (break its signal)\n  3. Re-evaluate model → accuracy drops to 84%\n  4. Importance = 92% − 84% = 8pp drop\n  5. Repeat for every feature\n  6. Rank features by drop magnitude\n\nProperties:\n  • Global: summarises model over all predictions\n  • Model-agnostic: only needs input/output\n  • Tells you HOW MUCH model relies on each feature\n  • Does NOT reveal direction (+ or −) or shape\n\nLimitation:\n  • Correlated features: shuffling one breaks the\n    joint signal → artificially low importance\n  • Slow: one full evaluation per feature\n\nFor direction → use PDP or SHAP'},
+  {t:'ex1', front:'SHAP — the gold standard (intuition + output)', back:'Based on Shapley values from cooperative game theory:\n"Fairly distribute the model prediction among features"\n\nFormula:\n  Prediction = base_value + Σ SHAP_i\n  Base value = average prediction across all training data\n  SHAP_i = contribution of feature i to THIS prediction\n\nExample:\n  Base value: 0.50\n  age=67:      + 0.18\n  income=low:  + 0.14\n  credit=poor: + 0.11\n  employed:    − 0.04\n  Prediction → 0.87  (high risk)\n\nProperties:\n  ✓ Local accuracy: contributions sum to prediction\n  ✓ Missingness: absent features get 0 contribution\n  ✓ Consistency: more important features get higher SHAP\n  ✓ Both global (summary plot) and local (waterfall)\n  ✓ Industry gold standard'},
+  {t:'ex1', front:'LIME vs Counterfactuals — when to use each', back:'LIME (Local Interpretable Model-agnostic Explanations):\n  1. Perturb input x → get nearby sample predictions\n  2. Fit weighted linear model on perturbed samples\n  3. Linear coefficients = local feature effects\n  Use for: quick local approximation, text/image\n  Limitation: unstable (sensitive to sampling seed)\n\nCounterfactual Explanations:\n  "What minimal change would flip the decision?"\n  "Your loan was DENIED.\n   If income were £42k (not £38k) → APPROVED."\n  Use for: user-facing explanations, GDPR compliance\n  Constraints: minimise changes, keep features realistic,\n               only change actionable attributes (not age)\n\nSHAP is preferred over LIME when:\n  • You need stability across runs\n  • You want consistent global + local explanations\n  • Tree models (exact TreeSHAP available)\n\nCounterfactuals are irreplaceable when:\n  • The user needs to know what to change'},
+  {t:'ex1', front:'Four reasons explainability matters', back:'1. Debugging spurious correlations\n   Model learns scanner type → pneumonia severity\n   High test accuracy hides the artefact\n   SHAP reveals: scanner_id is top feature → red flag\n\n2. Trust & adoption\n   Doctors/loan officers won\'t use opaque models\n   Interpretability = price of admission in high-stakes domains\n\n3. Fairness & bias detection\n   "Postcode" = proxy for race/socioeconomic status\n   High SHAP importance for postcode → discrimination risk\n   Decompose SHAP by demographic group to test\n\n4. Regulatory compliance\n   GDPR Art.22: right to explanation for automated decisions\n   FDA: explainability required for AI medical devices\n   Finance: model documentation for credit decisions\n\nWho needs what:\n  Data scientist   → SHAP summary + PDP (debugging)\n  End user         → local SHAP + counterfactual (why me?)\n  Regulator        → fairness plots + model card'},
+
   // NN8: Graph Neural Networks flashcards
   {t:'nn8', front:'Graph vocabulary — the essential terms', back:'G = (V, E):  V = vertices (nodes),  E = edges (links)\n\nAdjacency matrix A  [|V| × |V|]:\n  A[i][j] = 1 if edge (i,j) exists, else 0\n  Symmetric for undirected graphs\n\nDegree matrix D  [|V| × |V|, diagonal]:\n  D[i][i] = number of neighbours of node i\n\nNode feature matrix X  [|V| × d]:\n  Each row = feature vector for one node\n  CORA: X ∈ R^{2708×1433}\n\nNormalised adjacency:\n  Â = D^{-½} A D^{-½}\n  → degree-invariant aggregation\n  (add self-loops: Ã = A+I first)'},
   {t:'nn8', front:'Three levels of GNN tasks', back:'Node-level:\n  Predict a label/value for each node\n  Training: (node, label) pairs\n  Example: CORA paper topic classification\n  Output: per-node embedding z_v\n\nLink-level:\n  Predict edge existence or type\n  Training: known edges + sampled non-edges\n  Example: recommend products to users\n  Score: σ(z_u · z_v) or MLP(z_u, z_v)\n\nGraph-level:\n  Predict one label for the whole graph\n  Training: (graph, label) pairs\n  Example: molecular toxicity prediction\n  Readout: pool all z_v → one graph embedding\n\nSemi-supervised: label few nodes,\n  GCN propagates signal to unlabelled ones\n  CORA: 140 labels → 81% on 2568 unlabelled'},
@@ -16304,6 +17726,15 @@ function toggleChapter(id) {
   arrow.classList.toggle('collapsed', isCollapsed);
 }
 
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.nav-chapter-items').forEach(function(items) {
+    const id = items.id.replace('chapter-', '');
+    items.classList.add('collapsed');
+    const arrow = document.getElementById('arrow-' + id);
+    if (arrow) arrow.classList.add('collapsed');
+  });
+});
+
 function nav(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -16311,7 +17742,7 @@ function nav(page) {
   document.getElementById('main').scrollTop = 0;
   const navEl = document.querySelector(`[onclick="nav('${page}')"]`);
   if (navEl) navEl.classList.add('active');
-  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9','nn1','nn2','nn3','nn4','nn5','nn6','nn7','nn8'].includes(page)) {
+  if (['w1','w2','w3','w4','w5','w6','w7','w8','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','en1','en2','en3','en4','pe1','pe2','pe3','pe4','pe5','ul1','ul2','ul3','ul4','ul5','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9','nn1','nn2','nn3','nn4','nn5','nn6','nn7','nn8','ex1','ex2'].includes(page)) {
     markVisited(page);
     renderInlineQuiz(page);
   }
