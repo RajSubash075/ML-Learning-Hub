@@ -6,7 +6,7 @@
 <title>ML Learning Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #0f1117;
@@ -25,7 +25,7 @@
   --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, 'Fira Code', monospace;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; align-items: stretch; }
+body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; align-items: stretch; }
 
 /* SIDEBAR */
 #sidebar {
@@ -62,7 +62,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 
 /* MAIN */
 #main { margin-left: 260px; width: calc(100% - 260px); height: 100vh; overflow-y: auto; background: var(--bg); }
-.page { display: none; padding: 32px 40px; width: 100%; }
+.page { display: none; padding: 32px 40px; width: 100%; max-width: 860px; margin: 0 auto; }
 .page.active { display: block; }
 
 /* TYPOGRAPHY */
@@ -90,10 +90,39 @@ ul li, ol li { color: var(--text-muted); font-size: 0.88rem; line-height: 1.8; }
 .key-concept p { margin: 0; font-size: 0.85rem; }
 
 /* CODE */
-.code-block { background: var(--code-bg); border: 1px solid #2d3561; border-radius: 8px; padding: 16px; margin: 14px 0; overflow-x: auto; }
+.code-block { background: var(--code-bg); border: 1px solid #2d3561; border-radius: 8px; padding: 16px; margin: 14px 0; overflow-x: auto; position: relative; }
 .code-block pre { font-family: var(--mono); font-size: 0.8rem; color: #c9d1d9; line-height: 1.6; white-space: pre; }
 code { font-family: var(--mono); font-size: 0.79rem; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; color: #c9d1d9; border: 1px solid rgba(45,53,97,0.4); }
 .kw { color: #ff7b72; } .fn { color: #d2a8ff; } .st { color: #a5d6ff; } .cm { color: #8b949e; } .nu { color: #79c0ff; }
+
+/* COPY-CODE BUTTON */
+.copy-btn { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.06); border: 1px solid var(--card-border); color: var(--text-muted); font-size: 0.68rem; font-family: 'Inter',sans-serif; padding: 3px 9px; border-radius: 5px; cursor: pointer; opacity: 0; transition: opacity 0.15s; z-index: 2; }
+.code-block:hover .copy-btn { opacity: 1; }
+.copy-btn:hover { color: var(--text); background: rgba(255,255,255,0.12); }
+.copy-btn.copied { color: var(--green); border-color: var(--green); opacity: 1; }
+
+/* SEARCH */
+.sidebar-search { padding: 0 16px 10px; }
+#search-box { width: 100%; padding: 8px 12px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text); font-size: 0.82rem; font-family: inherit; }
+#search-box::placeholder { color: var(--text-muted); }
+#search-box:focus { outline: none; border-color: var(--accent); }
+#search-results { margin-top: 6px; max-height: 320px; overflow-y: auto; }
+#search-results:not(:empty) { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; padding: 4px; }
+.search-result { padding: 6px 9px; border-radius: 6px; cursor: pointer; }
+.search-result:hover { background: rgba(91,138,245,0.12); }
+.search-result .sr-page { color: var(--text-muted); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.search-result .sr-head { color: var(--text); font-size: 0.79rem; line-height: 1.3; }
+.search-result mark { background: rgba(251,191,36,0.32); color: inherit; border-radius: 2px; padding: 0 1px; }
+
+/* SCROLL PROGRESS */
+#scroll-progress { position: fixed; top: 0; left: 260px; right: 0; height: 3px; z-index: 150; pointer-events: none; }
+#scroll-progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.08s linear; }
+
+/* PREV / NEXT FLOATING NAV */
+#prevnext { position: fixed; bottom: 18px; right: 18px; display: flex; gap: 8px; z-index: 140; }
+#prevnext button { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text); font-size: 1.1rem; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.4); transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+#prevnext button:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+@media (max-width: 768px) { #scroll-progress { left: 0; } #prevnext { bottom: 12px; right: 12px; } }
 
 /* TABLE */
 table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.83rem; }
@@ -206,6 +235,20 @@ tr:hover td { background: rgba(91,138,245,0.04); }
 .fig-grid .figure { margin: 0; }
 @media (max-width: 768px) { .fig-grid { grid-template-columns: 1fr; } }
 
+/* SEMANTIC CALLOUTS — intuition / worked example / pitfall */
+.callout { border-radius: 8px; padding: 13px 16px; margin: 16px 0; border-left: 3px solid; }
+.callout .callout-head { font-weight: 700; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 7px; }
+.callout p { margin: 0 0 8px; font-size: 0.88rem; line-height: 1.65; color: var(--text); }
+.callout p:last-child { margin-bottom: 0; }
+.callout code { font-size: 0.8rem; }
+.callout-intuition { background: rgba(167,139,250,0.08); border-color: var(--accent2); }
+.callout-intuition .callout-head { color: var(--accent2); }
+.callout-example { background: rgba(52,211,153,0.07); border-color: var(--green); }
+.callout-example .callout-head { color: var(--green); }
+.callout-example .work { font-family: var(--mono); font-size: 0.82rem; color: #c9d1d9; background: var(--code-bg); border: 1px solid var(--card-border); border-radius: 6px; padding: 10px 12px; margin: 8px 0; line-height: 1.7; white-space: pre-wrap; }
+.callout-pitfall { background: rgba(248,113,113,0.08); border-color: var(--red); }
+.callout-pitfall .callout-head { color: var(--red); }
+
 /* DIVIDER */
 hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
 
@@ -255,12 +298,16 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <h1>🧠 ML Learning Hub</h1>
     <p>Introduction to Machine Learning</p>
   </div>
+  <div class="sidebar-search">
+    <input id="search-box" type="text" placeholder="🔍 Search lessons…" autocomplete="off" oninput="doSearch()">
+    <div id="search-results"></div>
+  </div>
   <div class="progress-bar-wrap"><div class="progress-bar-fill" id="global-progress-bar" style="width:0%"></div></div>
-  <div class="progress-label" id="global-progress-label">0 of 16 lessons visited</div>
+  <div class="progress-label" id="global-progress-label">0 of 52 lessons visited</div>
 
   <div class="nav-item active" onclick="nav('home')" id="nav-home"><span class="icon">🏠</span> Home</div>
   <div class="sidebar-section">Chapters</div>
-  <div class="nav-item nav-item-chapter" onclick="toggleChapter('lessons')"><span class="icon">📚</span> Foundation<span class="chapter-arrow" id="arrow-lessons">▾</span></div>
+  <div class="nav-item nav-item-chapter" onclick="openChapter('lessons','overview')"><span class="icon">📚</span> Foundation<span class="chapter-arrow" id="arrow-lessons" onclick="event.stopPropagation(); toggleChapter('lessons')">▾</span></div>
   <div class="nav-chapter-items" id="chapter-lessons">
     <div class="nav-item nav-item-sub" onclick="nav('overview')"><span class="icon">🏠</span> Overview</div>
     <div class="nav-item nav-item-sub" onclick="nav('w1')" id="nav-w1"><span class="icon">🧹</span> L1: Data Preprocessing<span class="check" id="check-w1"></span></div>
@@ -274,7 +321,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('fsheet')" id="nav-fsheet"><span class="icon">📋</span> Foundation Cheat Sheet</div>
   </div>
 
-  <div class="nav-item nav-item-chapter" onclick="toggleChapter('classification')"><span class="icon">📚</span> Supervised Classification<span class="chapter-arrow" id="arrow-classification">▾</span></div>
+  <div class="nav-item nav-item-chapter" onclick="openChapter('classification','cov')"><span class="icon">📚</span> Supervised Classification<span class="chapter-arrow" id="arrow-classification" onclick="event.stopPropagation(); toggleChapter('classification')">▾</span></div>
   <div class="nav-chapter-items" id="chapter-classification">
     <div class="nav-item nav-item-sub" onclick="nav('cov')"><span class="icon">🏠</span> Overview</div>
     <div class="nav-item nav-item-sub" onclick="nav('w9')"  id="nav-w9" ><span class="icon">🎯</span> L1: Intro to Classification<span class="check" id="check-w9"></span></div>
@@ -290,7 +337,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('csheet')" id="nav-csheet"><span class="icon">📋</span> Classification Cheat Sheet</div>
   </div>
 
-  <div class="nav-item nav-item-chapter" onclick="toggleChapter('ensemble')"><span class="icon">📚</span> Ensemble Methods<span class="chapter-arrow" id="arrow-ensemble">▾</span></div>
+  <div class="nav-item nav-item-chapter" onclick="openChapter('ensemble','enov')"><span class="icon">📚</span> Ensemble Methods<span class="chapter-arrow" id="arrow-ensemble" onclick="event.stopPropagation(); toggleChapter('ensemble')">▾</span></div>
   <div class="nav-chapter-items" id="chapter-ensemble">
     <div class="nav-item nav-item-sub" onclick="nav('enov')"><span class="icon">🏠</span> Overview</div>
     <div class="nav-item nav-item-sub" onclick="nav('en1')" id="nav-en1"><span class="icon">🧩</span> L1: Intro to Ensembles<span class="check" id="check-en1"></span></div>
@@ -300,7 +347,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('ensheet')" id="nav-ensheet"><span class="icon">📋</span> Ensemble Cheat Sheet</div>
   </div>
 
-  <div class="nav-item nav-item-chapter" onclick="toggleChapter('prageval')"><span class="icon">📚</span> Pragmatic Model Evaluation<span class="chapter-arrow" id="arrow-prageval">▾</span></div>
+  <div class="nav-item nav-item-chapter" onclick="openChapter('prageval','peov')"><span class="icon">📚</span> Pragmatic Model Evaluation<span class="chapter-arrow" id="arrow-prageval" onclick="event.stopPropagation(); toggleChapter('prageval')">▾</span></div>
   <div class="nav-chapter-items" id="chapter-prageval">
     <div class="nav-item nav-item-sub" onclick="nav('peov')"><span class="icon">🏠</span> Overview</div>
     <div class="nav-item nav-item-sub" onclick="nav('pe1')" id="nav-pe1"><span class="icon">🏗️</span> L1: Hierarchical Validation<span class="check" id="check-pe1"></span></div>
@@ -311,7 +358,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('pesheet')" id="nav-pesheet"><span class="icon">📋</span> Pragmatic Eval Cheat Sheet</div>
   </div>
 
-  <div class="nav-item nav-item-chapter" onclick="toggleChapter('unsupervised')"><span class="icon">📚</span> Unsupervised Learning<span class="chapter-arrow" id="arrow-unsupervised">▾</span></div>
+  <div class="nav-item nav-item-chapter" onclick="openChapter('unsupervised','ulov')"><span class="icon">📚</span> Unsupervised Learning<span class="chapter-arrow" id="arrow-unsupervised" onclick="event.stopPropagation(); toggleChapter('unsupervised')">▾</span></div>
   <div class="nav-chapter-items" id="chapter-unsupervised">
     <div class="nav-item nav-item-sub" onclick="nav('ulov')"><span class="icon">🏠</span> Overview</div>
     <div class="nav-item nav-item-sub" onclick="nav('ul1')" id="nav-ul1"><span class="icon">🌐</span> L1: Fundamentals<span class="check" id="check-ul1"></span></div>
@@ -322,7 +369,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('ulsheet')" id="nav-ulsheet"><span class="icon">📋</span> Unsupervised Cheat Sheet</div>
   </div>
 
-  <div class="nav-item nav-item-chapter" onclick="toggleChapter('timeseries')"><span class="icon">📚</span> Time Series Analysis<span class="chapter-arrow" id="arrow-timeseries">▾</span></div>
+  <div class="nav-item nav-item-chapter" onclick="openChapter('timeseries','tsov')"><span class="icon">📚</span> Time Series Analysis<span class="chapter-arrow" id="arrow-timeseries" onclick="event.stopPropagation(); toggleChapter('timeseries')">▾</span></div>
   <div class="nav-chapter-items" id="chapter-timeseries">
     <div class="nav-item nav-item-sub" onclick="nav('tsov')"><span class="icon">🏠</span> Overview</div>
     <div class="nav-item nav-item-sub" onclick="nav('ts1')" id="nav-ts1"><span class="icon">📈</span> L1: Introduction to Time Series<span class="check" id="check-ts1"></span></div>
@@ -337,7 +384,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('tssheet')" id="nav-tssheet"><span class="icon">📋</span> Time Series Cheat Sheet</div>
   </div>
 
-  <div class="nav-item nav-item-chapter" onclick="toggleChapter('neural')"><span class="icon">📚</span> Neural Networks & Deep Learning<span class="chapter-arrow" id="arrow-neural">▾</span></div>
+  <div class="nav-item nav-item-chapter" onclick="openChapter('neural','nnov')"><span class="icon">📚</span> Neural Networks & Deep Learning<span class="chapter-arrow" id="arrow-neural" onclick="event.stopPropagation(); toggleChapter('neural')">▾</span></div>
   <div class="nav-chapter-items" id="chapter-neural">
     <div class="nav-item nav-item-sub" onclick="nav('nnov')"><span class="icon">🏠</span> Overview</div>
     <div class="nav-item nav-item-sub" onclick="nav('nn1')" id="nav-nn1"><span class="icon">🧠</span> L1: Neural Network Fundamentals<span class="check" id="check-nn1"></span></div>
@@ -351,7 +398,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('nnsheet')" id="nav-nnsheet"><span class="icon">📋</span> Neural Networks Cheat Sheet</div>
   </div>
 
-  <div class="nav-item nav-item-chapter" onclick="toggleChapter('explainability')"><span class="icon">📚</span> Model Explainability<span class="chapter-arrow" id="arrow-explainability">▾</span></div>
+  <div class="nav-item nav-item-chapter" onclick="openChapter('explainability','exov')"><span class="icon">📚</span> Model Explainability<span class="chapter-arrow" id="arrow-explainability" onclick="event.stopPropagation(); toggleChapter('explainability')">▾</span></div>
   <div class="nav-chapter-items" id="chapter-explainability">
     <div class="nav-item nav-item-sub" onclick="nav('exov')"><span class="icon">🏠</span> Overview</div>
     <div class="nav-item nav-item-sub" onclick="nav('ex1')" id="nav-ex1"><span class="icon">🧭</span> L1: Introduction to Explainability<span class="check" id="check-ex1"></span></div>
@@ -364,6 +411,12 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
   <div class="nav-item" onclick="nav('quiz')"><span class="icon">📝</span> Quiz</div>
   <div class="nav-item" onclick="nav('flashcards')"><span class="icon">🃏</span> Flashcards</div>
   <div class="nav-item" onclick="nav('progress')"><span class="icon">📊</span> My Progress</div>
+</div>
+
+<div id="scroll-progress"><div id="scroll-progress-fill"></div></div>
+<div id="prevnext">
+  <button id="pn-prev" onclick="pnGo(-1)" title="Previous lesson (←)">←</button>
+  <button id="pn-next" onclick="pnGo(1)" title="Next lesson (→)">→</button>
 </div>
 
 <div id="main">
@@ -383,6 +436,8 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
       <p>The ML Learning Hub is a self-contained interactive learning platform. It contains <strong>50+ lessons</strong> across 8 chapters, interactive quizzes, flashcards, and cheat sheets — all running in a single HTML file you can open in any browser, including on your phone. No install, no login, no internet required after the first load.</p>
     </div>
   </div>
+
+  <div id="home-progress"></div>
 
   <h3>How to use it</h3>
   <div class="card-grid">
@@ -565,6 +620,12 @@ encoder = <span class="fn">OneHotEncoder</span>()
 encoder.<span class="fn">fit</span>(data)          <span class="cm"># learn categories</span>
 encoder.<span class="fn">transform</span>(data)   <span class="cm"># convert to binary vectors</span></pre></div>
 
+  <div class="callout callout-pitfall">
+    <div class="callout-head">⚠️ Pitfall — don't label-encode unordered categories</div>
+    <p>It's tempting to map <code>red→0, green→1, blue→2</code> in one column. But that tells the model green is "between" red and blue, and blue is "twice" green — a <strong>fake numeric order</strong> that doesn't exist. Models will happily learn nonsense from it.</p>
+    <p><strong>Rule:</strong> one-hot for <em>nominal</em> (unordered) categories; integer/label encoding only for <em>ordinal</em> ones with a real order (<code>low &lt; medium &lt; high</code>). And beware <strong>high cardinality</strong> — one-hot encoding a "city" column with 5,000 values creates 5,000 columns; reach for frequency or target encoding instead.</p>
+  </div>
+
   <h3>Scaling Continuous Data</h3>
   <table>
     <tr><th>Method</th><th>Formula</th><th>Result</th><th>Use when</th></tr>
@@ -572,6 +633,24 @@ encoder.<span class="fn">transform</span>(data)   <span class="cm"># convert to 
     <tr><td><strong>MinMaxScaler</strong></td><td>(x − min) / (max − min)</td><td>Range [0, 1]</td><td>No outliers</td></tr>
     <tr><td><strong>RobustScaler</strong></td><td>(x − median) / IQR</td><td>Outlier-resistant</td><td>Data has outliers</td></tr>
   </table>
+
+  <div class="callout callout-intuition">
+    <div class="callout-head">💡 Intuition — why scaling matters</div>
+    <p>Many models judge features by their raw magnitude or by distance. If <code>salary</code> ranges 20,000–200,000 and <code>age</code> ranges 18–80, the model effectively hears salary <em>shouting</em> and age <em>whispering</em> — not because salary matters more, but because its numbers are bigger. Scaling puts every feature on equal footing so the model can weigh them on merit.</p>
+    <p><strong>Needs scaling:</strong> KNN, SVM, K-Means, PCA, neural nets, and regularised linear models. <strong>Doesn't care:</strong> decision trees and tree ensembles (they split one feature at a time, so units are irrelevant).</p>
+  </div>
+
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — StandardScaler by hand</div>
+    <p>Scale the column <code>[10, 20, 30, 40, 100]</code>:</p>
+    <div class="work">1. mean μ = (10+20+30+40+100) / 5 = 40
+2. deviations = [−30, −20, −10, 0, 60]
+3. variance = (900+400+100+0+3600) / 5 = 1000
+   std σ = √1000 ≈ 31.6
+4. z = (x − 40) / 31.6  →
+   [−0.95, −0.63, −0.32, 0.00, +1.90]</div>
+    <p>Notice the value <strong>100</strong> becomes <strong>+1.90</strong> — under 2 standard deviations away, so it's <em>not</em> an extreme outlier by the |z| &gt; 3 rule. (sklearn uses the population std, dividing by N, not N−1.)</p>
+  </div>
 
   <h3>Missing Data — Imputation</h3>
   <div class="card">
@@ -702,6 +781,22 @@ model = <span class="fn">LinearRegression</span>().<span class="fn">fit</span>(X
 poly = <span class="fn">PolynomialFeatures</span>(degree=<span class="nu">3</span>)
 X_poly = poly.<span class="fn">fit_transform</span>(X)  <span class="cm"># creates 1, x, x², x³ automatically</span></pre></div>
 
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — how a line becomes a curve</div>
+    <p>Take a single value <code>x = 3</code>. <code>PolynomialFeatures(degree=3)</code> expands it into four features:</p>
+    <div class="work">x  →  [ x⁰ , x¹ , x² , x³ ]
+3  →  [  1 ,  3 ,  9 , 27 ]
+
+prediction:  ŷ = w₀·1 + w₁·3 + w₂·9 + w₃·27</div>
+    <p>The model still computes a <strong>weighted sum</strong> — it's linear in the weights w. But because the <em>inputs</em> now include x², x³, the prediction traces a curve as x changes. That's the whole trick: feature engineering gives a "linear" model the power to bend.</p>
+  </div>
+
+  <div class="callout callout-pitfall">
+    <div class="callout-head">⚠️ Pitfall — degree explosion &amp; wild extrapolation</div>
+    <p><strong>Too many features:</strong> with several input features, <code>degree=3</code> also creates every cross-term (x₁x₂, x₁²x₂, …) — dozens to hundreds of columns that slow training and overfit.</p>
+    <p><strong>Extrapolation blows up:</strong> a high-degree fit can hug the training points perfectly, then rocket to ±∞ just outside their range. Keep degree low (2–3), <strong>scale after expanding</strong> (x³ dwarfs x in magnitude), and always check a held-out set.</p>
+  </div>
+
   <div class="card">
     <h4 style="margin-top:0">Data Augmentation</h4>
     <p>A related idea — artificially increasing training data by adding small variations or noise. Especially useful for images in neural networks. Helps models generalise better.</p>
@@ -778,6 +873,11 @@ X_poly = poly.<span class="fn">fit_transform</span>(X)  <span class="cm"># creat
   <h3>Gradient Descent Algorithm</h3>
   <p>Instead of trying random values, we use calculus to find which direction reduces MSE fastest and step in that direction repeatedly.</p>
 
+  <div class="callout callout-intuition">
+    <div class="callout-head">💡 Intuition — downhill in the fog</div>
+    <p>Picture standing on a foggy hillside, trying to reach the lowest point. You can't see the valley, but you can feel which way the ground slopes under your feet. So you take a step in the steepest downhill direction, feel again, and repeat. That's gradient descent: the <strong>gradient</strong> is the slope you feel, the <strong>learning rate</strong> is how big a step you take, and the <strong>minimum error</strong> is the valley floor.</p>
+  </div>
+
   <table>
     <tr><th>Element</th><th>Description</th><th>Typical value</th></tr>
     <tr><td><strong>Gradient</strong></td><td>Direction to step (from derivative of MSE)</td><td>Calculated each iteration</td></tr>
@@ -796,6 +896,26 @@ eta = <span class="nu">0.0001</span>
     D_b = (-<span class="nu">2</span>/n) * <span class="fn">sum</span>(y - y_pred)
     w = w - eta * D_w
     b = b - eta * D_b</pre></div>
+
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — one gradient descent step by hand</div>
+    <p>Three points <code>(1,2), (2,4), (3,6)</code> (true line is y = 2x). Start at <code>w=0, b=0</code> with <code>η=0.1</code>:</p>
+    <div class="work">1. predict  ŷ = w·x + b      = [0, 0, 0]
+2. errors   (y − ŷ)          = [2, 4, 6]
+3. gradients
+   D_w = −2/3 · (1·2 + 2·4 + 3·6) = −2/3 · 28 = −18.7
+   D_b = −2/3 · (2 + 4 + 6)       = −2/3 · 12 = −8.0
+4. step downhill  (w ← w − η·D_w)
+   w = 0 − 0.1·(−18.7) = +1.87
+   b = 0 − 0.1·(−8.0)  = +0.80</div>
+    <p>In a single step the slope <strong>w jumped from 0 to 1.87</strong> — already most of the way to the true value of 2. Repeat the loop thousands of times and w, b settle at the best-fit line. The negative gradients pushed the weights <em>up</em>, exactly toward where the error is lower.</p>
+  </div>
+
+  <div class="callout callout-pitfall">
+    <div class="callout-head">⚠️ Pitfall — the learning rate is make-or-break</div>
+    <p><strong>Too big:</strong> each step overshoots the valley and bounces <em>higher</em> each time until the loss explodes to <code>NaN</code>. <strong>Too small:</strong> you'll wait forever. Diagnose from the loss: rising/oscillating → lower η; crawling down → raise it.</p>
+    <p><strong>Scale your features first.</strong> If one feature is 1000× another, the loss surface becomes a long, thin ravine that gradient descent zig-zags down painfully slowly. (OLS in the next lesson sidesteps the learning rate entirely.)</p>
+  </div>
 
   <h3>R² — Coefficient of Determination</h3>
   <div class="card">
@@ -868,6 +988,11 @@ eta = <span class="nu">0.0001</span>
     <div class="card"><div class="key-concept"><div class="label">(XᵀX)⁻¹</div><p>Matrix inverse — the matrix equivalent of dividing.</p></div></div>
   </div>
 
+  <div class="callout callout-intuition">
+    <div class="callout-head">💡 Intuition — go straight to the bottom of the bowl</div>
+    <p>The MSE loss for a linear model is a smooth bowl (a paraboloid) with exactly one lowest point. Gradient descent <em>walks</em> down to it step by step. OLS uses calculus instead: it sets the derivative of the loss to zero and <strong>solves that equation directly</strong> — landing on the exact bottom in one shot, no learning rate, no iterations. That's what <code>(XᵀX)⁻¹Xᵀy</code> is: the closed-form answer to "where is the slope zero?"</p>
+  </div>
+
   <h3>OLS in Python</h3>
   <div class="code-block"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
 
@@ -876,6 +1001,23 @@ X = np.<span class="fn">hstack</span>((np.<span class="fn">ones</span>((n, <span
 beta = np.linalg.<span class="fn">inv</span>(X.T @ X) @ np.<span class="fn">dot</span>(X.T, y)
 
 Y_pred = X @ beta  <span class="cm"># predictions</span></pre></div>
+
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — reading the coefficients</div>
+    <p>Say OLS fits a house-price model and returns these weights:</p>
+    <div class="work">price = 50,000  +  1,200·area  −  3,000·age</div>
+    <p>Read each coefficient as <strong>"holding everything else fixed":</strong></p>
+    <p>• <code>+1,200</code> → each extra m² of area adds £1,200.<br>
+       • <code>−3,000</code> → each extra year of age subtracts £3,000.<br>
+       • <code>50,000</code> → the intercept: a (hypothetical) house of area 0, age 0.</p>
+    <p>Predict an 80 m², 5-year-old house: <code>50,000 + 1,200·80 − 3,000·5 = 50,000 + 96,000 − 15,000 = <strong>£131,000</strong></code>.</p>
+  </div>
+
+  <div class="callout callout-pitfall">
+    <div class="callout-head">⚠️ Pitfall — when OLS misbehaves</div>
+    <p><strong>Multicollinearity:</strong> if two features are highly correlated (e.g. "area in m²" and "area in ft²"), <code>XᵀX</code> becomes nearly non-invertible — coefficients swing wildly and flip sign with tiny data changes. Drop one, or use Ridge.</p>
+    <p><strong>Outliers:</strong> OLS minimises <em>squared</em> error, so a single extreme point can yank the whole line toward it. <strong>Scale:</strong> the matrix inverse is O(d³) in the number of features — fine for tabular data, but gradient descent wins on very wide or huge datasets.</p>
+  </div>
 
   <h3>Using Statsmodels for Hypothesis Testing</h3>
   <div class="code-block"><pre><span class="kw">import</span> statsmodels.api <span class="kw">as</span> sm
@@ -980,6 +1122,15 @@ model.<span class="fn">score</span>(X_test, y_test)        <span class="cm"># ev
     <p class="fig-caption">As complexity grows, training error keeps falling — but test error follows a U: it drops, bottoms out at the <strong>sweet spot</strong>, then climbs as the model starts memorising noise. The goal is the bottom of the test curve, not the bottom of the train curve.</p>
   </div>
 
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — diagnose from the two scores</div>
+    <p>You don't guess at bias vs variance — you read it straight off the train and test scores:</p>
+    <div class="work">Model A:  train R² 0.95 | test R² 0.55  → big gap   → OVERFIT
+Model B:  train R² 0.62 | test R² 0.60  → both low  → UNDERFIT
+Model C:  train R² 0.88 | test R² 0.85  → both high → GOOD ✓</div>
+    <p><strong>A</strong> memorised the training set → add regularisation, cut features, or get more data. <strong>B</strong> is too simple → add features, raise the polynomial degree, or lower λ. <strong>C</strong> generalises → ship it. The <em>gap</em> tells you the direction to move.</p>
+  </div>
+
   <div class="fig-grid">
     <div class="figure">
       <div class="fig-title" style="color:#f87171">Underfitting</div>
@@ -1045,6 +1196,12 @@ lasso = <span class="fn">Lasso</span>(alpha=<span class="nu">0.5</span>)   <span
 ridge.<span class="fn">fit</span>(X_train, y_train)
 ridge.<span class="fn">predict</span>(X_test)</pre></div>
 
+  <div class="callout callout-pitfall">
+    <div class="callout-head">⚠️ Pitfall — always scale before Ridge/Lasso</div>
+    <p>The penalty <code>λ·Σβ²</code> treats every coefficient equally. But a feature measured in small units (e.g. <code>area</code> in km²) needs a <em>large</em> coefficient, while one in big units (area in m²) needs a tiny one — so the penalty unfairly crushes the first and ignores the second. The model ends up penalising features for their <strong>units</strong>, not their importance.</p>
+    <p><strong>Fix:</strong> <code>StandardScaler</code> before fitting (ideally inside a Pipeline) so every feature is on the same scale and the penalty is fair. Plain OLS doesn't need this — only regularised models do.</p>
+  </div>
+
   <p><strong>λ (called <code>alpha</code> in sklearn)</strong> is the strength dial — how heavily large weights are penalised:</p>
   <table>
     <tr><th>λ setting</th><th>Effect on weights</th><th>Result</th></tr>
@@ -1081,6 +1238,13 @@ ridge.<span class="fn">predict</span>(X_test)</pre></div>
   <h3>The Error Term</h3>
   <p>Every linear model has: <strong>y = wx + b + ε</strong>. The error ε represents everything the model cannot explain. If the model is correct, ε is pure random noise — no pattern at all. The 5 assumptions describe what ε should look like.</p>
 
+  <div class="callout callout-intuition">
+    <div class="callout-head">💡 Intuition — assumptions are the fine print</div>
+    <p>A linear model will <em>always</em> hand you coefficients and p-values — even on garbage. The assumptions are the "terms and conditions" that decide whether you can <strong>trust</strong> those numbers. Crucially: there are two different jobs:</p>
+    <p>• <strong>Prediction</strong> ("what will y be?") — fairly forgiving; mild violations still predict OK.<br>
+       • <strong>Inference</strong> ("is this feature significant? what's the confidence interval?") — fragile; if the assumptions break, the p-values and intervals are <em>lies</em>.</p>
+  </div>
+
   <h3>The 5 Assumptions</h3>
 
   <div class="card" style="margin-bottom:10px">
@@ -1107,6 +1271,22 @@ ridge.<span class="fn">predict</span>(X_test)</pre></div>
     <h4 style="margin-top:0; color:var(--red)">5. No Multicollinearity</h4>
     <p>Input features should not be highly correlated with each other.</p>
     <p><strong>Check:</strong> correlation heatmap — values above 0.7 or below −0.7 are problematic. <strong>Fix:</strong> remove one feature, use PCA, or use Lasso.</p>
+  </div>
+
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — what a residual actually is</div>
+    <p>A residual is simply <code>actual − predicted</code> (your estimate of ε for that row):</p>
+    <div class="work">actual y    = [120,  95, 140]
+predicted ŷ = [100, 105, 138]
+residual    = [+20, −10,  +2]   (y − ŷ)</div>
+    <p>Then you <strong>plot residuals against the predictions</strong> and look for patterns. Random scatter around 0 = healthy. A curve, a fan/funnel, or a trend means the model is systematically wrong somewhere — a violated assumption you can see with your eyes.</p>
+  </div>
+
+  <div class="callout callout-pitfall">
+    <div class="callout-head">⚠️ Pitfall — common assumption mistakes</div>
+    <p>• <strong>Check the residuals, not the raw features.</strong> Linearity, equal variance, and normality are all about the <em>errors</em> after fitting — not the input columns.<br>
+       • <strong>Don't panic over mild non-normality</strong> if you only care about prediction — it mostly hurts inference.<br>
+       • <strong>Multicollinearity</strong> doesn't bias predictions, but it inflates coefficient variance — so "which feature matters" becomes unreliable even when the model predicts fine.</p>
   </div>
 
   <h3>Diagnosing with Residual Plots</h3>
@@ -1169,6 +1349,11 @@ ridge.<span class="fn">predict</span>(X_test)</pre></div>
 
   <h3>Why sklearn?</h3>
   <p>sklearn contains hundreds of ML algorithms all sharing the same interface. This means you can swap models with almost no code changes — the same 5-step pattern works for everything.</p>
+
+  <div class="callout callout-intuition">
+    <div class="callout-head">💡 Intuition — one universal remote</div>
+    <p>Every estimator speaks the same three verbs: <code>.fit()</code> to learn, <code>.predict()</code> to apply, <code>.score()</code> to grade. Learn that one "remote" and you can drive a linear model, a random forest, or a neural network without relearning anything. The job stops being "how do I call this model?" and becomes "which model, and with what hyperparameters?" — which is where your judgment actually matters.</p>
+  </div>
 
   <h3>The Universal Pattern</h3>
   <div class="code-block"><pre><span class="cm"># 1. Import</span>
@@ -1255,6 +1440,19 @@ model = <span class="fn">MLPRegressor</span>()
 model.<span class="fn">fit</span>(X_train, y_train)
 model.<span class="fn">predict</span>(X_test)
 model.<span class="fn">score</span>(X_test, y_test)</pre></div>
+
+  <div class="callout callout-pitfall">
+    <div class="callout-head">⚠️ Pitfall — <code>fit_transform</code> on train, <code>transform</code> on test</div>
+    <p>The single most common leakage bug. A transformer (scaler, PCA, encoder) must <strong>learn its statistics from training data only</strong>, then apply them to the test data:</p>
+    <div class="work">✓ RIGHT
+  X_train = scaler.fit_transform(X_train)   # learn μ,σ AND apply
+  X_test  = scaler.transform(X_test)        # apply train's μ,σ
+
+✗ WRONG
+  X = scaler.fit_transform(X)               # learns from test too
+  X_train, X_test = split(X)                # → leakage, inflated score</div>
+    <p>If you call <code>fit</code> (or <code>fit_transform</code>) on the test set, its values leak into the transformation and your reported score becomes a fantasy. The safe habit: wrap everything in a <code>Pipeline</code> so sklearn enforces this for you.</p>
+  </div>
 
   <div class="alert alert-warn">⚠️ sklearn makes it easy to use models without understanding them. The theory you've built over 8 lessons is what separates good ML from dangerous ML.</div>
 
@@ -1392,6 +1590,21 @@ x_pca = pca.<span class="fn">transform</span>(scaled_data)
 <span class="cm"># → [0.4427, 0.6324]</span></pre></div>
 
   <div class="card"><div class="key-concept"><div class="label">What 63% means</div><p>With just 2 numbers per patient (instead of 30), we keep 63% of all the variation in the original data. That's enough to visually separate malignant from benign tumours in a scatter plot — something impossible with raw 30-feature data.</p></div></div>
+
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — how many components to keep</div>
+    <p>Say the first six components explain:</p>
+    <div class="work">explained_variance_ratio_ = [.44, .19, .09, .06, .05, .04]
+cumulative (.cumsum())    = [.44, .63, .72, .78, .83, .87]</div>
+    <p>Pick a target — say "keep ≥ 80% of the variance" — and read off the first point the cumulative line crosses it: that's <strong>K = 5</strong> (cumulative .83). You compressed many features to 5 while keeping 83% of the information. Shortcut: <code>PCA(n_components=0.80)</code> lets sklearn choose K for you.</p>
+  </div>
+
+  <div class="callout callout-pitfall">
+    <div class="callout-head">⚠️ Pitfall — PCA throws away interpretability (and sometimes signal)</div>
+    <p>• <strong>Components aren't your features.</strong> PC1 is a blend of all 30 originals, so "which gene matters" becomes "which <em>mixture</em> matters." Don't use PCA when you need to explain individual features to stakeholders.<br>
+       • <strong>Always scale first</strong> — an unscaled large-unit feature hijacks the variance and dominates PC1.<br>
+       • <strong>PCA is unsupervised:</strong> it keeps high-<em>variance</em> directions, which aren't always the ones that separate your classes. Occasionally the low-variance component you discarded was the one that predicted the label.</p>
+  </div>
 
   <h3>Step 5 — Visualise the Result</h3>
   <div class="code-block"><pre>plt.<span class="fn">figure</span>(figsize=(<span class="nu">8</span>, <span class="nu">6</span>))
@@ -2176,6 +2389,11 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
     <p class="fig-caption">Every classifier carves feature space into regions. Simple models draw a straight boundary (left); flexible models bend it to fit complex class shapes (right). 🔵 = class A, 🔴 = class B.</p>
   </div>
 
+  <div class="callout callout-intuition">
+    <div class="callout-head">💡 Intuition — two ways to tell cats from dogs</div>
+    <p>A <strong>discriminative</strong> model learns the <em>border</em>: "anything above this line is a dog." It only cares where classes differ. A <strong>generative</strong> model learns what each class <em>looks like</em> ("here's the typical cat, here's the typical dog"), then asks "which does this new animal resemble more?" via Bayes' Rule. Discriminative usually wins on raw accuracy with lots of data; generative needs less data and can even invent new examples.</p>
+  </div>
+
   <h3>Two Families of Classifiers</h3>
   <p>The most important conceptual split in classification. Both families produce decision boundaries, but they get there differently.</p>
   <div class="card-grid">
@@ -2226,6 +2444,19 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
     <tr><td><code>P(y)</code></td><td>Prior</td><td>How common is class y overall? Estimated from class frequencies</td></tr>
     <tr><td><code>P(x)</code></td><td>Normalisation</td><td>Makes probabilities sum to 1 — same for all classes, so often ignored</td></tr>
   </table>
+
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — Bayes' Rule with real numbers</div>
+    <p>A disease affects <strong>1%</strong> of people. A test is <strong>90%</strong> sensitive (catches sick people) and has a <strong>9%</strong> false-positive rate. You test positive — what's the chance you're actually sick?</p>
+    <div class="work">P(sick)            = 0.01      P(well) = 0.99
+P(+ | sick)        = 0.90
+P(+ | well)        = 0.09
+
+P(+) = 0.90·0.01 + 0.09·0.99 = 0.009 + 0.089 = 0.098
+P(sick | +) = P(+|sick)·P(sick) / P(+)
+            = 0.009 / 0.098 ≈ 0.092  →  ~9%</div>
+    <p>Only <strong>9%</strong> — wildly lower than the test's 90% sensitivity! Because the disease is so rare, the false positives from the huge healthy group swamp the true positives. This is exactly how a generative classifier reasons: combine the <em>prior</em> (how common) with the <em>likelihood</em> (how the evidence looks).</p>
+  </div>
 
   <h3>Real-World Classification Tasks</h3>
   <table>
@@ -2287,6 +2518,25 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
     </div>
   </div>
   <p>This is "naive" because it's almost never true in reality — word frequencies in emails are correlated, flight delay types are correlated. But it works surprisingly well anyway, because even imperfect probability estimates tend to rank the right class highest.</p>
+
+  <div class="callout callout-intuition">
+    <div class="callout-head">💡 Intuition — why "naive" still works</div>
+    <p>"Naive" means the model pretends every feature is independent given the class. That's almost always false — in spam, "free" and "money" clearly travel together. Yet Naive Bayes is shockingly effective, because <strong>classification only needs the right class to win</strong>, not perfectly accurate probabilities. Even if the multiplied numbers are off, the <em>ranking</em> of classes usually stays correct, so the winner doesn't flip.</p>
+  </div>
+
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — classify an email as spam</div>
+    <p>An email contains the words <code>{free, money}</code>. Training data gave these probabilities:</p>
+    <div class="work">P(spam)=0.4   P(free|spam)=0.8   P(money|spam)=0.5
+P(ham) =0.6   P(free|ham) =0.1   P(money|ham) =0.05
+
+multiply prior × each likelihood (the "naive" step):
+score(spam) = 0.4 · 0.8 · 0.5  = 0.160
+score(ham)  = 0.6 · 0.1 · 0.05 = 0.003
+
+normalise: P(spam | email) = 0.160 / (0.160 + 0.003) ≈ 0.98</div>
+    <p>Spam wins decisively (0.16 vs 0.003) → <strong>~98% spam</strong>. You just multiply the prior by one likelihood per word — that product <em>is</em> the naive assumption in action.</p>
+  </div>
 
   <h3>Gaussian Naive Bayes — For Continuous Features</h3>
   <p>When features are continuous numbers (like distance, delay minutes, salary), Naive Bayes models each feature per class as a Gaussian (bell curve). During training it simply calculates the mean and standard deviation of each feature separately for each class.</p>
@@ -2493,6 +2743,17 @@ sns.<span class="fn">displot</span>(log_proba[:, <span class="nu">1</span>])</pr
     <tr><td>z → −∞</td><td>→ 0</td><td>Very strong signal for class 0</td></tr>
   </table>
 
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — from weights to a probability to a loss</div>
+    <p>Model has weights <code>w = [1.5, −0.8]</code>, bias <code>b = 0.2</code>. A patient has features <code>x = [2, 1]</code> and is truly class 1 (y=1):</p>
+    <div class="work">z = w·x + b = 1.5·2 + (−0.8)·1 + 0.2 = 2.4
+σ(z) = 1 / (1 + e^−2.4) = 1 / (1 + 0.091) ≈ 0.92
+
+predicted P(class 1) = 0.92  →  with threshold 0.5, predict 1 ✓
+log-loss = −ln(0.92) ≈ 0.083   (small — confident & correct)</div>
+    <p>Now suppose the truth had been class 0. The loss becomes <code>−ln(1 − 0.92) = −ln(0.08) ≈ 2.5</code> — <strong>30× larger</strong>. That's binary cross-entropy punishing a confident, wrong prediction far more harshly than a hesitant one.</p>
+  </div>
+
   <h3>Thresholding — Probability → Class</h3>
   <div class="card-grid">
     <div class="card"><div class="key-concept"><div class="label">P(y=1) ≥ 0.5 → class 1</div><p>Default threshold. Since σ(z) ≥ 0.5 iff z ≥ 0, the decision boundary is simply wᵀx + b = 0.</p></div></div>
@@ -2618,6 +2879,12 @@ sns.<span class="fn">displot</span>(log_proba[:, <span class="nu">1</span>])</pr
   <h3>The Decision Boundary</h3>
   <p>The prediction flips at σ(z) = 0.5, which means z = 0. So the decision boundary is <strong>wᵀx + b = 0</strong> — always linear. Logistic regression cannot learn curved boundaries natively. For that you need polynomial features (L3) or a different model (L12+).</p>
 
+  <div class="callout callout-pitfall">
+    <div class="callout-head">⚠️ Pitfall — perfect separation &amp; unscaled features</div>
+    <p><strong>Perfect separation:</strong> if a feature splits the classes cleanly, the optimiser can keep growing its weight toward ∞ to push the sigmoid into a hard step — coefficients explode and you may see a <code>ConvergenceWarning</code>. The cure is regularisation (keep <code>C</code> finite), which is on by default in sklearn.</p>
+    <p><strong>Scale your features</strong> (gradient descent converges far faster), and remember the boundary is always a straight line — judge a curvy problem with a curvy model, not by forcing logistic regression.</p>
+  </div>
+
   <h3>Full sklearn Example</h3>
   <div class="code-block"><pre><span class="kw">from</span> sklearn.linear_model <span class="kw">import</span> LogisticRegression
 <span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
@@ -2680,6 +2947,20 @@ model.<span class="fn">fit</span>(X_train, y_train)
     <tr><td><strong>F1 Score</strong></td><td>2·(P·R)/(P+R)</td><td>Harmonic mean of both — penalises imbalance between them</td></tr>
   </table>
 
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — all four metrics from one matrix</div>
+    <p>A fraud detector is tested on 1,000 transactions (only 50 are fraud). It flags 60 as fraud; 40 of those are real fraud:</p>
+    <div class="work">                Predicted Fraud   Predicted OK
+Actual Fraud          TP = 40         FN = 10
+Actual OK             FP = 20         TN = 930
+
+Accuracy  = (40+930) / 1000        = 0.97   (97%!)
+Precision = 40 / (40+20)           = 0.67
+Recall    = 40 / (40+10)           = 0.80
+F1        = 2·(0.67·0.80)/(0.67+0.80) ≈ 0.73</div>
+    <p><strong>97% accuracy looks great — but it's a lie.</strong> A model that flagged <em>nothing</em> would score 95% (950/1000). Precision 0.67 says a third of fraud alerts are false alarms; recall 0.80 says it misses 1 in 5 real frauds. F1 (0.73) gives the honest single-number summary.</p>
+  </div>
+
   <h3>How to Read F1 Score</h3>
   <p>F1 ranges from 0 to 1. But context matters more than the number — always compare against a sensible baseline.</p>
   <table>
@@ -2693,6 +2974,11 @@ model.<span class="fn">fit</span>(X_train, y_train)
   <div class="key-concept">
     <div class="label">F1 punishes imbalance</div>
     <p>Precision=0.99, Recall=0.10 → F1 ≈ 0.18 (heavily penalised). Precision=0.90, Recall=0.90 → F1 = 0.90. A high F1 means the model is neither spamming false alarms nor missing too many positives — it's doing both jobs simultaneously.</p>
+  </div>
+
+  <div class="callout callout-pitfall">
+    <div class="callout-head">⚠️ Pitfall — pick the metric from the cost of mistakes</div>
+    <p>There is no universal "best" metric — it depends on which error hurts more. <strong>Cancer screening:</strong> a false negative (missed tumour) can be fatal → optimise <em>recall</em>. <strong>Spam filter:</strong> a false positive (a real job offer binned) is costly → optimise <em>precision</em>. Reaching for accuracy by default is the classic rookie mistake on imbalanced data. Also note: F1 ignores true negatives entirely, so it only describes performance on the positive (usually rare) class.</p>
   </div>
 
   <h3>Precision–Recall Tradeoff</h3>
@@ -2932,6 +3218,26 @@ y_prob = model.<span class="fn">predict_proba</span>(X_test)[:, <span class="nu"
   </div>
   <p>The tree tries every feature and every threshold, picks the combination with the highest Gini gain — meaning the children are as pure as possible.</p>
 
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — score a split with Gini gain</div>
+    <p>A node has <strong>10 samples: 5 yes, 5 no</strong> (maximally mixed). A candidate split sends them to two children:</p>
+    <div class="work">Parent G(S) = 1 − (5/10)² − (5/10)² = 1 − 0.25 − 0.25 = 0.50
+
+Left child  (4 samples: 4 yes, 0 no):
+  G(S₁) = 1 − (4/4)² − (0/4)² = 0      ← pure!
+Right child (6 samples: 1 yes, 5 no):
+  G(S₂) = 1 − (1/6)² − (5/6)² = 1 − 0.028 − 0.694 = 0.278
+
+weighted child impurity = (4/10)·0 + (6/10)·0.278 = 0.167
+Gini gain = 0.50 − 0.167 = 0.333</div>
+    <p>The split cut impurity from 0.50 to 0.167 — a gain of <strong>0.333</strong>. The tree computes this for <em>every</em> feature and threshold and greedily keeps the highest-gain one. A perfectly clean split (both children pure) would give the maximum possible gain of 0.50.</p>
+  </div>
+
+  <div class="callout callout-pitfall">
+    <div class="callout-head">⚠️ Pitfall — a single tree overfits and is unstable</div>
+    <p>Left unconstrained, a tree keeps splitting until every leaf is pure — memorising the training set (100% train accuracy, poor test accuracy). And trees are <strong>high-variance</strong>: change a few rows and the whole structure can rearrange. Control depth with <code>max_depth</code> / <code>min_samples_leaf</code>, and prefer a Random Forest (next lesson) when you want stability.</p>
+  </div>
+
   <h3>Information Gain — The Alternative</h3>
   <p>Instead of Gini, you can measure node impurity using <strong>Entropy</strong>. The goal flips: <strong>maximise information gain</strong> (reduction in entropy).</p>
   <div class="card-grid">
@@ -3140,6 +3446,27 @@ plt.<span class="fn">tight_layout</span>(); plt.<span class="fn">show</span>()</
     </div>
   </div>
 
+  <div class="callout callout-intuition">
+    <div class="callout-head">💡 Intuition — the wisdom of crowds</div>
+    <p>Ask one person to guess the weight of an ox and you get one biased guess. Ask 500 people and <em>average</em> their guesses — it's uncannily accurate, because individual errors point in random directions and cancel, while the shared truth reinforces. A random forest is that crowd: hundreds of trees, each trained on a different slice of data and features, voting together. The catch (and the whole design goal) is that the crowd must be <strong>diverse</strong> — 500 identical guesses tell you nothing new.</p>
+  </div>
+
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — why a crowd beats one tree</div>
+    <p>Say each tree is only <strong>70%</strong> accurate. Take 3 of them and majority-vote (need ≥2 right):</p>
+    <div class="work">P(all 3 right)     = 0.7³           = 0.343
+P(exactly 2 right) = 3 · 0.7² · 0.3 = 0.441
+P(majority right)  = 0.343 + 0.441  = 0.784   → 78%</div>
+    <p>Three mediocre 70% trees became a <strong>78%</strong> ensemble — and 100 trees push it far higher. But this maths assumes their errors are <em>independent</em>. If every tree makes the same mistakes, averaging achieves nothing — which is exactly why Random Forest adds feature randomness to decorrelate them.</p>
+  </div>
+
+  <div class="callout callout-pitfall">
+    <div class="callout-head">⚠️ Pitfall — not a magic bullet</div>
+    <p>• <strong>Can't extrapolate:</strong> a forest predicts a flat constant outside the range of its training data — useless for trending time series.<br>
+       • <strong>Correlated trees barely help:</strong> if one feature dominates every tree, variance hardly drops (feature randomness mitigates this).<br>
+       • <strong>You lose interpretability:</strong> you trade one readable flowchart for hundreds of trees — reach for SHAP/feature-importance to explain it.</p>
+  </div>
+
   <h3>Random Forests = Bagging + Feature Randomness</h3>
   <p>Random Forests add one extra step: at each split, only a <strong>random subset of features</strong> is considered. This decorrelates the trees — if one feature dominates, not all trees will rely on it.</p>
   <div class="card-grid">
@@ -3314,6 +3641,23 @@ rf.<span class="fn">score</span>(X_test, y_test)
     <tr><td><strong>Minkowski</strong></td><td>(Σ|xᵢ−yᵢ|ᵖ)^(1/p)</td><td>Generalisation — Euclidean when p=2, Manhattan when p=1</td></tr>
   </table>
 
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — classify a point with k=3</div>
+    <p>New point <code>q = (5, 5)</code>. Five training points with their classes:</p>
+    <div class="work">A=(4,4) 🔵   B=(6,5) 🔴   C=(5,7) 🔵   D=(7,6) 🔴   E=(3,5) 🔵
+
+Euclidean distance from q=(5,5):
+  B: √(1²+0²) = 1.00   ← nearest
+  A: √(1²+1²) = 1.41
+  C: √(0²+2²) = 2.00
+  E: √(2²+0²) = 2.00
+  D: √(2²+1²) = 2.24
+
+k=3 nearest → B 🔴 , A 🔵 , C 🔵
+vote: 2 blue vs 1 red  →  predict 🔵</div>
+    <p>That's the entire algorithm: measure distance to every point, take the k closest, count the votes. No training, no equation — just memory and arithmetic at prediction time.</p>
+  </div>
+
   <h3>⚠️ Critical: Feature Scaling is Mandatory</h3>
   <p>KNN decides "nearest" purely by distance. Without scaling, large-range features completely drown out small-range ones.</p>
   <div class="card">
@@ -3477,6 +3821,29 @@ SVM               → the unique line sitting in the exact middle of the widest 
     <div class="key-concept"><div class="label">The maths behind the margin</div>
       <p>The hyperplane is <strong>w · x + b = 0</strong>. The two margin edges sit at <strong>w · x + b = +1</strong> and <strong>w · x + b = −1</strong>. The margin width = <strong>2 / ‖w‖</strong>. Maximising the margin means minimising ‖w‖ — a convex quadratic optimisation with a unique global solution.</p>
     </div>
+  </div>
+
+  <div class="callout callout-intuition">
+    <div class="callout-head">💡 Intuition — the widest street</div>
+    <p>Infinitely many lines separate two classes. SVM picks the one that carves the <strong>widest possible street</strong> between them — the boundary runs down the centre line, and the kerbs (margin edges) just touch the nearest points of each class. A wide street is a confident decision: a noisy new point has room to spare before it crosses to the wrong side.</p>
+  </div>
+
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — margin width &amp; classifying a point</div>
+    <p>Suppose training found <code>w = [3, 4]</code>, <code>b = −12</code>:</p>
+    <div class="work">‖w‖ = √(3² + 4²) = 5
+margin width = 2 / ‖w‖ = 2 / 5 = 0.40
+
+classify q = (2, 2):
+  w·q + b = 3·2 + 4·2 − 12 = 6 + 8 − 12 = +2
+  +2 > 0  → class +1
+  |+2| ≥ 1 → comfortably outside the margin (not a support vector)</div>
+    <p>A point sitting <em>exactly</em> on a margin edge would give <code>w·x + b = ±1</code> — those are the support vectors. Everything else could be deleted and the boundary wouldn't move.</p>
+  </div>
+
+  <div class="callout callout-pitfall">
+    <div class="callout-head">⚠️ Pitfall — scale first, and watch C &amp; dataset size</div>
+    <p>SVM is built on distances and margins, so <strong>unscaled features wreck it</strong> — a large-range feature dominates ‖w‖. Always <code>StandardScaler</code> first. <code>C</code> is the dial: small C = wider margin, more tolerant (risks underfit); large C = narrow margin, fits training hard (risks overfit). And kernel SVMs are O(n²–n³) — fine for thousands of rows, painful for millions (use <code>LinearSVC</code> or another model there).</p>
   </div>
 
   <h3>Support Vectors — The Only Points That Matter</h3>
@@ -3738,6 +4105,22 @@ X_test  = scaler.<span class="fn">transform</span>(X_test)          <span class=
     <div class="card"><div class="key-concept"><div class="label">StratifiedKFold</div><p>Each fold preserves the same class proportion as the full dataset. Essential for imbalanced classification — ensures rare classes appear in every fold.</p></div></div>
   </div>
   <p>Typical choices: k=5 or k=10. Larger k = less biased estimate, more compute. Standard deviation across folds tells you how stable the model is — high std means results depend heavily on which data it saw.</p>
+
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — read CV as mean ± std</div>
+    <p>5-fold CV returns these accuracies. Always report the spread, not just the average:</p>
+    <div class="work">Model A folds: [0.81, 0.83, 0.80, 0.82, 0.84]
+  mean = 0.82,  std = 0.014   →  0.82 ± 0.01   (stable ✓)
+
+Model B folds: [0.88, 0.72, 0.91, 0.69, 0.90]
+  mean = 0.82,  std = 0.097   →  0.82 ± 0.10   (volatile ✗)</div>
+    <p>Both average <strong>82%</strong> — but A is dependable while B's score swings wildly with the data it happens to see. A single train/test split might have shown you only B's lucky 0.91 fold and fooled you. The std is the honesty check.</p>
+  </div>
+
+  <div class="callout callout-pitfall">
+    <div class="callout-head">⚠️ Pitfall — preprocessing inside the CV loop, not before</div>
+    <p>If you scale (or impute, or select features) on the <em>whole</em> dataset and <em>then</em> run cross-validation, every fold's "test" portion already influenced the scaler — that's leakage, and your CV score is optimistic. The fix: put preprocessing in a <code>Pipeline</code> and pass the pipeline to <code>cross_val_score</code>, so each fold re-fits the scaler on its own training data only.</p>
+  </div>
 
   <h3>cross_validate — All Metrics in One Call</h3>
   <p>Instead of writing loops manually, <code>cross_validate</code> handles splitting, training, and evaluating for you across all folds.</p>
@@ -4011,6 +4394,28 @@ Win counts: headlamps=4, float=4, containers=3, tableware=3 ...</span>
     <tr><td>Works well when</td><td>Classes well-separated</td><td>Classes overlap, small dataset</td></tr>
     <tr><td>sklearn default</td><td>Yes</td><td>Via OneVsOneClassifier wrapper</td></tr>
   </table>
+
+  <div class="callout callout-example">
+    <div class="callout-head">🧮 Worked example — softmax turns scores into probabilities</div>
+    <p>A 3-class model outputs raw scores (logits) <code>[2.0, 1.0, 0.1]</code> for <code>[cat, dog, bird]</code>. Softmax exponentiates and normalises:</p>
+    <div class="work">exponentiate:  e^2.0=7.39   e^1.0=2.72   e^0.1=1.11
+sum = 7.39 + 2.72 + 1.11 = 11.22
+
+probabilities:
+  cat  = 7.39 / 11.22 = 0.66
+  dog  = 2.72 / 11.22 = 0.24
+  bird = 1.11 / 11.22 = 0.10        (sum = 1.00 ✓)
+
+predict argmax → cat (66%)</div>
+    <p>Unlike One-vs-Rest, softmax probabilities <strong>sum to 1</strong>, so they're directly comparable across classes. This is how multinomial logistic regression and neural-network classifiers produce their final output.</p>
+  </div>
+
+  <div class="callout callout-pitfall">
+    <div class="callout-head">⚠️ Pitfall — OvR scores, OvO cost, and imbalance</div>
+    <p>• <strong>OvR confidences aren't true probabilities</strong> and don't sum to 1 — comparing them across classifiers is slightly apples-to-oranges (softmax avoids this).<br>
+       • <strong>OvO explodes:</strong> K(K−1)/2 classifiers — that's 45 models for 10 classes.<br>
+       • <strong>Imbalance compounds</strong> across many classes; a rare class gets drowned. Use stratified splits and <em>macro</em>-averaged metrics so small classes still count.</p>
+  </div>
 
   <h3>Evaluating Multiclass Models</h3>
   <p>Accuracy collapses everything to one number — it hides which classes are failing. You need per-class performance.</p>
@@ -20697,6 +21102,15 @@ function toggleChapter(id) {
   arrow.classList.toggle('collapsed', isCollapsed);
 }
 
+// Clicking a chapter name: open its overview AND expand its lesson list.
+function openChapter(id, overviewPage) {
+  const items = document.getElementById('chapter-' + id);
+  const arrow = document.getElementById('arrow-' + id);
+  if (items) items.classList.remove('collapsed');
+  if (arrow) arrow.classList.remove('collapsed');
+  nav(overviewPage);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.nav-chapter-items').forEach(function(items) {
     const id = items.id.replace('chapter-', '');
@@ -20724,6 +21138,15 @@ function nav(page) {
   }
   if (page === 'progress') renderProgress();
   if (page === 'flashcards') renderFlashcard();
+  if (page === 'home') renderHomeProgress();
+  currentPage = page;
+  updatePrevNext(page);
+  const sf = document.getElementById('scroll-progress-fill');
+  if (sf) sf.style.width = '0%';
+  const sr = document.getElementById('search-results');
+  if (sr) sr.innerHTML = '';
+  const sb = document.getElementById('search-box');
+  if (sb) sb.value = '';
 }
 
 function markVisited(w) {
@@ -20736,9 +21159,12 @@ function markVisited(w) {
 }
 
 function updateGlobalProgress() {
-  const pct = Math.round((visited.length / 25) * 100);
+  const done = visited.filter(v => LESSON_IDS.includes(v)).length;
+  const total = LESSON_IDS.length;
+  const pct = total ? Math.round(done / total * 100) : 0;
   document.getElementById('global-progress-bar').style.width = pct + '%';
-  document.getElementById('global-progress-label').textContent = `${visited.length} of 44 lessons visited`;
+  document.getElementById('global-progress-label').textContent = `${done} of ${total} lessons · ${pct}%`;
+  renderHomeProgress();
 }
 
 // ===================== INLINE QUIZ =====================
@@ -20870,7 +21296,8 @@ function showResults() {
     const p = Math.round((s.c/s.t)*100);
     return `<div class="rb-item"><div class="rb-label">${TOPICS[t]||t}</div><div class="rb-value" style="color:${p>=80?'var(--green)':p>=60?'var(--yellow)':'var(--red)'}">${s.c}/${s.t} (${p}%)</div></div>`;
   }).join('');
-  quizHistory.push({date: new Date().toISOString(), score, total, pct});
+  const ch = CHAPTERS.find(c => !selectedTopics.includes('all') && c.ids.length === selectedTopics.length && c.ids.every(id => selectedTopics.includes(id)));
+  quizHistory.push({date: new Date().toISOString(), score, total, pct, chapter: ch ? ch.key : null});
   localStorage.setItem('ml_quiz_history', JSON.stringify(quizHistory));
 }
 
@@ -20959,31 +21386,71 @@ function shuffleCards() {
 }
 
 // ===================== PROGRESS =====================
+function pctColor(p) { return p >= 80 ? 'var(--green)' : p >= 40 ? 'var(--yellow)' : 'var(--red)'; }
+
 function renderProgress() {
   const content = document.getElementById('progress-content');
-  const topicCards = Object.keys(TOPICS).map(t => {
-    const done = visited.includes(t);
-    return `<div class="card" style="display:flex; align-items:center; gap:16px; margin-bottom:10px">
-      <div style="width:40px; height:40px; border-radius:50%; background:${done?'rgba(52,211,153,0.1)':'var(--card-bg)'}; border:2px solid ${done?'var(--green)':'var(--card-border)'}; display:flex; align-items:center; justify-content:center; font-size:1.2rem">${done?'✓':'○'}</div>
-      <div><div style="font-weight:600; font-size:0.9rem">${TOPICS[t]}</div><div style="font-size:0.75rem; color:var(--text-muted)">${done?'Visited':'Not yet visited'}</div></div>
-      <div style="margin-left:auto"><button class="btn btn-outline" style="padding:6px 14px; font-size:0.78rem" onclick="nav('${t}')">Go →</button></div>
+  const overall = visited.filter(v => LESSON_IDS.includes(v)).length;
+  const oPct = Math.round(overall / LESSON_IDS.length * 100);
+
+  let html = `<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+      <strong>Overall progress</strong>
+      <span style="color:var(--accent); font-weight:700">${overall} / ${LESSON_IDS.length} lessons · ${oPct}%</span>
+    </div>
+    <div class="progress-bar-wrap" style="margin:0; height:8px"><div class="progress-bar-fill" style="width:${oPct}%; height:8px"></div></div>
+  </div>`;
+
+  html += '<h3>By Chapter</h3>';
+  html += CHAPTERS.map(ch => {
+    const done = ch.ids.filter(id => visited.includes(id)).length;
+    const pct = Math.round(done / ch.ids.length * 100);
+    const cq = quizHistory.filter(q => q.chapter === ch.key);
+    const best = cq.length ? Math.max(...cq.map(q => q.pct)) : null;
+    return `<div class="card" style="margin-bottom:10px; padding:16px">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; gap:10px">
+        <strong style="font-size:0.92rem">${ch.name}</strong>
+        <span style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap">${done}/${ch.ids.length} lessons${best != null ? ` · <span style="color:${pctColor(best)}">best quiz ${best}%</span>` : ''}</span>
+      </div>
+      <div class="progress-bar-wrap" style="margin:0; height:7px"><div class="progress-bar-fill" style="width:${pct}%; height:7px"></div></div>
     </div>`;
   }).join('');
 
-  const recentQuizzes = quizHistory.slice(-5).reverse().map(r => {
+  const recentQuizzes = quizHistory.slice(-6).reverse().map(r => {
     const date = new Date(r.date).toLocaleDateString();
-    return `<tr><td>${date}</td><td>${r.score}/${r.total}</td><td style="color:${r.pct>=80?'var(--green)':r.pct>=60?'var(--yellow)':'var(--red)'}">${r.pct}%</td></tr>`;
-  }).join('') || '<tr><td colspan="3" style="text-align:center; color:var(--text-muted)">No quizzes taken yet</td></tr>';
+    const label = r.chapter ? (CHAPTERS.find(c => c.key === r.chapter) || {}).name || 'Mixed' : 'Mixed';
+    return `<tr><td>${date}</td><td style="color:var(--text-muted)">${label}</td><td>${r.score}/${r.total}</td><td style="color:${pctColor(r.pct)}">${r.pct}%</td></tr>`;
+  }).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--text-muted)">No quizzes taken yet</td></tr>';
 
-  content.innerHTML = `
-    <h3>Topic Progress</h3>
-    ${topicCards}
-    <h3>Recent Quiz Results</h3>
+  html += `<h3>Recent Quiz Results</h3>
     <table>
-      <tr><th>Date</th><th>Score</th><th>Percentage</th></tr>
+      <tr><th>Date</th><th>Topic</th><th>Score</th><th>%</th></tr>
       ${recentQuizzes}
-    </table>
-  `;
+    </table>`;
+
+  content.innerHTML = html;
+}
+
+function renderHomeProgress() {
+  const el = document.getElementById('home-progress');
+  if (!el) return;
+  const overall = visited.filter(v => LESSON_IDS.includes(v)).length;
+  const oPct = Math.round(overall / LESSON_IDS.length * 100);
+  const bars = CHAPTERS.map(ch => {
+    const done = ch.ids.filter(id => visited.includes(id)).length;
+    const pct = Math.round(done / ch.ids.length * 100);
+    return `<div title="${ch.name}: ${done}/${ch.ids.length}" style="flex:1; min-width:0">
+      <div class="progress-bar-wrap" style="margin:0; height:6px"><div class="progress-bar-fill" style="width:${pct}%; height:6px"></div></div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="card" style="margin-bottom:0">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+      <strong style="font-size:0.9rem">Your progress</strong>
+      <span style="font-size:0.82rem; color:var(--accent); font-weight:700">${overall} / ${LESSON_IDS.length} lessons · ${oPct}%</span>
+    </div>
+    <div style="display:flex; gap:5px; margin-bottom:8px">${bars}</div>
+    <div style="font-size:0.72rem; color:var(--text-muted)">One bar per chapter · <span onclick="nav('progress')" style="color:var(--accent); cursor:pointer">see full breakdown →</span></div>
+  </div>`;
 }
 
 function clearProgress() {
@@ -21000,6 +21467,105 @@ function clearProgress() {
 // ===================== UTILS =====================
 function escHtml(str) { return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// ===================== COURSE STRUCTURE =====================
+const CHAPTERS = [
+  {name:'Foundation', key:'foundation', ids:['w1','w2','w3','w4','w5','w6','w7','w8']},
+  {name:'Supervised Classification', key:'classification', ids:['w9','nb','w10','w11','w12','w13','w14','w15','w16','mc']},
+  {name:'Ensemble Methods', key:'ensemble', ids:['en1','en2','en3','en4']},
+  {name:'Pragmatic Model Evaluation', key:'prageval', ids:['pe1','pe2','pe3','pe4','pe5']},
+  {name:'Unsupervised Learning', key:'unsupervised', ids:['ul1','ul2','ul3','ul4','ul5']},
+  {name:'Time Series Analysis', key:'timeseries', ids:['ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9']},
+  {name:'Neural Networks & Deep Learning', key:'neural', ids:['nn1','nn2','nn3','nn4','nn5','nn6','nn7','nn8']},
+  {name:'Model Explainability', key:'explainability', ids:['ex1','ex2','ex3']}
+];
+const LESSON_IDS = CHAPTERS.reduce((a,c) => a.concat(c.ids), []);
+const SEQUENCE = ['home','overview','w1','w2','w3','w4','w5','w6','w7','w8','fsheet',
+  'cov','w9','nb','w10','w11','w12','w13','w14','w15','w16','mc','csheet',
+  'enov','en1','en2','en3','en4','ensheet',
+  'peov','pe1','pe2','pe3','pe4','pe5','pesheet',
+  'ulov','ul1','ul2','ul3','ul4','ul5','ulsheet',
+  'tsov','ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9','tssheet',
+  'nnov','nn1','nn2','nn3','nn4','nn5','nn6','nn7','nn8','nnsheet',
+  'exov','ex1','ex2','ex3','exsheet'];
+let currentPage = 'home';
+
+// ===================== PREV / NEXT =====================
+function updatePrevNext(page) {
+  const i = SEQUENCE.indexOf(page);
+  const prev = document.getElementById('pn-prev'), next = document.getElementById('pn-next');
+  if (!prev || !next) return;
+  if (i < 0) { prev.style.display = next.style.display = 'none'; return; }
+  prev.style.display = i > 0 ? 'flex' : 'none';
+  next.style.display = i < SEQUENCE.length - 1 ? 'flex' : 'none';
+}
+function pnGo(dir) {
+  const i = SEQUENCE.indexOf(currentPage);
+  if (i < 0) return;
+  const j = i + dir;
+  if (j >= 0 && j < SEQUENCE.length) nav(SEQUENCE[j]);
+}
+
+// ===================== SEARCH =====================
+let searchIndex = [];
+function buildSearchIndex() {
+  searchIndex = [];
+  document.querySelectorAll('.page[id^="page-"]').forEach(function(pg) {
+    const pid = pg.id.replace('page-', '');
+    const titleEl = pg.querySelector('h1,h2');
+    const pageTitle = titleEl ? titleEl.textContent.trim() : pid;
+    let n = 0;
+    pg.querySelectorAll('h1,h2,h3,h4').forEach(function(h) {
+      if (!h.id) h.id = 'sx-' + pid + '-' + (n++);
+      const txt = h.textContent.trim();
+      if (txt) searchIndex.push({pid: pid, pageTitle: pageTitle, text: txt, hid: h.id});
+    });
+  });
+}
+function doSearch() {
+  const box = document.getElementById('search-results');
+  const q = document.getElementById('search-box').value.trim().toLowerCase();
+  if (q.length < 2) { box.innerHTML = ''; return; }
+  const hits = searchIndex.filter(e => e.text.toLowerCase().includes(q) || e.pageTitle.toLowerCase().includes(q)).slice(0, 16);
+  if (!hits.length) { box.innerHTML = '<div class="search-result" style="color:var(--text-muted)">No matches</div>'; return; }
+  const rx = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+  box.innerHTML = hits.map(function(h) {
+    const safe = escHtml(h.text).replace(rx, '<mark>$1</mark>');
+    return `<div class="search-result" onclick="searchGo('${h.pid}','${h.hid}')"><div class="sr-page">${escHtml(h.pageTitle)}</div><div class="sr-head">${safe}</div></div>`;
+  }).join('');
+}
+function searchGo(pid, hid) {
+  nav(pid);
+  setTimeout(function() {
+    const el = document.getElementById(hid);
+    if (el) {
+      el.scrollIntoView({behavior: 'smooth', block: 'center'});
+      const orig = el.style.backgroundColor;
+      el.style.transition = 'background-color 0.3s';
+      el.style.backgroundColor = 'rgba(251,191,36,0.18)';
+      setTimeout(function() { el.style.backgroundColor = orig; }, 1300);
+    }
+  }, 80);
+}
+
+// ===================== COPY CODE =====================
+function addCopyButtons() {
+  document.querySelectorAll('.code-block').forEach(function(block) {
+    if (block.querySelector('.copy-btn')) return;
+    const btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = 'Copy';
+    btn.onclick = function() {
+      const pre = block.querySelector('pre');
+      const text = pre ? pre.innerText : '';
+      navigator.clipboard.writeText(text).then(function() {
+        btn.textContent = '✓ Copied'; btn.classList.add('copied');
+        setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+      });
+    };
+    block.appendChild(btn);
+  });
+}
+
 // ===================== INIT =====================
 document.getElementById('q-count-slider')?.addEventListener('input', function() {
   document.getElementById('q-count-label').textContent = this.value + ' questions';
@@ -21009,7 +21575,33 @@ visited.forEach(w => {
   const el = document.getElementById('check-' + w);
   if (el) el.textContent = '✓';
 });
+
+buildSearchIndex();
+addCopyButtons();
 updateGlobalProgress();
+renderHomeProgress();
+updatePrevNext(currentPage);
+
+// scroll progress bar
+(function() {
+  const mainEl = document.getElementById('main');
+  const fill = document.getElementById('scroll-progress-fill');
+  if (mainEl && fill) {
+    mainEl.addEventListener('scroll', function() {
+      const h = mainEl.scrollHeight - mainEl.clientHeight;
+      fill.style.width = (h > 0 ? (mainEl.scrollTop / h * 100) : 0) + '%';
+    });
+  }
+})();
+
+// keyboard navigation
+document.addEventListener('keydown', function(e) {
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea') return;
+  if (e.key === 'ArrowRight') { if (currentPage === 'flashcards') fcNav(1); else pnGo(1); }
+  else if (e.key === 'ArrowLeft') { if (currentPage === 'flashcards') fcNav(-1); else pnGo(-1); }
+  else if (e.key === ' ' && currentPage === 'flashcards') { e.preventDefault(); flipCard(); }
+});
 </script>
 </body>
 </html>
