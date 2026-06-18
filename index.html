@@ -197,6 +197,15 @@ tr:hover td { background: rgba(91,138,245,0.04); }
 .alert-info { background: rgba(91,138,245,0.1); border: 1px solid rgba(91,138,245,0.2); color: var(--accent); }
 .alert-warn { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.2); color: var(--yellow); }
 
+/* FIGURES — inline SVG diagrams */
+.figure { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 16px; margin: 14px 0; text-align: center; }
+.figure svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+.figure .fig-caption { font-size: 0.78rem; color: var(--text-muted); margin: 10px 0 0; line-height: 1.5; }
+.figure .fig-title { font-size: 0.82rem; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+.fig-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 14px 0; }
+.fig-grid .figure { margin: 0; }
+@media (max-width: 768px) { .fig-grid { grid-template-columns: 1fr; } }
+
 /* DIVIDER */
 hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
 
@@ -258,7 +267,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('w2')" id="nav-w2"><span class="icon">⚙️</span> L2: Feature Engineering<span class="check" id="check-w2"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('w3')" id="nav-w3"><span class="icon">📉</span> L3: Linear Regression (GD)<span class="check" id="check-w3"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('w4')" id="nav-w4"><span class="icon">🔢</span> L4: OLS Method<span class="check" id="check-w4"></span></div>
-    <div class="nav-item nav-item-sub" onclick="nav('w5')" id="nav-w5"><span class="icon">🎓</span> L5: Supervised Learning<span class="check" id="check-w5"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('w5')" id="nav-w5"><span class="icon">🎯</span> L5: Generalisation &amp; Regularisation<span class="check" id="check-w5"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('w6')" id="nav-w6"><span class="icon">📋</span> L6: Assumptions<span class="check" id="check-w6"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('w7')" id="nav-w7"><span class="icon">🔧</span> L7: Scikit-Learn<span class="check" id="check-w7"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('w8')"     id="nav-w8"    ><span class="icon">🔭</span> L8: PCA<span class="check" id="check-w8"></span></div>
@@ -499,9 +508,9 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     </div>
     <div class="topic-card" onclick="nav('w5')">
       <div class="week-num">Lesson 5</div>
-      <h4>🎓 Supervised Learning</h4>
-      <p>Train-test split, overfitting, Ridge, Lasso</p>
-      <div style="margin-top:10px"><span class="badge badge-blue">Regularisation</span><span class="badge badge-purple">Bias-Variance</span></div>
+      <h4>🎯 Generalisation &amp; Regularisation</h4>
+      <p>Train-test split, overfitting, bias-variance, Ridge, Lasso</p>
+      <div style="margin-top:10px"><span class="badge badge-blue">Generalisation</span><span class="badge badge-purple">Regularisation</span></div>
     </div>
     <div class="topic-card" onclick="nav('w6')">
       <div class="week-num">Lesson 6</div>
@@ -583,6 +592,39 @@ encoder.<span class="fn">transform</span>(data)   <span class="cm"># convert to 
 
 outliers = data[<span class="fn">zscore</span>(data[<span class="st">'price'</span>]).<span class="fn">abs</span>() > <span class="nu">3</span>]</pre></div>
 
+  <div class="figure">
+    <div class="fig-title">Z-Score & the Normal Distribution</div>
+    <svg viewBox="0 0 460 210" role="img" aria-label="Normal distribution with outlier regions beyond 3 sigma">
+      <!-- shaded outlier tails -->
+      <path d="M 50 175 C 95 174, 110 150, 120 130 L 120 175 Z" fill="rgba(248,113,113,0.35)"/>
+      <path d="M 410 175 C 365 174, 350 150, 340 130 L 340 175 Z" fill="rgba(248,113,113,0.35)"/>
+      <!-- main bell fill -->
+      <path d="M 120 175 C 160 175, 195 45, 230 45 C 265 45, 300 175, 340 175 Z" fill="rgba(91,138,245,0.18)"/>
+      <!-- bell outline -->
+      <path d="M 50 175 C 110 174, 150 172, 175 150 C 200 128, 212 45, 230 45 C 248 45, 260 128, 285 150 C 310 172, 350 174, 410 175" fill="none" stroke="#5b8af5" stroke-width="2.5"/>
+      <!-- axis -->
+      <line x1="40" y1="175" x2="420" y2="175" stroke="#2d3561" stroke-width="1.5"/>
+      <!-- sigma ticks -->
+      <g fill="#94a3b8" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">
+        <line x1="120" y1="175" x2="120" y2="181" stroke="#94a3b8"/><text x="120" y="195">−3σ</text>
+        <line x1="175" y1="175" x2="175" y2="181" stroke="#94a3b8"/><text x="175" y="195">−2σ</text>
+        <line x1="230" y1="175" x2="230" y2="181" stroke="#94a3b8"/><text x="230" y="195">μ</text>
+        <line x1="285" y1="175" x2="285" y2="181" stroke="#94a3b8"/><text x="285" y="195">+2σ</text>
+        <line x1="340" y1="175" x2="340" y2="181" stroke="#94a3b8"/><text x="340" y="195">+3σ</text>
+      </g>
+      <!-- mean line -->
+      <line x1="230" y1="48" x2="230" y2="175" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <!-- outlier labels -->
+      <text x="70" y="120" fill="#f87171" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">outliers</text>
+      <text x="70" y="134" fill="#f87171" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">|z|&gt;3</text>
+      <text x="390" y="120" fill="#f87171" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">outliers</text>
+      <text x="390" y="134" fill="#f87171" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">|z|&gt;3</text>
+      <!-- 99.7% label -->
+      <text x="230" y="100" fill="#e2e8f0" font-size="12" text-anchor="middle" font-family="'Segoe UI',sans-serif">99.7% within ±3σ</text>
+    </svg>
+    <p class="fig-caption">The z-score rescales any value to "standard deviations from the mean". Only ~0.3% of normally-distributed data falls beyond ±3σ — so those points (red) are flagged as outliers.</p>
+  </div>
+
   <div class="alert alert-warn">⚠️ Look-ahead bias: always fit your scaler on training data only. Never fit on the whole dataset before splitting.</div>
 
   <div class="inline-quiz">
@@ -606,6 +648,31 @@ outliers = data[<span class="fn">zscore</span>(data[<span class="st">'price'</sp
 
   <div class="card">
     <div class="key-concept"><div class="label">Key Insight</div><p>A linear model is linear in its <em>weights</em>, not in its features. You can feed it x², log(x), or sin(x) — it will still use them linearly, but the result is a curve.</p></div>
+  </div>
+
+  <div class="figure">
+    <div class="fig-title">Why a Straight Line Isn't Enough</div>
+    <svg viewBox="0 0 470 210" role="img" aria-label="Left: straight line underfitting curved data. Right: polynomial curve fitting it.">
+      <!-- LEFT PANEL: underfit -->
+      <line x1="22" y1="30" x2="22" y2="172" stroke="#2d3561" stroke-width="1.5"/>
+      <line x1="22" y1="172" x2="208" y2="172" stroke="#2d3561" stroke-width="1.5"/>
+      <line x1="26" y1="118" x2="206" y2="96" stroke="#f87171" stroke-width="2.5"/>
+      <g fill="#5b8af5">
+        <circle cx="40" cy="52" r="4"/><circle cx="66" cy="95" r="4"/><circle cx="92" cy="128" r="4"/>
+        <circle cx="115" cy="145" r="4"/><circle cx="140" cy="128" r="4"/><circle cx="166" cy="95" r="4"/><circle cx="192" cy="52" r="4"/>
+      </g>
+      <text x="115" y="196" fill="#f87171" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">straight line — underfits</text>
+      <!-- RIGHT PANEL: fits -->
+      <line x1="250" y1="30" x2="250" y2="172" stroke="#2d3561" stroke-width="1.5"/>
+      <line x1="250" y1="172" x2="448" y2="172" stroke="#2d3561" stroke-width="1.5"/>
+      <path d="M 256 50 Q 343 240 430 50" fill="none" stroke="#34d399" stroke-width="2.5"/>
+      <g fill="#5b8af5">
+        <circle cx="268" cy="52" r="4"/><circle cx="294" cy="95" r="4"/><circle cx="320" cy="128" r="4"/>
+        <circle cx="343" cy="145" r="4"/><circle cx="368" cy="128" r="4"/><circle cx="394" cy="95" r="4"/><circle cx="420" cy="52" r="4"/>
+      </g>
+      <text x="349" y="196" fill="#34d399" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">+ x² feature — fits</text>
+    </svg>
+    <p class="fig-caption">The data follows a curve, so a straight line (left) can't capture it. Adding an <strong>x²</strong> feature lets the <em>same</em> linear model bend to fit (right) — it's still linear in the weights, just not in x.</p>
   </div>
 
   <h3>Types of Feature Transformations</h3>
@@ -670,6 +737,44 @@ X_poly = poly.<span class="fn">fit_transform</span>(X)  <span class="cm"># creat
     <p style="text-align:center; font-size:0.8rem; margin:0">Square each error (prevents cancellation), average across all N samples.</p>
   </div>
 
+  <div class="figure">
+    <div class="fig-title">Residuals & the Loss Surface</div>
+    <svg viewBox="0 0 470 210" role="img" aria-label="Left: best-fit line with residual segments. Right: gradient descent stepping down a loss bowl.">
+      <!-- LEFT: fit line + residuals -->
+      <line x1="22" y1="28" x2="22" y2="172" stroke="#2d3561" stroke-width="1.5"/>
+      <line x1="22" y1="172" x2="210" y2="172" stroke="#2d3561" stroke-width="1.5"/>
+      <!-- residual segments (point to line) -->
+      <g stroke="#f87171" stroke-width="1.5" stroke-dasharray="3 2">
+        <line x1="48" y1="140" x2="48" y2="150"/><line x1="80" y1="100" x2="80" y2="128"/>
+        <line x1="112" y1="118" x2="112" y2="106"/><line x1="146" y1="70" x2="146" y2="84"/>
+        <line x1="180" y1="74" x2="180" y2="62"/>
+      </g>
+      <!-- best fit line -->
+      <line x1="30" y1="158" x2="202" y2="52" stroke="#5b8af5" stroke-width="2.5"/>
+      <!-- points -->
+      <g fill="#a78bfa">
+        <circle cx="48" cy="140" r="4"/><circle cx="80" cy="100" r="4"/><circle cx="112" cy="118" r="4"/>
+        <circle cx="146" cy="70" r="4"/><circle cx="180" cy="74" r="4"/>
+      </g>
+      <text x="116" y="196" fill="#94a3b8" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">ŷ = w·x + b &nbsp; (red = residuals)</text>
+      <!-- RIGHT: loss bowl with GD steps -->
+      <line x1="250" y1="28" x2="250" y2="172" stroke="#2d3561" stroke-width="1.5"/>
+      <line x1="250" y1="172" x2="448" y2="172" stroke="#2d3561" stroke-width="1.5"/>
+      <path d="M 262 40 Q 349 250 436 40" fill="none" stroke="#5b8af5" stroke-width="2.5"/>
+      <!-- descending steps -->
+      <g fill="#34d399">
+        <circle cx="280" cy="78" r="4.5"/><circle cx="305" cy="118" r="4.5"/><circle cx="330" cy="142" r="4.5"/>
+        <circle cx="349" cy="150" r="4.5"/>
+      </g>
+      <g stroke="#34d399" stroke-width="1.5">
+        <line x1="280" y1="78" x2="305" y2="118"/><line x1="305" y1="118" x2="330" y2="142"/><line x1="330" y1="142" x2="349" y2="150"/>
+      </g>
+      <text x="252" y="22" fill="#94a3b8" font-size="10" font-family="'Segoe UI',sans-serif">MSE</text>
+      <text x="349" y="196" fill="#94a3b8" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">gradient descent → minimum</text>
+    </svg>
+    <p class="fig-caption">MSE squares each red residual and averages them. Gradient descent (right) repeatedly steps "downhill" on the loss surface — the gradient gives the direction, the learning rate the step size — until it reaches the lowest error.</p>
+  </div>
+
   <h3>Gradient Descent Algorithm</h3>
   <p>Instead of trying random values, we use calculus to find which direction reduces MSE fastest and step in that direction repeatedly.</p>
 
@@ -728,6 +833,30 @@ eta = <span class="nu">0.0001</span>
     <tr><td><strong>Requires</strong></td><td>Learning rate tuning</td><td>Matrix to be invertible</td></tr>
   </table>
 
+  <div class="figure">
+    <div class="fig-title">Two Roads to the Same Minimum</div>
+    <svg viewBox="0 0 470 205" role="img" aria-label="Left: gradient descent taking many small steps. Right: OLS jumping to the minimum in one move.">
+      <!-- LEFT: GD many steps -->
+      <path d="M 35 45 Q 120 235 205 45" fill="none" stroke="#5b8af5" stroke-width="2.5"/>
+      <circle cx="120" cy="150" r="6" fill="none" stroke="#fbbf24" stroke-width="2"/>
+      <g fill="#34d399">
+        <circle cx="55" cy="76" r="4"/><circle cx="78" cy="112" r="4"/><circle cx="97" cy="134" r="4"/><circle cx="110" cy="145" r="4"/><circle cx="120" cy="150" r="4"/>
+      </g>
+      <g stroke="#34d399" stroke-width="1.5">
+        <line x1="55" y1="76" x2="78" y2="112"/><line x1="78" y1="112" x2="97" y2="134"/><line x1="97" y1="134" x2="110" y2="145"/><line x1="110" y1="145" x2="120" y2="150"/>
+      </g>
+      <text x="120" y="192" fill="#34d399" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">Gradient Descent: many steps</text>
+      <!-- RIGHT: OLS one jump -->
+      <path d="M 265 45 Q 350 235 435 45" fill="none" stroke="#5b8af5" stroke-width="2.5"/>
+      <circle cx="350" cy="150" r="6" fill="none" stroke="#fbbf24" stroke-width="2"/>
+      <defs><marker id="ols-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#a78bfa"/></marker></defs>
+      <circle cx="288" cy="78" r="4" fill="#a78bfa"/>
+      <path d="M 288 78 Q 300 150 344 148" fill="none" stroke="#a78bfa" stroke-width="2.5" marker-end="url(#ols-arrow)"/>
+      <text x="350" y="192" fill="#a78bfa" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">OLS: one calculation</text>
+    </svg>
+    <p class="fig-caption">Both find the weights that minimise error. Gradient descent walks down the loss surface step by step; OLS solves <strong>β* = (XᵀX)⁻¹Xᵀy</strong> and lands on the exact minimum (yellow ring) in a single matrix calculation.</p>
+  </div>
+
   <h3>The OLS Formula</h3>
   <div class="card" style="text-align:center; padding:24px">
     <div style="font-size:1.3rem; color:var(--accent); font-family:var(--mono); margin-bottom:10px">β* = (XᵀX)⁻¹ Xᵀy</div>
@@ -771,23 +900,42 @@ results = sm.<span class="fn">OLS</span>(y, X).<span class="fn">fit</span>()
   </div>
   <div class="btn-row">
     <button class="btn btn-primary" onclick="startTopicQuiz('w4')">📝 Full Topic Quiz</button>
-    <button class="btn btn-outline" onclick="nav('w5')">Next: Supervised Learning →</button>
+    <button class="btn btn-outline" onclick="nav('w5')">Next: Generalisation &amp; Regularisation →</button>
   </div>
 </div>
 
 <!-- WEEK 5 -->
 <div class="page" id="page-w5">
-  <h2>🎓 Supervised Learning with Linear Regression</h2>
-  <p class="subtitle">The full ML pipeline: split, train, evaluate, regularise.</p>
+  <h2>🎯 Generalisation &amp; Regularisation</h2>
+  <p class="subtitle">The real goal of ML — a model that performs on data it has never seen — and how to get there.</p>
 
-  <h3>ML vs Statistics Mindset</h3>
+  <div class="alert alert-info">💡 L3 and L4 taught you how to <em>fit</em> a linear model (gradient descent, then OLS). This lesson is about something deeper and more general: making sure a model <strong>generalises</strong> — works on new, unseen data, not just the data it memorised. These ideas (splitting, overfitting, regularisation) apply to <em>every</em> supervised model, not just linear regression.</div>
+
+  <h3>Two Mindsets: Statistics vs Machine Learning</h3>
+  <p>Linear regression lives in both worlds, but they ask different questions:</p>
   <div class="card-grid">
-    <div class="card"><div class="key-concept"><div class="label">Statistics asks</div><p>Why does this relationship exist? Are parameters significant?</p></div></div>
-    <div class="card"><div class="key-concept"><div class="label">ML asks</div><p>How well does this predict <em>unseen</em> data?</p></div></div>
+    <div class="card"><div class="key-concept"><div class="label">Statistics asks</div><p>Why does this relationship exist? Are the coefficients significant? It cares about <em>explaining</em> the data in hand.</p></div></div>
+    <div class="card"><div class="key-concept"><div class="label">Machine learning asks</div><p>How well does this <em>predict unseen data</em>? It cares about performance on the future, not the past.</p></div></div>
   </div>
 
-  <h3>Train-Test Split</h3>
-  <p>Never evaluate your model on the data it trained on. Split first — always.</p>
+  <h3>The Golden Rule: Train-Test Split</h3>
+  <p>Never judge a model on the data it learned from — it has already seen those answers, so a high score there proves nothing. Hold back a slice of data, train on the rest, and grade the model <strong>only</strong> on the held-out slice.</p>
+
+  <div class="figure">
+    <div class="fig-title">Splitting Your Data</div>
+    <svg viewBox="0 0 460 92" role="img" aria-label="A data bar split into 80 percent training and 20 percent test">
+      <rect x="20" y="22" width="420" height="40" rx="8" fill="none" stroke="#2d3561" stroke-width="1.5"/>
+      <rect x="22" y="24" width="332" height="36" fill="rgba(91,138,245,0.22)"/>
+      <rect x="356" y="24" width="82" height="36" fill="rgba(167,139,250,0.22)"/>
+      <line x1="355" y1="22" x2="355" y2="62" stroke="#2d3561" stroke-width="1.5"/>
+      <text x="188" y="46" fill="#e2e8f0" font-size="13" font-weight="600" text-anchor="middle" font-family="'Segoe UI',sans-serif">Training set — 80%</text>
+      <text x="397" y="46" fill="#e2e8f0" font-size="12" font-weight="600" text-anchor="middle" font-family="'Segoe UI',sans-serif">Test 20%</text>
+      <text x="188" y="80" fill="#5b8af5" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">model.fit() — learns here</text>
+      <text x="397" y="80" fill="#a78bfa" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">score() here</text>
+    </svg>
+    <p class="fig-caption">Fit the model on the training set, then measure it on the untouched test set. For tuning, hold back a third <strong>validation</strong> slice too — keep the test set sealed until the very end so its score stays an honest estimate of real-world performance.</p>
+  </div>
+
   <div class="code-block"><pre><span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
 
 X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(
@@ -796,7 +944,10 @@ X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(
 model.<span class="fn">fit</span>(X_train, y_train)        <span class="cm"># train only on train data</span>
 model.<span class="fn">score</span>(X_test, y_test)        <span class="cm"># evaluate only on test data</span></pre></div>
 
+  <div class="card"><div class="key-concept"><div class="label">The generalisation gap</div><p>The space between your <strong>training score</strong> and <strong>test score</strong> is the single most useful diagnostic in ML. A small gap with both scores high = a model that generalises. A big gap (great on train, poor on test) = overfitting. Both scores low = underfitting.</p></div></div>
+
   <h3>Bias-Variance Tradeoff</h3>
+  <p>Every model balances two opposing errors. <strong>Bias</strong> is error from being too simple to capture the pattern; <strong>variance</strong> is error from being so flexible it fits the noise. You can't drive both to zero — reducing one tends to raise the other.</p>
   <table>
     <tr><th>Situation</th><th>Train score</th><th>Test score</th><th>Problem</th></tr>
     <tr><td>Underfitting (High Bias)</td><td>Low</td><td>Low</td><td>Model too simple</td></tr>
@@ -804,8 +955,66 @@ model.<span class="fn">score</span>(X_test, y_test)        <span class="cm"># ev
     <tr><td>Overfitting (High Variance)</td><td>Very high</td><td>Low</td><td>Model memorised noise</td></tr>
   </table>
 
-  <h3>Regularisation</h3>
-  <p>Add a penalty to the cost function to discourage large weights and prevent overfitting.</p>
+  <div class="figure">
+    <div class="fig-title">The Bias-Variance Tradeoff Curve</div>
+    <svg viewBox="0 0 460 210" role="img" aria-label="Training error falls with complexity while test error is U-shaped with a sweet spot in the middle">
+      <line x1="44" y1="20" x2="44" y2="174" stroke="#2d3561" stroke-width="1.5"/>
+      <line x1="44" y1="174" x2="442" y2="174" stroke="#2d3561" stroke-width="1.5"/>
+      <text x="46" y="15" fill="#94a3b8" font-size="10" font-family="'Segoe UI',sans-serif">error ↑</text>
+      <!-- legend -->
+      <line x1="92" y1="26" x2="110" y2="26" stroke="#34d399" stroke-width="2.5"/><text x="114" y="30" fill="#94a3b8" font-size="10" font-family="'Segoe UI',sans-serif">train error</text>
+      <line x1="92" y1="40" x2="110" y2="40" stroke="#f87171" stroke-width="2.5"/><text x="114" y="44" fill="#94a3b8" font-size="10" font-family="'Segoe UI',sans-serif">test error</text>
+      <!-- train error: falls as complexity rises -->
+      <path d="M 58 60 C 165 120, 300 150, 438 160" fill="none" stroke="#34d399" stroke-width="2.5"/>
+      <!-- test error: U-shaped -->
+      <path d="M 58 50 C 135 96, 200 104, 238 106 C 320 108, 385 80, 438 52" fill="none" stroke="#f87171" stroke-width="2.5"/>
+      <!-- sweet spot -->
+      <line x1="238" y1="106" x2="238" y2="174" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <circle cx="238" cy="106" r="4.5" fill="#fbbf24"/>
+      <text x="238" y="98" fill="#fbbf24" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">sweet spot</text>
+      <!-- bottom labels -->
+      <text x="110" y="192" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">underfit (high bias)</text>
+      <text x="243" y="205" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">increasing model complexity →</text>
+      <text x="392" y="192" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">overfit (high variance)</text>
+    </svg>
+    <p class="fig-caption">As complexity grows, training error keeps falling — but test error follows a U: it drops, bottoms out at the <strong>sweet spot</strong>, then climbs as the model starts memorising noise. The goal is the bottom of the test curve, not the bottom of the train curve.</p>
+  </div>
+
+  <div class="fig-grid">
+    <div class="figure">
+      <div class="fig-title" style="color:#f87171">Underfitting</div>
+      <svg viewBox="0 0 160 130" role="img" aria-label="Straight line failing to follow curved data">
+        <line x1="14" y1="12" x2="14" y2="112" stroke="#2d3561" stroke-width="1.5"/>
+        <line x1="14" y1="112" x2="152" y2="112" stroke="#2d3561" stroke-width="1.5"/>
+        <line x1="18" y1="90" x2="150" y2="52" stroke="#f87171" stroke-width="2.5"/>
+        <g fill="#5b8af5"><circle cx="30" cy="96" r="3.5"/><circle cx="52" cy="74" r="3.5"/><circle cx="76" cy="82" r="3.5"/><circle cx="100" cy="54" r="3.5"/><circle cx="124" cy="62" r="3.5"/><circle cx="144" cy="42" r="3.5"/></g>
+      </svg>
+      <p class="fig-caption">Too simple. Misses the pattern — low train <em>and</em> test score.</p>
+    </div>
+    <div class="figure">
+      <div class="fig-title" style="color:#34d399">Good Fit</div>
+      <svg viewBox="0 0 160 130" role="img" aria-label="Smooth curve following the trend">
+        <line x1="14" y1="12" x2="14" y2="112" stroke="#2d3561" stroke-width="1.5"/>
+        <line x1="14" y1="112" x2="152" y2="112" stroke="#2d3561" stroke-width="1.5"/>
+        <path d="M 22 94 Q 88 68 150 46" fill="none" stroke="#34d399" stroke-width="2.5"/>
+        <g fill="#5b8af5"><circle cx="30" cy="96" r="3.5"/><circle cx="52" cy="74" r="3.5"/><circle cx="76" cy="82" r="3.5"/><circle cx="100" cy="54" r="3.5"/><circle cx="124" cy="62" r="3.5"/><circle cx="144" cy="42" r="3.5"/></g>
+      </svg>
+      <p class="fig-caption">Captures the trend, ignores noise — high train <em>and</em> test score.</p>
+    </div>
+    <div class="figure">
+      <div class="fig-title" style="color:#fbbf24">Overfitting</div>
+      <svg viewBox="0 0 160 130" role="img" aria-label="Wiggly curve passing through every point">
+        <line x1="14" y1="12" x2="14" y2="112" stroke="#2d3561" stroke-width="1.5"/>
+        <line x1="14" y1="112" x2="152" y2="112" stroke="#2d3561" stroke-width="1.5"/>
+        <path d="M 30 96 C 40 70, 46 58, 52 74 C 60 92, 68 94, 76 82 C 86 60, 92 42, 100 54 C 110 72, 118 74, 124 62 C 132 48, 138 34, 144 42" fill="none" stroke="#fbbf24" stroke-width="2.5"/>
+        <g fill="#5b8af5"><circle cx="30" cy="96" r="3.5"/><circle cx="52" cy="74" r="3.5"/><circle cx="76" cy="82" r="3.5"/><circle cx="100" cy="54" r="3.5"/><circle cx="124" cy="62" r="3.5"/><circle cx="144" cy="42" r="3.5"/></g>
+      </svg>
+      <p class="fig-caption">Memorises every point incl. noise — high train, low test score.</p>
+    </div>
+  </div>
+
+  <h3>Regularisation — Controlling Complexity</h3>
+  <p>Regularisation is the main tool for pulling an overfit model back toward the sweet spot. It adds a <strong>penalty on large weights</strong> to the cost function — the model can still fit the data, but it now pays a price for complexity, so it keeps weights small and the fit smooth.</p>
 
   <div class="card-grid">
     <div class="card">
@@ -835,6 +1044,24 @@ lasso = <span class="fn">Lasso</span>(alpha=<span class="nu">0.5</span>)   <span
 
 ridge.<span class="fn">fit</span>(X_train, y_train)
 ridge.<span class="fn">predict</span>(X_test)</pre></div>
+
+  <p><strong>λ (called <code>alpha</code> in sklearn)</strong> is the strength dial — how heavily large weights are penalised:</p>
+  <table>
+    <tr><th>λ setting</th><th>Effect on weights</th><th>Result</th></tr>
+    <tr><td><strong>λ → 0</strong></td><td>Almost no penalty</td><td>Back to ordinary regression — risks <em>overfitting</em></td></tr>
+    <tr><td><strong>λ just right</strong></td><td>Weights gently shrunk</td><td>Smoother fit, better test score — the <em>sweet spot</em> ✓</td></tr>
+    <tr><td><strong>λ → ∞</strong></td><td>Weights crushed toward 0</td><td>Model becomes nearly flat — risks <em>underfitting</em></td></tr>
+  </table>
+  <p>Choose λ the same way you choose any hyperparameter: try several values and keep the one with the best <em>validation</em> score (e.g. with cross-validation).</p>
+
+  <div class="card"><div class="key-concept"><div class="label">Lesson recap — the golden rules</div>
+    <ul>
+      <li><strong>Split before you do anything.</strong> Fit only on training data; keep the test set sealed.</li>
+      <li><strong>Watch the gap.</strong> Compare train vs test score — a large gap means overfitting.</li>
+      <li><strong>Aim for the sweet spot,</strong> not the lowest training error.</li>
+      <li><strong>Regularise to control complexity.</strong> Ridge to shrink, Lasso to also select features; tune λ on validation data.</li>
+    </ul>
+  </div></div>
 
   <div class="inline-quiz">
     <h3>🧪 Quick Check</h3>
@@ -892,6 +1119,39 @@ ridge.<span class="fn">predict</span>(X_test)</pre></div>
     <tr><td>Heavy tails in distribution</td><td>Normality</td></tr>
   </table>
 
+  <div class="fig-grid">
+    <div class="figure">
+      <div class="fig-title" style="color:#34d399">Healthy ✓</div>
+      <svg viewBox="0 0 160 120" role="img" aria-label="Residuals randomly scattered around zero">
+        <line x1="14" y1="60" x2="150" y2="60" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <g fill="#34d399"><circle cx="28" cy="54" r="3"/><circle cx="44" cy="70" r="3"/><circle cx="60" cy="49" r="3"/><circle cx="76" cy="67" r="3"/><circle cx="92" cy="56" r="3"/><circle cx="108" cy="71" r="3"/><circle cx="124" cy="52" r="3"/><circle cx="138" cy="65" r="3"/></g>
+        <text x="82" y="112" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">random band</text>
+      </svg>
+      <p class="fig-caption">No pattern around 0 — all assumptions OK.</p>
+    </div>
+    <div class="figure">
+      <div class="fig-title" style="color:#f87171">Curved</div>
+      <svg viewBox="0 0 160 120" role="img" aria-label="Residuals form a curve">
+        <line x1="14" y1="60" x2="150" y2="60" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <path d="M 26 80 Q 82 16 138 80" fill="none" stroke="#f87171" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.6"/>
+        <g fill="#f87171"><circle cx="28" cy="78" r="3"/><circle cx="46" cy="56" r="3"/><circle cx="64" cy="40" r="3"/><circle cx="82" cy="34" r="3"/><circle cx="100" cy="40" r="3"/><circle cx="118" cy="55" r="3"/><circle cx="136" cy="78" r="3"/></g>
+        <text x="82" y="112" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">wave / curve</text>
+      </svg>
+      <p class="fig-caption">Systematic curve → <strong>Linearity</strong> violated.</p>
+    </div>
+    <div class="figure">
+      <div class="fig-title" style="color:#f87171">Funnel</div>
+      <svg viewBox="0 0 160 120" role="img" aria-label="Residuals fan out as predictions grow">
+        <line x1="14" y1="60" x2="150" y2="60" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <line x1="20" y1="58" x2="146" y2="26" stroke="#f87171" stroke-width="1" stroke-dasharray="3 3" opacity="0.5"/>
+        <line x1="20" y1="62" x2="146" y2="94" stroke="#f87171" stroke-width="1" stroke-dasharray="3 3" opacity="0.5"/>
+        <g fill="#f87171"><circle cx="28" cy="61" r="3"/><circle cx="44" cy="57" r="3"/><circle cx="44" cy="64" r="3"/><circle cx="68" cy="52" r="3"/><circle cx="68" cy="70" r="3"/><circle cx="96" cy="44" r="3"/><circle cx="96" cy="78" r="3"/><circle cx="124" cy="34" r="3"/><circle cx="124" cy="88" r="3"/></g>
+        <text x="82" y="112" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">spread grows</text>
+      </svg>
+      <p class="fig-caption">Fan shape → <strong>Homoscedasticity</strong> violated.</p>
+    </div>
+  </div>
+
   <div class="inline-quiz">
     <h3>🧪 Quick Check</h3>
     <div id="inline-q-w6"></div>
@@ -925,6 +1185,45 @@ y_pred = model.<span class="fn">predict</span>(X_test)
 
 <span class="cm"># 5. Evaluate</span>
 score = model.<span class="fn">score</span>(X_test, y_test)</pre></div>
+
+  <div class="figure">
+    <div class="fig-title">The Universal sklearn Workflow</div>
+    <svg viewBox="0 0 470 96" role="img" aria-label="Five-step flow: import, create, fit, predict, score">
+      <defs><marker id="flow-arrow" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+      <!-- connectors -->
+      <g stroke="#94a3b8" stroke-width="1.5">
+        <line x1="80" y1="40" x2="98" y2="40" marker-end="url(#flow-arrow)"/>
+        <line x1="178" y1="40" x2="196" y2="40" marker-end="url(#flow-arrow)"/>
+        <line x1="276" y1="40" x2="294" y2="40" marker-end="url(#flow-arrow)"/>
+        <line x1="374" y1="40" x2="392" y2="40" marker-end="url(#flow-arrow)"/>
+      </g>
+      <!-- boxes -->
+      <g font-family="'Segoe UI',sans-serif" text-anchor="middle">
+        <rect x="4" y="20" width="76" height="40" rx="8" fill="rgba(91,138,245,0.12)" stroke="#5b8af5" stroke-width="1.5"/>
+        <text x="42" y="38" fill="#e2e8f0" font-size="12" font-weight="600">1 · Import</text>
+        <text x="42" y="52" fill="#94a3b8" font-size="9" font-family="var(--mono)">from sklearn…</text>
+
+        <rect x="102" y="20" width="76" height="40" rx="8" fill="rgba(91,138,245,0.12)" stroke="#5b8af5" stroke-width="1.5"/>
+        <text x="140" y="38" fill="#e2e8f0" font-size="12" font-weight="600">2 · Create</text>
+        <text x="140" y="52" fill="#94a3b8" font-size="9" font-family="var(--mono)">model = …()</text>
+
+        <rect x="200" y="20" width="76" height="40" rx="8" fill="rgba(52,211,153,0.12)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="238" y="38" fill="#34d399" font-size="12" font-weight="600">3 · Fit</text>
+        <text x="238" y="52" fill="#94a3b8" font-size="9" font-family="var(--mono)">.fit(X_train)</text>
+
+        <rect x="298" y="20" width="76" height="40" rx="8" fill="rgba(91,138,245,0.12)" stroke="#5b8af5" stroke-width="1.5"/>
+        <text x="336" y="38" fill="#e2e8f0" font-size="12" font-weight="600">4 · Predict</text>
+        <text x="336" y="52" fill="#94a3b8" font-size="9" font-family="var(--mono)">.predict(X)</text>
+
+        <rect x="394" y="20" width="74" height="40" rx="8" fill="rgba(167,139,250,0.12)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="431" y="38" fill="#a78bfa" font-size="12" font-weight="600">5 · Score</text>
+        <text x="431" y="52" fill="#94a3b8" font-size="9" font-family="var(--mono)">.score(X,y)</text>
+      </g>
+      <text x="120" y="84" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">fit only on training data</text>
+      <text x="370" y="84" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">predict &amp; score on test data</text>
+    </svg>
+    <p class="fig-caption">Every sklearn estimator — linear models, trees, SVMs, neural nets — follows this exact five-step pattern. Swap the model in step 2 and the other four steps are identical.</p>
+  </div>
 
   <h3>Naming Conventions</h3>
   <div class="card-grid">
@@ -988,6 +1287,51 @@ model.<span class="fn">score</span>(X_test, y_test)</pre></div>
   <div class="card"><div class="key-concept"><div class="label">The key rule</div><p>The best direction to summarise data is the one that <strong>maximises the variance of the projections</strong>. High variance = more information kept. You keep the top k components and discard the rest — losing only the least informative directions.</p></div></div>
 
   <p>Think of it like finding the best angle to photograph a 3D object in 2D: most of the structure is preserved, only the depth is lost.</p>
+
+  <div class="figure">
+    <div class="fig-title">Principal Components & Explained Variance</div>
+    <svg viewBox="0 0 470 210" role="img" aria-label="Left: a correlated point cloud with PC1 and PC2 axes. Right: a scree plot of explained variance.">
+      <!-- LEFT: point cloud + principal axes -->
+      <g fill="#5b8af5">
+        <circle cx="62" cy="148" r="3.5"/><circle cx="78" cy="134" r="3.5"/><circle cx="72" cy="142" r="3.5"/>
+        <circle cx="95" cy="122" r="3.5"/><circle cx="105" cy="130" r="3.5"/><circle cx="112" cy="110" r="3.5"/>
+        <circle cx="120" cy="116" r="3.5"/><circle cx="130" cy="98" r="3.5"/><circle cx="140" cy="104" r="3.5"/>
+        <circle cx="150" cy="86" r="3.5"/><circle cx="160" cy="92" r="3.5"/><circle cx="172" cy="70" r="3.5"/>
+        <circle cx="102" cy="112" r="3.5"/><circle cx="135" cy="120" r="3.5"/>
+      </g>
+      <defs>
+        <marker id="pc-arrow1" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#a78bfa"/></marker>
+        <marker id="pc-arrow2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#34d399"/></marker>
+      </defs>
+      <!-- PC1 along long axis -->
+      <line x1="116" y1="109" x2="178" y2="62" stroke="#a78bfa" stroke-width="3" marker-end="url(#pc-arrow1)"/>
+      <!-- PC2 perpendicular, shorter -->
+      <line x1="116" y1="109" x2="150" y2="137" stroke="#34d399" stroke-width="3" marker-end="url(#pc-arrow2)"/>
+      <text x="186" y="56" fill="#a78bfa" font-size="11" font-family="'Segoe UI',sans-serif">PC1</text>
+      <text x="154" y="152" fill="#34d399" font-size="11" font-family="'Segoe UI',sans-serif">PC2</text>
+      <text x="100" y="185" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">PC1 = direction of max variance</text>
+
+      <!-- RIGHT: scree plot -->
+      <line x1="262" y1="40" x2="262" y2="160" stroke="#2d3561" stroke-width="1.5"/>
+      <line x1="262" y1="160" x2="460" y2="160" stroke="#2d3561" stroke-width="1.5"/>
+      <g fill="#a78bfa">
+        <rect x="274" y="50" width="24" height="110" rx="2"/>
+        <rect x="310" y="112" width="24" height="48" rx="2"/>
+        <rect x="346" y="137" width="24" height="23" rx="2"/>
+        <rect x="382" y="142" width="24" height="18" rx="2"/>
+        <rect x="418" y="147" width="24" height="13" rx="2"/>
+      </g>
+      <!-- cumulative line -->
+      <polyline points="286,72 322,118 358,134 394,141 430,145" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="3 2"/>
+      <g fill="#94a3b8" font-size="9" text-anchor="middle" font-family="'Segoe UI',sans-serif">
+        <text x="286" y="172">PC1</text><text x="322" y="172">PC2</text><text x="358" y="172">PC3</text><text x="394" y="172">PC4</text><text x="430" y="172">PC5</text>
+      </g>
+      <text x="286" y="44" fill="#e2e8f0" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">44%</text>
+      <text x="322" y="106" fill="#e2e8f0" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">19%</text>
+      <text x="360" y="185" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">scree plot — find the elbow</text>
+    </svg>
+    <p class="fig-caption">Left: PCA rotates the axes to align with the data's spread — PC1 (purple) captures the most variance, PC2 (green) the most of what's left, at right angles. Right: the scree plot ranks each component's variance; keep components up to the "elbow" where the bars flatten.</p>
+  </div>
 
   <h3>The Breast Cancer Example — Why PCA Helps</h3>
   <p>The sklearn breast cancer dataset has <strong>569 patients</strong> and <strong>30 features</strong> measuring tumour cell characteristics (radius, texture, perimeter, area, smoothness … measured as mean, standard error, and worst value). Many of these 30 features are highly correlated — mean radius, mean perimeter, and mean area all increase together. PCA can compress all 30 into just 2 components that still capture most of the structure.</p>
@@ -1190,7 +1534,7 @@ pipeline.<span class="fn">predict</span>(X_new)   <span class="cm"># raw 30 feat
     <tr><td><strong>L2: Feature Engineering</strong></td><td>Creating better inputs</td><td>Linear models are linear in weights, not features — hand-craft curves via x², log(x), etc.</td></tr>
     <tr><td><strong>L3: Linear Regression (GD)</strong></td><td>Iterative fitting via gradient descent</td><td>MSE is the loss; gradient tells direction; learning rate controls step size</td></tr>
     <tr><td><strong>L4: OLS Method</strong></td><td>Closed-form exact solution</td><td>β* = (XᵀX)⁻¹Xᵀy — one formula gives the exact optimal weights</td></tr>
-    <tr><td><strong>L5: Supervised Learning</strong></td><td>Full ML pipeline + regularisation</td><td>Split before fitting; Ridge/Lasso prevent overfitting by penalising large weights</td></tr>
+    <tr><td><strong>L5: Generalisation &amp; Regularisation</strong></td><td>Full ML pipeline + regularisation</td><td>Split before fitting; Ridge/Lasso prevent overfitting by penalising large weights</td></tr>
     <tr><td><strong>L6: Assumptions</strong></td><td>When linear regression is valid</td><td>5 assumptions about the error term — check with residual plots</td></tr>
     <tr><td><strong>L7: Scikit-Learn</strong></td><td>The sklearn API</td><td>One universal pattern: import → create → fit → predict → score</td></tr>
     <tr><td><strong>L8: PCA</strong></td><td>Dimensionality reduction</td><td>Find the directions of maximum variance; compress features without losing information</td></tr>
@@ -1285,7 +1629,7 @@ pipeline.<span class="fn">predict</span>(X_new)   <span class="cm"># raw 30 feat
   </table>
 
   <!-- ── L5 ── -->
-  <h3>L5: Supervised Learning — The Full ML Pipeline</h3>
+  <h3>L5: Generalisation &amp; Regularisation</h3>
   <div class="card"><div class="key-concept"><div class="label">The golden rule</div><p>Never evaluate your model on the data it trained on. Always split into train and test <em>first</em>, then fit only on training data.</p></div></div>
 
   <h4>Bias-Variance Tradeoff</h4>
@@ -1425,7 +1769,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
           <div class="topic-chip" id="chip-w2" onclick="toggleChip('w2')">L2: Feature Eng.</div>
           <div class="topic-chip" id="chip-w3" onclick="toggleChip('w3')">L3: Linear Reg. (GD)</div>
           <div class="topic-chip" id="chip-w4" onclick="toggleChip('w4')">L4: OLS</div>
-          <div class="topic-chip" id="chip-w5" onclick="toggleChip('w5')">L5: Supervised</div>
+          <div class="topic-chip" id="chip-w5" onclick="toggleChip('w5')">L5: Generalisation</div>
           <div class="topic-chip" id="chip-w6" onclick="toggleChip('w6')">L6: Assumptions</div>
           <div class="topic-chip" id="chip-w7" onclick="toggleChip('w7')">L7: Sklearn</div>
           <div class="topic-chip" id="chip-w8" onclick="toggleChip('w8')">L8: PCA</div>
@@ -1571,7 +1915,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
         <div class="topic-chip" id="fc-chip-w2" onclick="fcFilter('w2')">L2: Feature Eng.</div>
         <div class="topic-chip" id="fc-chip-w3" onclick="fcFilter('w3')">L3: Linear Reg.</div>
         <div class="topic-chip" id="fc-chip-w4" onclick="fcFilter('w4')">L4: OLS</div>
-        <div class="topic-chip" id="fc-chip-w5" onclick="fcFilter('w5')">L5: Supervised</div>
+        <div class="topic-chip" id="fc-chip-w5" onclick="fcFilter('w5')">L5: Generalisation</div>
         <div class="topic-chip" id="fc-chip-w6" onclick="fcFilter('w6')">L6: Assumptions</div>
         <div class="topic-chip" id="fc-chip-w7" onclick="fcFilter('w7')">L7: Sklearn</div>
         <div class="topic-chip" id="fc-chip-w8" onclick="fcFilter('w8')">L8: PCA</div>
@@ -1815,6 +2159,23 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
     <p style="margin:10px 0 0; font-size:0.82rem">Even the simplest classifier — "always predict Class A" — has a boundary. It's just infinitely far away.</p>
   </div>
 
+  <div class="figure">
+    <div class="fig-title">Linear vs Non-Linear Decision Boundaries</div>
+    <svg viewBox="0 0 470 200" role="img" aria-label="Left: two classes split by a straight line. Right: two classes split by a curved boundary.">
+      <!-- LEFT: linear boundary -->
+      <line x1="60" y1="34" x2="158" y2="176" stroke="#fbbf24" stroke-width="2.5"/>
+      <g fill="#5b8af5"><circle cx="35" cy="150" r="4"/><circle cx="55" cy="135" r="4"/><circle cx="45" cy="162" r="4"/><circle cx="72" cy="146" r="4"/><circle cx="60" cy="120" r="4"/><circle cx="86" cy="160" r="4"/><circle cx="50" cy="108" r="4"/></g>
+      <g fill="#f87171"><circle cx="150" cy="60" r="4"/><circle cx="170" cy="76" r="4"/><circle cx="160" cy="50" r="4"/><circle cx="186" cy="66" r="4"/><circle cx="176" cy="92" r="4"/><circle cx="138" cy="72" r="4"/><circle cx="195" cy="100" r="4"/></g>
+      <text x="115" y="194" fill="#94a3b8" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">linear (Logistic, linear SVM)</text>
+      <!-- RIGHT: non-linear boundary -->
+      <path d="M 352 30 C 312 80, 398 118, 348 172" fill="none" stroke="#fbbf24" stroke-width="2.5"/>
+      <g fill="#5b8af5"><circle cx="270" cy="62" r="4"/><circle cx="288" cy="100" r="4"/><circle cx="276" cy="140" r="4"/><circle cx="304" cy="82" r="4"/><circle cx="298" cy="122" r="4"/><circle cx="314" cy="152" r="4"/><circle cx="284" cy="46" r="4"/></g>
+      <g fill="#f87171"><circle cx="402" cy="56" r="4"/><circle cx="416" cy="96" r="4"/><circle cx="404" cy="136" r="4"/><circle cx="388" cy="76" r="4"/><circle cx="422" cy="126" r="4"/><circle cx="434" cy="92" r="4"/><circle cx="396" cy="160" r="4"/></g>
+      <text x="360" y="194" fill="#94a3b8" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">non-linear (Trees, KNN, SVM-RBF)</text>
+    </svg>
+    <p class="fig-caption">Every classifier carves feature space into regions. Simple models draw a straight boundary (left); flexible models bend it to fit complex class shapes (right). 🔵 = class A, 🔴 = class B.</p>
+  </div>
+
   <h3>Two Families of Classifiers</h3>
   <p>The most important conceptual split in classification. Both families produce decision boundaries, but they get there differently.</p>
   <div class="card-grid">
@@ -1944,6 +2305,29 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
         <p>For a new point, plug each feature value into the Gaussian PDF to get P(xᵢ | y). Multiply across all features × prior. Pick the class with the highest score.</p>
       </div>
     </div>
+  </div>
+
+  <div class="figure">
+    <div class="fig-title">How Gaussian Naive Bayes Decides</div>
+    <svg viewBox="0 0 470 200" role="img" aria-label="Two overlapping bell curves, one per class, meeting at a decision boundary">
+      <!-- fills -->
+      <path d="M 45 160 C 105 158, 135 52, 160 52 C 185 52, 215 158, 275 160 Z" fill="rgba(91,138,245,0.16)"/>
+      <path d="M 200 160 C 262 158, 282 62, 300 62 C 318 62, 342 158, 432 160 Z" fill="rgba(248,113,113,0.16)"/>
+      <!-- baseline -->
+      <line x1="30" y1="160" x2="448" y2="160" stroke="#2d3561" stroke-width="1.5"/>
+      <!-- bells -->
+      <path d="M 45 160 C 105 158, 135 52, 160 52 C 185 52, 215 158, 275 160" fill="none" stroke="#5b8af5" stroke-width="2.5"/>
+      <path d="M 200 160 C 262 158, 282 62, 300 62 C 318 62, 342 158, 432 160" fill="none" stroke="#f87171" stroke-width="2.5"/>
+      <!-- decision boundary at crossover -->
+      <line x1="233" y1="92" x2="233" y2="172" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="233" y="186" fill="#fbbf24" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">decision boundary</text>
+      <!-- labels -->
+      <text x="150" y="44" fill="#5b8af5" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">P(x | class 0)</text>
+      <text x="312" y="54" fill="#f87171" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">P(x | class 1)</text>
+      <text x="120" y="110" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">→ predict 0</text>
+      <text x="360" y="110" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">→ predict 1</text>
+    </svg>
+    <p class="fig-caption">Training fits one bell curve (mean + std) per class for each feature. To classify a point, NB reads its height under each curve (× the class prior) and picks the taller one. The classes meet at the <strong>decision boundary</strong> where the curves cross.</p>
   </div>
 
   <h3>Log Probabilities — Avoiding Numerical Underflow</h3>
@@ -2115,6 +2499,78 @@ sns.<span class="fn">displot</span>(log_proba[:, <span class="nu">1</span>])</pr
     <div class="card"><div class="key-concept"><div class="label">Tuning the threshold</div><p>Lower it → catch more positives (higher recall, more false alarms). Raise it → be more certain before predicting positive (higher precision). Covered in L11.</p></div></div>
   </div>
 
+  <h3>Interactive: The Sigmoid &amp; the Decision Threshold</h3>
+  <p>Each point's score <em>z</em> is squashed by the sigmoid into a probability. Points whose probability clears the <strong>threshold</strong> (green region, right of the decision boundary) are predicted positive. Drag the threshold down to catch more positives — and watch the false alarms rise. 🔵 = true class 0, 🔴 = true class 1, <span style="color:#fbbf24">yellow ring</span> = misclassified.</p>
+  <div class="card" style="padding:16px">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px">
+      <label style="font-size:0.82rem; color:var(--text-muted); white-space:nowrap">threshold = <strong id="w10-thr-val">0.50</strong></label>
+      <input type="range" id="w10-thr" min="0.1" max="0.9" step="0.05" value="0.5" style="flex:1" oninput="w10Draw()">
+    </div>
+    <canvas id="w10-canvas" width="520" height="260" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; font-size:0.83rem">
+      <div style="padding:8px 12px; background:rgba(91,138,245,0.1); border-radius:6px; border-left:3px solid #5b8af5">
+        <div style="color:var(--text-muted); font-size:0.75rem">Decision boundary z*</div>
+        <div id="w10-info-z" style="color:#5b8af5; font-weight:700; font-family:var(--mono)"></div>
+      </div>
+      <div style="padding:8px 12px; background:rgba(52,211,153,0.1); border-radius:6px; border-left:3px solid #34d399">
+        <div style="color:var(--text-muted); font-size:0.75rem">Recall (positives caught)</div>
+        <div id="w10-info-rec" style="color:#34d399; font-weight:700; font-family:var(--mono)"></div>
+      </div>
+      <div style="padding:8px 12px; background:rgba(248,113,113,0.1); border-radius:6px; border-left:3px solid #f87171">
+        <div style="color:var(--text-muted); font-size:0.75rem">False alarms (FP)</div>
+        <div id="w10-info-fp" style="color:#f87171; font-weight:700; font-family:var(--mono)"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    var data=[{z:-4.5,y:0},{z:-3.2,y:0},{z:-2.6,y:0},{z:-1.7,y:0},{z:-1.0,y:1},{z:-0.3,y:0},{z:0.4,y:1},{z:1.0,y:0},{z:1.7,y:1},{z:2.5,y:1},{z:3.2,y:1},{z:4.3,y:1}];
+    function sig(z){return 1/(1+Math.exp(-z));}
+    window.w10Draw=function(){
+      var cv=document.getElementById('w10-canvas');if(!cv)return;
+      var ctx=cv.getContext('2d');
+      var t=parseFloat(document.getElementById('w10-thr').value);
+      document.getElementById('w10-thr-val').textContent=t.toFixed(2);
+      var W=520,H=260,PL=46,PR=16,PT=20,PB=34;
+      var zMin=-6,zMax=6,pMin=-0.05,pMax=1.05;
+      function xp(z){return PL+(z-zMin)/(zMax-zMin)*(W-PL-PR);}
+      function yp(p){return PT+(pMax-p)/(pMax-pMin)*(H-PT-PB);}
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+      var zStar=Math.log(t/(1-t));
+      ctx.fillStyle='rgba(52,211,153,0.08)';ctx.fillRect(xp(zStar),PT,(W-PR)-xp(zStar),(H-PB)-PT);
+      ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(PL,PT);ctx.lineTo(PL,H-PB);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(PL,yp(0));ctx.lineTo(W-PR,yp(0));ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='top';
+      [-6,-4,-2,0,2,4,6].forEach(function(v){ctx.fillText(v,xp(v),H-PB+5);});
+      ctx.textAlign='right';ctx.textBaseline='middle';
+      [0,0.5,1].forEach(function(v){ctx.fillText(v.toFixed(1),PL-5,yp(v));});
+      ctx.beginPath();ctx.strokeStyle='#5b8af5';ctx.lineWidth=2.5;
+      for(var i=0;i<=240;i++){var z=zMin+i*(zMax-zMin)/240;if(i===0)ctx.moveTo(xp(z),yp(sig(z)));else ctx.lineTo(xp(z),yp(sig(z)));}ctx.stroke();
+      ctx.strokeStyle='rgba(251,191,36,0.85)';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);
+      ctx.beginPath();ctx.moveTo(PL,yp(t));ctx.lineTo(W-PR,yp(t));ctx.stroke();
+      ctx.beginPath();ctx.moveTo(xp(zStar),PT);ctx.lineTo(xp(zStar),H-PB);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='#fbbf24';ctx.font='10px sans-serif';ctx.textAlign='left';ctx.textBaseline='alphabetic';
+      ctx.fillText('threshold '+t.toFixed(2),PL+5,yp(t)-5);
+      ctx.textAlign='center';ctx.fillStyle='rgba(52,211,153,0.85)';
+      ctx.fillText('predict positive →',(xp(zStar)+(W-PR))/2,PT+13);
+      var TP=0,FP=0,FN=0;
+      data.forEach(function(d){
+        var pred=sig(d.z)>=t?1:0;
+        if(d.y===1&&pred===1)TP++;else if(d.y===0&&pred===1)FP++;else if(d.y===1&&pred===0)FN++;
+        ctx.beginPath();ctx.arc(xp(d.z),yp(sig(d.z)),5,0,6.28);
+        ctx.fillStyle=d.y===1?'#f87171':'#5b8af5';ctx.fill();
+        ctx.lineWidth=2;ctx.strokeStyle=(pred===d.y)?'#0d1117':'#fbbf24';ctx.stroke();
+      });
+      var recall=(TP+FN)>0?Math.round(100*TP/(TP+FN)):0;
+      document.getElementById('w10-info-z').textContent=zStar.toFixed(2);
+      document.getElementById('w10-info-rec').textContent=recall+'%';
+      document.getElementById('w10-info-fp').textContent=FP+' point'+(FP===1?'':'s');
+    };
+    w10Draw();
+  })();
+  </script>
+
   <h3>Loss Function — Log Loss (Binary Cross-Entropy)</h3>
   <p>You can't use MSE here — the loss surface becomes non-convex and gradient descent gets stuck in local minima. Instead logistic regression uses <strong>binary cross-entropy</strong>:</p>
   <div class="card" style="text-align:center; padding:16px">
@@ -2246,6 +2702,88 @@ model.<span class="fn">fit</span>(X_train, y_train)
     <div class="card"><div class="key-concept"><div class="label">Higher threshold → higher Precision</div><p>Only predict positive when very confident. Fewer false alarms, but miss more real positives. Use when false alarms are costly (spam filters).</p></div></div>
   </div>
 
+  <h3>Interactive: Threshold → Confusion Matrix</h3>
+  <p>Each dot is one example with a model score. Slide the <strong>threshold</strong>: everything to its right is predicted positive. Watch the confusion matrix and metrics update live — and see precision and recall trade off against each other. 🔴 = actual positive, 🔵 = actual negative, <span style="color:#fbbf24">yellow ring</span> = misclassified.</p>
+  <div class="card" style="padding:16px">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px">
+      <label style="font-size:0.82rem; color:var(--text-muted); white-space:nowrap">threshold = <strong id="w11-thr-val">0.50</strong></label>
+      <input type="range" id="w11-thr" min="0.05" max="0.95" step="0.01" value="0.5" style="flex:1" oninput="w11Draw()">
+    </div>
+    <canvas id="w11-canvas" width="520" height="210" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div style="display:flex; flex-wrap:wrap; gap:16px; margin-top:14px; align-items:center; justify-content:center">
+      <div style="display:grid; grid-template-columns:auto auto auto; gap:4px; font-size:0.72rem; color:var(--text-muted)">
+        <div></div><div style="text-align:center; padding-bottom:2px">Pred +</div><div style="text-align:center; padding-bottom:2px">Pred −</div>
+        <div style="display:flex; align-items:center; padding-right:4px">Actual +</div>
+        <div class="cm-cell" style="background:rgba(52,211,153,0.16); border:1px solid rgba(52,211,153,0.4); border-radius:6px; padding:6px 12px; text-align:center; min-width:54px"><span id="w11-tp" style="font-size:1.15rem; font-weight:700; color:#34d399">0</span><br>TP</div>
+        <div class="cm-cell" style="background:rgba(248,113,113,0.16); border:1px solid rgba(248,113,113,0.4); border-radius:6px; padding:6px 12px; text-align:center; min-width:54px"><span id="w11-fn" style="font-size:1.15rem; font-weight:700; color:#f87171">0</span><br>FN</div>
+        <div style="display:flex; align-items:center; padding-right:4px">Actual −</div>
+        <div class="cm-cell" style="background:rgba(248,113,113,0.16); border:1px solid rgba(248,113,113,0.4); border-radius:6px; padding:6px 12px; text-align:center; min-width:54px"><span id="w11-fp" style="font-size:1.15rem; font-weight:700; color:#f87171">0</span><br>FP</div>
+        <div class="cm-cell" style="background:rgba(52,211,153,0.16); border:1px solid rgba(52,211,153,0.4); border-radius:6px; padding:6px 12px; text-align:center; min-width:54px"><span id="w11-tn" style="font-size:1.15rem; font-weight:700; color:#34d399">0</span><br>TN</div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; min-width:200px">
+        <div style="padding:8px 12px; background:rgba(91,138,245,0.1); border-radius:6px; border-left:3px solid #5b8af5"><div style="color:var(--text-muted); font-size:0.72rem">Precision</div><div id="w11-prec" style="color:#5b8af5; font-weight:700; font-family:var(--mono)"></div></div>
+        <div style="padding:8px 12px; background:rgba(52,211,153,0.1); border-radius:6px; border-left:3px solid #34d399"><div style="color:var(--text-muted); font-size:0.72rem">Recall</div><div id="w11-rec" style="color:#34d399; font-weight:700; font-family:var(--mono)"></div></div>
+        <div style="padding:8px 12px; background:rgba(167,139,250,0.1); border-radius:6px; border-left:3px solid #a78bfa"><div style="color:var(--text-muted); font-size:0.72rem">F1 score</div><div id="w11-f1" style="color:#a78bfa; font-weight:700; font-family:var(--mono)"></div></div>
+        <div style="padding:8px 12px; background:rgba(251,191,36,0.1); border-radius:6px; border-left:3px solid #fbbf24"><div style="color:var(--text-muted); font-size:0.72rem">Accuracy</div><div id="w11-acc" style="color:#fbbf24; font-weight:700; font-family:var(--mono)"></div></div>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    var neg=[0.06,0.11,0.16,0.20,0.24,0.28,0.32,0.36,0.40,0.45,0.50,0.55,0.61];
+    var pos=[0.39,0.44,0.50,0.56,0.61,0.66,0.70,0.74,0.78,0.83,0.88,0.93,0.97];
+    window.w11Draw=function(){
+      var cv=document.getElementById('w11-canvas');if(!cv)return;
+      var ctx=cv.getContext('2d');
+      var t=parseFloat(document.getElementById('w11-thr').value);
+      document.getElementById('w11-thr-val').textContent=t.toFixed(2);
+      var W=520,H=210,PL=24,PR=16,PT=26,PB=30;
+      function xp(s){return PL+s*(W-PL-PR);}
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba(52,211,153,0.07)';ctx.fillRect(xp(t),PT,(W-PR)-xp(t),(H-PB)-PT);
+      // axis
+      ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(PL,H-PB);ctx.lineTo(W-PR,H-PB);ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px monospace';ctx.textAlign='center';ctx.textBaseline='top';
+      [0,0.25,0.5,0.75,1].forEach(function(v){ctx.fillText(v.toFixed(2),xp(v),H-PB+5);});
+      // row labels
+      ctx.textAlign='left';ctx.textBaseline='middle';ctx.font='10px sans-serif';
+      ctx.fillStyle='#f87171';ctx.fillText('positives',PL+2,PT+8);
+      ctx.fillStyle='#5b8af5';ctx.fillText('negatives',PL+2,(H-PB)-10);
+      // threshold line
+      ctx.strokeStyle='rgba(251,191,36,0.9)';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);
+      ctx.beginPath();ctx.moveTo(xp(t),PT-4);ctx.lineTo(xp(t),H-PB);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='#fbbf24';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+      ctx.fillText('threshold',xp(t),PT-8);
+      ctx.textAlign='left';ctx.fillStyle='rgba(52,211,153,0.85)';ctx.fillText('predict +',xp(t)+5,H-PB-6);
+      var TP=0,FP=0,FN=0,TN=0;
+      pos.forEach(function(s,i){
+        var pred=s>=t;if(pred)TP++;else FN++;
+        var x=xp(s),y=PT+12+(i%3)*15;
+        ctx.beginPath();ctx.arc(x,y,5,0,6.28);ctx.fillStyle='#f87171';ctx.fill();
+        ctx.lineWidth=2;ctx.strokeStyle=pred?'#0d1117':'#fbbf24';ctx.stroke();
+      });
+      neg.forEach(function(s,i){
+        var pred=s>=t;if(pred)FP++;else TN++;
+        var x=xp(s),y=(H-PB)-14-(i%3)*15;
+        ctx.beginPath();ctx.arc(x,y,5,0,6.28);ctx.fillStyle='#5b8af5';ctx.fill();
+        ctx.lineWidth=2;ctx.strokeStyle=pred?'#fbbf24':'#0d1117';ctx.stroke();
+      });
+      var prec=(TP+FP)>0?TP/(TP+FP):0, rec=(TP+FN)>0?TP/(TP+FN):0;
+      var f1=(prec+rec)>0?2*prec*rec/(prec+rec):0, acc=(TP+TN)/(TP+FP+FN+TN);
+      document.getElementById('w11-tp').textContent=TP;
+      document.getElementById('w11-fn').textContent=FN;
+      document.getElementById('w11-fp').textContent=FP;
+      document.getElementById('w11-tn').textContent=TN;
+      document.getElementById('w11-prec').textContent=prec.toFixed(2);
+      document.getElementById('w11-rec').textContent=rec.toFixed(2);
+      document.getElementById('w11-f1').textContent=f1.toFixed(2);
+      document.getElementById('w11-acc').textContent=acc.toFixed(2);
+    };
+    w11Draw();
+  })();
+  </script>
+
   <h3>ROC Curve and AUC</h3>
   <p>The ROC curve sweeps the threshold from 0 → 1 and at each point plots False Positive Rate (x) vs True Positive Rate/Recall (y). AUC summarises the whole curve in one number.</p>
   <table>
@@ -2328,6 +2866,38 @@ y_prob = model.<span class="fn">predict_proba</span>(X_test)[:, <span class="nu"
   <div class="key-concept">
     <div class="label">No feature scaling needed</div>
     <p>Decision trees never compare features against each other. Each split asks "is feature X above threshold T?" — one feature at a time, in its own units. Unlike KNN or logistic regression, scale differences between features are completely irrelevant.</p>
+  </div>
+
+  <div class="figure">
+    <div class="fig-title">Splits Carve Feature Space into Boxes</div>
+    <svg viewBox="0 0 470 205" role="img" aria-label="Left: axis-aligned splits partition 2D space into rectangles. Right: the matching decision tree.">
+      <!-- LEFT: feature space -->
+      <rect x="20" y="15" width="100" height="170" fill="rgba(91,138,245,0.12)"/>
+      <rect x="120" y="15" width="105" height="90" fill="rgba(248,113,113,0.12)"/>
+      <rect x="120" y="105" width="105" height="80" fill="rgba(91,138,245,0.12)"/>
+      <rect x="20" y="15" width="205" height="170" fill="none" stroke="#2d3561" stroke-width="1.5"/>
+      <line x1="120" y1="15" x2="120" y2="185" stroke="#fbbf24" stroke-width="2"/>
+      <line x1="120" y1="105" x2="225" y2="105" stroke="#fbbf24" stroke-width="2"/>
+      <g fill="#5b8af5"><circle cx="45" cy="60" r="4"/><circle cx="70" cy="120" r="4"/><circle cx="55" cy="150" r="4"/><circle cx="90" cy="90" r="4"/><circle cx="40" cy="105" r="4"/><circle cx="155" cy="150" r="4"/><circle cx="190" cy="162" r="4"/><circle cx="175" cy="135" r="4"/><circle cx="205" cy="148" r="4"/></g>
+      <g fill="#f87171"><circle cx="150" cy="48" r="4"/><circle cx="182" cy="40" r="4"/><circle cx="165" cy="72" r="4"/><circle cx="202" cy="58" r="4"/></g>
+      <text x="122" y="200" fill="#fbbf24" font-size="9" font-family="'Segoe UI',sans-serif">split 1: x₁</text>
+      <!-- RIGHT: tree -->
+      <g font-family="'Segoe UI',sans-serif" text-anchor="middle">
+        <line x1="355" y1="46" x2="305" y2="86" stroke="#94a3b8" stroke-width="1.5"/>
+        <line x1="355" y1="46" x2="410" y2="86" stroke="#94a3b8" stroke-width="1.5"/>
+        <line x1="410" y1="116" x2="383" y2="150" stroke="#94a3b8" stroke-width="1.5"/>
+        <line x1="410" y1="116" x2="440" y2="150" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="327" y="22" width="56" height="24" rx="6" fill="rgba(91,138,245,0.15)" stroke="#5b8af5" stroke-width="1.5"/>
+        <text x="355" y="38" fill="#e2e8f0" font-size="11">x₁ &lt; t ?</text>
+        <circle cx="305" cy="98" r="13" fill="rgba(91,138,245,0.25)" stroke="#5b8af5" stroke-width="1.5"/><text x="305" y="102" fill="#5b8af5" font-size="11" font-weight="700">A</text>
+        <rect x="383" y="92" width="54" height="24" rx="6" fill="rgba(248,113,113,0.15)" stroke="#f87171" stroke-width="1.5"/>
+        <text x="410" y="108" fill="#e2e8f0" font-size="11">x₂ &lt; s ?</text>
+        <circle cx="383" cy="162" r="13" fill="rgba(248,113,113,0.25)" stroke="#f87171" stroke-width="1.5"/><text x="383" y="166" fill="#f87171" font-size="11" font-weight="700">B</text>
+        <circle cx="440" cy="162" r="13" fill="rgba(91,138,245,0.25)" stroke="#5b8af5" stroke-width="1.5"/><text x="440" y="166" fill="#5b8af5" font-size="11" font-weight="700">A</text>
+        <text x="318" y="72" fill="#94a3b8" font-size="9">yes</text><text x="390" y="72" fill="#94a3b8" font-size="9">no</text>
+      </g>
+    </svg>
+    <p class="fig-caption">Because each split tests one feature against a threshold, a tree partitions space into <strong>axis-aligned rectangles</strong> (left) — exactly the if/else flowchart on the right. More splits → finer boxes → risk of overfitting.</p>
   </div>
 
   <h3>Growing the Tree — Recursive Binary Splitting</h3>
@@ -2577,6 +3147,47 @@ plt.<span class="fn">tight_layout</span>(); plt.<span class="fn">show</span>()</
     <div class="card"><div class="key-concept"><div class="label">Regression average</div><p>Each tree predicts a number. The mean across all trees is the final prediction.</p></div></div>
   </div>
 
+  <div class="figure">
+    <div class="fig-title">Many Trees Vote — Errors Cancel Out</div>
+    <svg viewBox="0 0 470 190" role="img" aria-label="Training data is bootstrapped into several trees that each vote; the majority wins.">
+      <defs><marker id="rf-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+      <!-- data -->
+      <rect x="14" y="70" width="54" height="50" rx="6" fill="rgba(91,138,245,0.12)" stroke="#5b8af5" stroke-width="1.5"/>
+      <text x="41" y="91" fill="#e2e8f0" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">training</text>
+      <text x="41" y="104" fill="#e2e8f0" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">data</text>
+      <!-- bootstrap arrows + trees + votes -->
+      <g>
+        <line x1="70" y1="95" x2="126" y2="38" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#rf-arrow)"/>
+        <line x1="70" y1="95" x2="126" y2="95" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#rf-arrow)"/>
+        <line x1="70" y1="95" x2="126" y2="152" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#rf-arrow)"/>
+      </g>
+      <g stroke="#34d399" stroke-width="1.8" fill="none">
+        <path d="M 150 24 L 134 46 L 166 46 Z"/><line x1="150" y1="46" x2="150" y2="54"/>
+        <path d="M 150 81 L 134 103 L 166 103 Z"/><line x1="150" y1="103" x2="150" y2="111"/>
+        <path d="M 150 138 L 134 160 L 166 160 Z"/><line x1="150" y1="160" x2="150" y2="168"/>
+      </g>
+      <!-- votes -->
+      <circle cx="196" cy="38" r="11" fill="rgba(91,138,245,0.25)" stroke="#5b8af5" stroke-width="1.5"/><text x="196" y="42" fill="#5b8af5" font-size="11" font-weight="700" text-anchor="middle">A</text>
+      <circle cx="196" cy="95" r="11" fill="rgba(91,138,245,0.25)" stroke="#5b8af5" stroke-width="1.5"/><text x="196" y="99" fill="#5b8af5" font-size="11" font-weight="700" text-anchor="middle">A</text>
+      <circle cx="196" cy="152" r="11" fill="rgba(248,113,113,0.25)" stroke="#f87171" stroke-width="1.5"/><text x="196" y="156" fill="#f87171" font-size="11" font-weight="700" text-anchor="middle">B</text>
+      <!-- converge arrows -->
+      <g stroke="#94a3b8" stroke-width="1.2" fill="none">
+        <line x1="212" y1="40" x2="300" y2="88" marker-end="url(#rf-arrow)"/>
+        <line x1="212" y1="95" x2="300" y2="95" marker-end="url(#rf-arrow)"/>
+        <line x1="212" y1="150" x2="300" y2="102" marker-end="url(#rf-arrow)"/>
+      </g>
+      <!-- vote box -->
+      <rect x="302" y="72" width="64" height="46" rx="6" fill="rgba(167,139,250,0.12)" stroke="#a78bfa" stroke-width="1.5"/>
+      <text x="334" y="91" fill="#e2e8f0" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">majority</text>
+      <text x="334" y="104" fill="#e2e8f0" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">vote</text>
+      <!-- result -->
+      <line x1="366" y1="95" x2="398" y2="95" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#rf-arrow)"/>
+      <circle cx="430" cy="95" r="15" fill="rgba(52,211,153,0.2)" stroke="#34d399" stroke-width="2"/><text x="430" y="100" fill="#34d399" font-size="13" font-weight="700" text-anchor="middle">A</text>
+      <text x="430" y="128" fill="#94a3b8" font-size="9" text-anchor="middle" font-family="'Segoe UI',sans-serif">2 of 3 → A</text>
+    </svg>
+    <p class="fig-caption">Each tree trains on a different bootstrap sample (and a random feature subset), so they overfit differently. Combining their votes cancels the individual errors and keeps the shared signal — far lower variance than any single tree.</p>
+  </div>
+
   <h3>Key Hyperparameters</h3>
   <table>
     <tr><th>Parameter</th><th>What it controls</th><th>Typical range</th></tr>
@@ -2621,6 +3232,68 @@ rf.<span class="fn">score</span>(X_test, y_test)
     </div>
   </div>
   <p>No model is built. No parameters are learned. The training data <strong>is</strong> the model — fit() just stores it.</p>
+
+  <h3>Interactive: Choosing K</h3>
+  <p>The ◆ query point sits near a class boundary. Slide <strong>K</strong> and watch the highlighted neighbours (and the prediction) change — at K=1 the single closest point wins, but widening the circle can <em>flip</em> the majority. This is the bias-variance dial of KNN: small K = jagged/noisy, large K = smooth/over-general.</p>
+  <div class="card" style="padding:16px">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px">
+      <label style="font-size:0.82rem; color:var(--text-muted); white-space:nowrap">K = <strong id="w14-k-val">3</strong></label>
+      <input type="range" id="w14-k" min="1" max="7" step="2" value="3" style="flex:1" oninput="w14Draw()">
+    </div>
+    <canvas id="w14-canvas" width="340" height="330" style="width:100%; max-width:340px; display:block; margin:0 auto; border-radius:8px; background:#0d1117"></canvas>
+    <div style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:0.83rem; max-width:340px; margin-left:auto; margin-right:auto">
+      <div style="padding:8px 12px; background:rgba(91,138,245,0.1); border-radius:6px; border-left:3px solid #5b8af5"><div style="color:var(--text-muted); font-size:0.72rem">Prediction</div><div id="w14-pred" style="font-weight:700; font-family:var(--mono)"></div></div>
+      <div style="padding:8px 12px; background:rgba(251,191,36,0.1); border-radius:6px; border-left:3px solid #fbbf24"><div style="color:var(--text-muted); font-size:0.72rem">Neighbour vote</div><div id="w14-vote" style="color:#fbbf24; font-weight:700; font-family:var(--mono)"></div></div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    var A=[[3.9,4.6],[6.1,5.6],[5.2,3.6],[3,7],[2.8,6.5],[2.5,3],[2,5.5],[3.5,2.5]];
+    var B=[[5.2,5.2],[4.7,4.8],[7.5,4],[7,7],[8,6],[6.8,2.8]];
+    var Q=[5,5];
+    window.w14Draw=function(){
+      var cv=document.getElementById('w14-canvas');if(!cv)return;
+      var ctx=cv.getContext('2d');
+      var k=parseInt(document.getElementById('w14-k').value);
+      document.getElementById('w14-k-val').textContent=k;
+      var W=340,H=330,PL=30,PT=20;
+      function xp(x){return PL+x/10*280;}
+      function yp(y){return PT+(10-y)/10*280;}
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+      ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;ctx.strokeRect(PL,PT,280,280);
+      var qx=xp(Q[0]),qy=yp(Q[1]);
+      var pts=[];
+      A.forEach(function(p){pts.push({x:xp(p[0]),y:yp(p[1]),c:'A'});});
+      B.forEach(function(p){pts.push({x:xp(p[0]),y:yp(p[1]),c:'B'});});
+      pts.forEach(function(p){p.d=Math.hypot(p.x-qx,p.y-qy);});
+      pts.sort(function(a,b){return a.d-b.d;});
+      var kth=pts[k-1].d;
+      ctx.beginPath();ctx.arc(qx,qy,kth+5,0,6.28);
+      ctx.strokeStyle='rgba(251,191,36,0.7)';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);ctx.stroke();ctx.setLineDash([]);
+      var na=0,nb=0;
+      for(var i=0;i<k;i++){var p=pts[i];if(p.c==='A')na++;else nb++;
+        ctx.beginPath();ctx.moveTo(qx,qy);ctx.lineTo(p.x,p.y);ctx.strokeStyle='rgba(251,191,36,0.4)';ctx.lineWidth=1;ctx.stroke();}
+      pts.forEach(function(p,i){
+        var near=i<k;
+        ctx.beginPath();ctx.arc(p.x,p.y,near?6:5,0,6.28);
+        ctx.fillStyle=p.c==='A'?'#5b8af5':'#f87171';ctx.fill();
+        if(near){ctx.lineWidth=2.5;ctx.strokeStyle='#fbbf24';ctx.stroke();}
+      });
+      var pred=na>=nb?'A':'B';var pcol=pred==='A'?'#5b8af5':'#f87171';
+      ctx.save();ctx.translate(qx,qy);ctx.rotate(Math.PI/4);
+      ctx.fillStyle=pcol;ctx.strokeStyle='#fff';ctx.lineWidth=2;
+      ctx.fillRect(-7,-7,14,14);ctx.strokeRect(-7,-7,14,14);ctx.restore();
+      ctx.font='10px sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
+      ctx.fillStyle='#5b8af5';ctx.fillText('● Class A',PL+4,PT+12);
+      ctx.fillStyle='#f87171';ctx.fillText('● Class B',PL+72,PT+12);
+      ctx.fillStyle='#e2e8f0';ctx.fillText('◆ query',PL+142,PT+12);
+      document.getElementById('w14-pred').textContent='Class '+pred;
+      document.getElementById('w14-pred').style.color=pcol;
+      document.getElementById('w14-vote').textContent='A '+na+'  vs  B '+nb;
+    };
+    w14Draw();
+  })();
+  </script>
 
   <h3>KNN Gives You Probabilities, Not Just a Label</h3>
   <p>The vote counts translate directly into class probabilities. For k=5 and neighbours [A, A, C, B, C]:</p>
@@ -2775,12 +3448,30 @@ SVM               → the unique line sitting in the exact middle of the widest 
 
   <h3>The Margin — What It Is and Why It Matters</h3>
   <p>The <strong>margin</strong> is the perpendicular distance between the decision boundary and the nearest training points from each class. Visualise it as a "no-man's-land" strip around the boundary:</p>
-  <div class="code-block"><pre><span class="cm">Class A (●)    Margin edge     Boundary     Margin edge    Class B (○)</span>
-<span class="cm">    ●              |               |               |            ○</span>
-<span class="cm">      ●       ←───|───────────────|───────────────|───→        ○</span>
-<span class="cm">    ●              |               |               |            ○</span>
-<span class="cm">                       ← margin ←   → margin →</span>
-<span class="cm">                          (maximise the total width)</span></pre></div>
+  <div class="figure">
+    <div class="fig-title">The Maximum-Margin Hyperplane</div>
+    <svg viewBox="0 0 470 220" role="img" aria-label="A boundary with the widest possible margin; the points touching the margin edges are support vectors.">
+      <!-- margin strip -->
+      <polygon points="199,193 229,23 311,37 281,207" fill="rgba(251,191,36,0.06)"/>
+      <!-- margin edges (dashed) -->
+      <line x1="199" y1="193" x2="229" y2="23" stroke="rgba(251,191,36,0.7)" stroke-width="1.5" stroke-dasharray="5 3"/>
+      <line x1="281" y1="207" x2="311" y2="37" stroke="rgba(251,191,36,0.7)" stroke-width="1.5" stroke-dasharray="5 3"/>
+      <!-- boundary (solid) -->
+      <line x1="240" y1="200" x2="270" y2="30" stroke="#fbbf24" stroke-width="2.5"/>
+      <!-- blue class -->
+      <g fill="#5b8af5"><circle cx="110" cy="150" r="5"/><circle cx="140" cy="95" r="5"/><circle cx="95" cy="115" r="5"/><circle cx="165" cy="65" r="5"/><circle cx="125" cy="185" r="5"/></g>
+      <!-- red class -->
+      <g fill="#f87171"><circle cx="350" cy="145" r="5"/><circle cx="375" cy="90" r="5"/><circle cx="395" cy="135" r="5"/><circle cx="345" cy="55" r="5"/><circle cx="360" cy="180" r="5"/></g>
+      <!-- support vectors (on the margin edges) -->
+      <g><circle cx="210" cy="128" r="6" fill="#5b8af5" stroke="#fff" stroke-width="2"/><circle cx="221" cy="66" r="6" fill="#5b8af5" stroke="#fff" stroke-width="2"/>
+         <circle cx="293" cy="139" r="6" fill="#f87171" stroke="#fff" stroke-width="2"/><circle cx="302" cy="79" r="6" fill="#f87171" stroke="#fff" stroke-width="2"/></g>
+      <!-- labels -->
+      <text x="262" y="20" fill="#fbbf24" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">boundary</text>
+      <text x="255" y="118" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">⟵ margin ⟶</text>
+      <text x="360" y="210" fill="#fff" font-size="10" text-anchor="middle" font-family="'Segoe UI',sans-serif">◯ = support vectors</text>
+    </svg>
+    <p class="fig-caption">Of the infinitely many separating lines, SVM picks the one with the <strong>widest margin</strong> (yellow strip). Only the closest points — the <strong>support vectors</strong> (white-ringed) — touch the margin edges and define the boundary; every other point could move freely without changing it.</p>
+  </div>
   <p>A wider margin means the model has a large safe zone around its decision boundary. Test points that land in this zone are classified confidently. A narrow margin means the boundary is dangerously close to training points — small noise in new data tips it the wrong way.</p>
   <div class="card">
     <div class="key-concept"><div class="label">The maths behind the margin</div>
@@ -2993,13 +3684,55 @@ X_test  = scaler.<span class="fn">transform</span>(X_test)          <span class=
 
   <h3>K-Fold Cross-Validation</h3>
   <p>A single train/test split can be lucky or unlucky. K-fold CV gives a reliable estimate by rotating which part of the data is the test set — every point gets tested exactly once.</p>
-  <div class="code-block"><pre><span class="cm"># K=5 illustration:</span>
-<span class="cm"># Fold 1: [TEST ][train][train][train][train] → score 1</span>
-<span class="cm"># Fold 2: [train][TEST ][train][train][train] → score 2</span>
-<span class="cm"># Fold 3: [train][train][TEST ][train][train] → score 3</span>
-<span class="cm"># Fold 4: [train][train][train][TEST ][train] → score 4</span>
-<span class="cm"># Fold 5: [train][train][train][train][TEST ] → score 5</span>
-<span class="cm"># Final = mean(scores) ± std(scores)</span></pre></div>
+  <div class="figure">
+    <div class="fig-title">5-Fold Cross-Validation</div>
+    <svg viewBox="0 0 470 220" role="img" aria-label="Five rounds; in each, a different fifth of the data is the test fold and the rest is training.">
+      <g font-family="'Segoe UI',sans-serif" font-size="9" text-anchor="middle">
+        <!-- Row 1 -->
+        <text x="34" y="33" fill="#94a3b8" font-size="10">Fold 1</text>
+        <rect x="64" y="16" width="52" height="26" rx="4" fill="rgba(52,211,153,0.22)" stroke="#34d399" stroke-width="1.5"/><text x="90" y="33" fill="#34d399" font-weight="700">TEST</text>
+        <rect x="122" y="16" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="148" y="33" fill="#94a3b8">train</text>
+        <rect x="180" y="16" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="206" y="33" fill="#94a3b8">train</text>
+        <rect x="238" y="16" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="264" y="33" fill="#94a3b8">train</text>
+        <rect x="296" y="16" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="322" y="33" fill="#94a3b8">train</text>
+        <text x="392" y="33" fill="#5b8af5" font-size="11">→ score₁</text>
+        <!-- Row 2 -->
+        <text x="34" y="69" fill="#94a3b8" font-size="10">Fold 2</text>
+        <rect x="64" y="52" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="90" y="69" fill="#94a3b8">train</text>
+        <rect x="122" y="52" width="52" height="26" rx="4" fill="rgba(52,211,153,0.22)" stroke="#34d399" stroke-width="1.5"/><text x="148" y="69" fill="#34d399" font-weight="700">TEST</text>
+        <rect x="180" y="52" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="206" y="69" fill="#94a3b8">train</text>
+        <rect x="238" y="52" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="264" y="69" fill="#94a3b8">train</text>
+        <rect x="296" y="52" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="322" y="69" fill="#94a3b8">train</text>
+        <text x="392" y="69" fill="#5b8af5" font-size="11">→ score₂</text>
+        <!-- Row 3 -->
+        <text x="34" y="105" fill="#94a3b8" font-size="10">Fold 3</text>
+        <rect x="64" y="88" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="90" y="105" fill="#94a3b8">train</text>
+        <rect x="122" y="88" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="148" y="105" fill="#94a3b8">train</text>
+        <rect x="180" y="88" width="52" height="26" rx="4" fill="rgba(52,211,153,0.22)" stroke="#34d399" stroke-width="1.5"/><text x="206" y="105" fill="#34d399" font-weight="700">TEST</text>
+        <rect x="238" y="88" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="264" y="105" fill="#94a3b8">train</text>
+        <rect x="296" y="88" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="322" y="105" fill="#94a3b8">train</text>
+        <text x="392" y="105" fill="#5b8af5" font-size="11">→ score₃</text>
+        <!-- Row 4 -->
+        <text x="34" y="141" fill="#94a3b8" font-size="10">Fold 4</text>
+        <rect x="64" y="124" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="90" y="141" fill="#94a3b8">train</text>
+        <rect x="122" y="124" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="148" y="141" fill="#94a3b8">train</text>
+        <rect x="180" y="124" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="206" y="141" fill="#94a3b8">train</text>
+        <rect x="238" y="124" width="52" height="26" rx="4" fill="rgba(52,211,153,0.22)" stroke="#34d399" stroke-width="1.5"/><text x="264" y="141" fill="#34d399" font-weight="700">TEST</text>
+        <rect x="296" y="124" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="322" y="141" fill="#94a3b8">train</text>
+        <text x="392" y="141" fill="#5b8af5" font-size="11">→ score₄</text>
+        <!-- Row 5 -->
+        <text x="34" y="177" fill="#94a3b8" font-size="10">Fold 5</text>
+        <rect x="64" y="160" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="90" y="177" fill="#94a3b8">train</text>
+        <rect x="122" y="160" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="148" y="177" fill="#94a3b8">train</text>
+        <rect x="180" y="160" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="206" y="177" fill="#94a3b8">train</text>
+        <rect x="238" y="160" width="52" height="26" rx="4" fill="rgba(91,138,245,0.12)" stroke="#2d3561"/><text x="264" y="177" fill="#94a3b8">train</text>
+        <rect x="296" y="160" width="52" height="26" rx="4" fill="rgba(52,211,153,0.22)" stroke="#34d399" stroke-width="1.5"/><text x="322" y="177" fill="#34d399" font-weight="700">TEST</text>
+        <text x="392" y="177" fill="#5b8af5" font-size="11">→ score₅</text>
+      </g>
+      <text x="235" y="206" fill="#e2e8f0" font-size="11" text-anchor="middle" font-family="'Segoe UI',sans-serif">Final = mean(score₁…score₅) ± std</text>
+    </svg>
+    <p class="fig-caption">The data is split into 5 equal folds. Each round trains on 4 folds and tests on the 5th — rotating so every point is tested exactly once. Averaging the 5 scores gives a far more reliable estimate than any single split, and the std shows how stable the model is.</p>
+  </div>
   <div class="card-grid">
     <div class="card"><div class="key-concept"><div class="label">Standard KFold</div><p>Splits data into k equal folds randomly. Fast. Use for regression or balanced classification.</p></div></div>
     <div class="card"><div class="key-concept"><div class="label">StratifiedKFold</div><p>Each fold preserves the same class proportion as the full dataset. Essential for imbalanced classification — ensures rare classes appear in every fold.</p></div></div>
@@ -3221,6 +3954,40 @@ grid.<span class="fn">fit</span>(X_train, y_train)
 <span class="cm">
 Final prediction → headlamps</span></pre></div>
   <div class="alert alert-info">These scores don't sum to 1 — you're doing a relative comparison (who is most confident), not computing true probabilities. That's why softmax (multinomial LR) is sometimes better for logistic regression.</div>
+
+  <div class="fig-grid">
+    <div class="figure">
+      <div class="fig-title" style="color:#5b8af5">Classifier 1: A vs rest</div>
+      <svg viewBox="0 0 160 135" role="img" aria-label="Binary classifier separating class A from all others">
+        <rect x="10" y="10" width="140" height="115" fill="none" stroke="#2d3561" stroke-width="1"/>
+        <line x1="16" y1="98" x2="110" y2="16" stroke="#fbbf24" stroke-width="2"/>
+        <g fill="#5b8af5"><circle cx="40" cy="40" r="4"/><circle cx="60" cy="55" r="4"/><circle cx="45" cy="65" r="4"/><circle cx="70" cy="42" r="4"/></g>
+        <g fill="#475569"><circle cx="60" cy="105" r="4"/><circle cx="80" cy="115" r="4"/><circle cx="50" cy="118" r="4"/><circle cx="75" cy="100" r="4"/><circle cx="120" cy="60" r="4"/><circle cx="130" cy="80" r="4"/><circle cx="115" cy="72" r="4"/><circle cx="135" cy="55" r="4"/></g>
+      </svg>
+      <p class="fig-caption">"Am I an A, or not?"</p>
+    </div>
+    <div class="figure">
+      <div class="fig-title" style="color:#34d399">Classifier 2: B vs rest</div>
+      <svg viewBox="0 0 160 135" role="img" aria-label="Binary classifier separating class B from all others">
+        <rect x="10" y="10" width="140" height="115" fill="none" stroke="#2d3561" stroke-width="1"/>
+        <line x1="16" y1="86" x2="148" y2="92" stroke="#fbbf24" stroke-width="2"/>
+        <g fill="#34d399"><circle cx="60" cy="105" r="4"/><circle cx="80" cy="115" r="4"/><circle cx="50" cy="118" r="4"/><circle cx="75" cy="100" r="4"/></g>
+        <g fill="#475569"><circle cx="40" cy="40" r="4"/><circle cx="60" cy="55" r="4"/><circle cx="45" cy="65" r="4"/><circle cx="70" cy="42" r="4"/><circle cx="120" cy="60" r="4"/><circle cx="130" cy="80" r="4"/><circle cx="115" cy="72" r="4"/><circle cx="135" cy="55" r="4"/></g>
+      </svg>
+      <p class="fig-caption">"Am I a B, or not?"</p>
+    </div>
+    <div class="figure">
+      <div class="fig-title" style="color:#f87171">Classifier 3: C vs rest</div>
+      <svg viewBox="0 0 160 135" role="img" aria-label="Binary classifier separating class C from all others">
+        <rect x="10" y="10" width="140" height="115" fill="none" stroke="#2d3561" stroke-width="1"/>
+        <line x1="100" y1="16" x2="100" y2="120" stroke="#fbbf24" stroke-width="2"/>
+        <g fill="#f87171"><circle cx="120" cy="60" r="4"/><circle cx="130" cy="80" r="4"/><circle cx="115" cy="72" r="4"/><circle cx="135" cy="55" r="4"/></g>
+        <g fill="#475569"><circle cx="40" cy="40" r="4"/><circle cx="60" cy="55" r="4"/><circle cx="45" cy="65" r="4"/><circle cx="70" cy="42" r="4"/><circle cx="60" cy="105" r="4"/><circle cx="80" cy="115" r="4"/><circle cx="50" cy="118" r="4"/><circle cx="75" cy="100" r="4"/></g>
+      </svg>
+      <p class="fig-caption">"Am I a C, or not?"</p>
+    </div>
+  </div>
+  <p style="font-size:0.85rem; color:var(--text-muted); text-align:center; margin-top:-4px">One-vs-Rest turns a 3-class problem into 3 binary classifiers. A new point runs through all three; the <strong>most confident</strong> one wins.</p>
 
   <h3>Strategy 2: One-vs-One (OvO)</h3>
   <p>Train one binary classifier for <strong>every pair of classes</strong>. For K classes: K(K−1)/2 classifiers. Each test example goes to all classifiers — the class that wins the most head-to-head duels wins overall.</p>
@@ -5616,7 +6383,7 @@ mi_scores = <span class="fn">make_mi_scores</span>(df.<span class="fn">iloc</spa
     <p class="subtitle">Grid Search, Random Search, and Bayesian Optimisation — finding the best hyperparameters without exhaustive guessing</p>
   </div>
 
-  <h2>What are Hyperparameters?</h2>
+  <h3>What are Hyperparameters?</h3>
   <p>Every machine learning model has two kinds of parameters:</p>
   <ul>
     <li><strong>Model parameters</strong> — learned automatically from data during training (e.g. the weights in a neural network, the split thresholds in a decision tree)</li>
@@ -5654,7 +6421,7 @@ mi_scores = <span class="fn">make_mi_scores</span>(df.<span class="fn">iloc</spa
     </table>
   </div>
 
-  <h3>Model Selection vs Model Optimisation</h3>
+  <h4>Model Selection vs Model Optimisation</h4>
   <p>These terms are often confused:</p>
   <ul>
     <li><strong>Model selection</strong> — choosing <em>which type of algorithm to use</em>. Should we use a Random Forest or Logistic Regression?</li>
@@ -5662,7 +6429,7 @@ mi_scores = <span class="fn">make_mi_scores</span>(df.<span class="fn">iloc</spa
   </ul>
   <p>Think of it as: selection = picking a car model, optimisation = tuning the engine settings for your specific driving conditions.</p>
 
-  <h2>Cross-Validation Recap</h2>
+  <h3>Cross-Validation Recap</h3>
   <p>Before we can optimise, we need a reliable way to <em>score</em> a model. That's where cross-validation comes in.</p>
   <p>With <code>cv=5</code>, sklearn splits the data into 5 folds, trains on 4, tests on 1, and repeats 5 times. Each sample gets tested exactly once.</p>
 
@@ -5682,7 +6449,7 @@ scores = cross_val_score(clf, X, y, cv=5, scoring='f1_macro')</code></pre></div>
     <strong>Why report mean ± std?</strong> The mean tells you average performance. The std tells you how <em>stable</em> that performance is across folds. High std = the model behaves very differently depending on which samples it trains on — a warning sign.
   </div>
 
-  <h2>Grid Search</h2>
+  <h3>Grid Search</h3>
   <p>Grid Search is the simplest strategy: try <strong>every possible combination</strong> of the hyperparameter values you specify. It's exhaustive — it guarantees finding the best combination within your grid, but it's slow when the grid is large.</p>
 
   <div class="code-block"><pre><code>from sklearn.model_selection import GridSearchCV
@@ -5706,7 +6473,7 @@ print(clf.best_estimator_.score(X_test, y_test))  # score on held-out test set</
     <p style="margin:0; font-size:0.88rem; line-height:1.7; color:var(--text-muted)">When you specify <code>param_grid</code> as a <strong>list</strong>, each dict is evaluated independently. This prevents invalid combinations — for example, the second dict searches over <code>max_depth</code> only when <code>criterion='gini'</code>, because those parameters interact differently. A single flat dict would create all combinations including nonsensical ones.</p>
   </div>
 
-  <h3>What Grid Search actually does:</h3>
+  <h4>What Grid Search actually does:</h4>
   <ul>
     <li>Takes every combination of values from your grid</li>
     <li>Trains a model on each combination using cross-validation</li>
@@ -5718,7 +6485,7 @@ print(clf.best_estimator_.score(X_test, y_test))  # score on held-out test set</
     <strong>The curse of combinatorics:</strong> With 4 values for n_estimators × 2 criteria × 3 max_depths = 24 combinations. With 5-fold CV, that's 120 model fits. Add one more hyperparameter with 5 values → 600 fits. Grid Search scales badly with the number of hyperparameters.
   </div>
 
-  <h2>Random Search</h2>
+  <h3>Random Search</h3>
   <p>Instead of exhaustively trying every combination, Random Search <strong>samples randomly</strong> from the hyperparameter distributions you define. You control the budget with <code>n_iter</code>.</p>
 
   <div class="code-block"><pre><code>from sklearn.model_selection import RandomizedSearchCV
@@ -5738,7 +6505,7 @@ clf = RandomizedSearchCV(logistic, distributions, random_state=0, n_iter=500)
 clf.fit(X_train, y_train)
 print(clf.best_params_)</code></pre></div>
 
-  <h3>Investigating what values were actually sampled</h3>
+  <h4>Investigating what values were actually sampled</h4>
   <p>One of Random Search's advantages is you can inspect <em>which values it actually tried</em> — this reveals the shape of the search and can expose if a good region was found early:</p>
 
   <div class="code-block"><pre><code">import pandas as pd
@@ -5759,10 +6526,10 @@ sns.ecdfplot([p['C'] for p in clf.cv_results_['params']])</code></pre></div>
     <strong>When Random beats Grid:</strong> Empirical research (Bergstra & Bengio, 2012) showed that for the same compute budget, Random Search finds better hyperparameters than Grid Search. Why? Because not all hyperparameters matter equally. Grid wastes budget on irrelevant combinations; random coverage of the important dimensions is denser.
   </div>
 
-  <h2>Bayesian Optimisation</h2>
+  <h3>Bayesian Optimisation</h3>
   <p>Both Grid and Random Search are <strong>uninformed</strong> — each evaluation is independent. Bayesian Optimisation is <strong>smarter</strong>: it learns from every evaluation and uses that knowledge to decide <em>where to look next</em>.</p>
 
-  <h3>The key idea: Surrogate model</h3>
+  <h4>The key idea: Surrogate model</h4>
   <p>Bayesian Optimisation maintains a <strong>surrogate model</strong> (usually a Gaussian Process) that approximates the true relationship between hyperparameter values and model performance. This surrogate is cheap to evaluate, unlike actually training a model.</p>
 
   <div class="card" style="border-left:3px solid var(--accent)">
@@ -5776,7 +6543,7 @@ sns.ecdfplot([p['C'] for p in clf.cv_results_['params']])</code></pre></div>
     </ol>
   </div>
 
-  <h3>Implementing Bayesian Optimisation with bayes_opt</h3>
+  <h4>Implementing Bayesian Optimisation with bayes_opt</h4>
   <p>The <code>bayesian-optimization</code> library requires your objective function to take hyperparameter values as arguments and return a score to <strong>maximise</strong>:</p>
 
   <div class="code-block"><pre><code>from bayes_opt import BayesianOptimization
@@ -5827,7 +6594,7 @@ print('Best result:', optimizer.max)
     <strong>Why cast to int?</strong> <code>bayes_opt</code> treats all parameters as continuous floats internally (Gaussian Processes work in continuous space). If your model needs an integer (like <code>n_estimators=100</code>, not <code>100.7</code>), you must cast with <code>int()</code> inside the wrapper function.
   </div>
 
-  <h3>Exploration vs Exploitation</h3>
+  <h4>Exploration vs Exploitation</h4>
   <p>The acquisition function faces a trade-off:</p>
   <ul>
     <li><strong>Exploitation</strong> — go straight to the region the surrogate thinks is best. Efficient, but can get stuck in a local optimum.</li>
@@ -5835,7 +6602,7 @@ print('Best result:', optimizer.max)
   </ul>
   <p>The acquisition function automatically balances both. With more <code>init_points</code>, you give the surrogate more initial coverage of the space before the guided phase begins.</p>
 
-  <h2>Comparison: All Three Methods</h2>
+  <h3>Comparison: All Three Methods</h3>
 
   <div class="card" style="padding:0; overflow:hidden">
     <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
@@ -5885,7 +6652,7 @@ print('Best result:', optimizer.max)
     <p class="subtitle">Choosing between Linear Models, Tree-based Ensembles, and Neural Networks — and how AIC/BIC help you select without a test set</p>
   </div>
 
-  <h2>What is Model Selection?</h2>
+  <h3>What is Model Selection?</h3>
   <p>Model selection is the problem of picking <em>which type of algorithm to use</em> for a given problem. This is distinct from model optimisation (tuning hyperparameters of a chosen model). Think of it as: selection = choosing a car model, optimisation = tuning the engine settings.</p>
   <p>Three model families cover the vast majority of supervised learning problems:</p>
   <div class="card" style="border-left:3px solid var(--accent)">
@@ -5896,7 +6663,7 @@ print('Best result:', optimizer.max)
     </ol>
   </div>
 
-  <h2>Step 0: Identify the Problem Type via EDA</h2>
+  <h3>Step 0: Identify the Problem Type via EDA</h3>
   <p>Before picking a model, visualise your data. The key question is: <strong>is the relationship between features and target linear?</strong></p>
 
   <div class="code-block"><pre><code>import seaborn as sns
@@ -5908,7 +6675,7 @@ sns.pairplot(df, height=1.35)  # scatter matrix of all feature pairs</code></pre
     <strong>Correlation doesn't tell the full story.</strong> Petal width vs sepal width in Iris data shows Pearson r = −0.36, suggesting weak linearity. But the actual scatter reveals <em>two separate linear clusters</em> — a linear mixture model. Correlation misses this because it treats all points as one group. Always look at the plot, not just the number.
   </div>
 
-  <h2>1. Linear Models</h2>
+  <h3>1. Linear Models</h3>
   <p>The general form of a linear model:</p>
   <div class="card" style="background:var(--surface); text-align:center; padding:16px 20px; font-size:1rem">
     y = α₀ + α₁x₁ + α₂x₂ + ... + αₘxₘ
@@ -5947,7 +6714,7 @@ lm    = LinearRegression().fit(X_train, y_train)
 ridge = Ridge(alpha=1.0).fit(X_train, y_train)
 lasso = Lasso(alpha=0.1).fit(X_train, y_train)</code></pre></div>
 
-  <h3>Strengths and limitations</h3>
+  <h4>Strengths and limitations</h4>
   <ul>
     <li><strong>✅ Interpretable</strong> — each coefficient directly tells you the contribution of that feature</li>
     <li><strong>✅ Strong theoretical guarantees</strong> when the linearity assumption holds</li>
@@ -5955,7 +6722,7 @@ lasso = Lasso(alpha=0.1).fit(X_train, y_train)</code></pre></div>
     <li><strong>❌ Not well-defined</strong> for structured data like images, text, or graphs</li>
   </ul>
 
-  <h2>2. AIC and BIC — Selecting Models Without a Test Set</h2>
+  <h3>2. AIC and BIC — Selecting Models Without a Test Set</h3>
   <p>For linear models, you can choose the best model using only training data, by balancing <strong>predictive fit</strong> against <strong>model complexity</strong>. The two most used information criteria are:</p>
 
   <div class="card" style="background:var(--surface); padding:16px 20px">
@@ -5996,7 +6763,7 @@ print(BIC(X_train, y_train, model))</code></pre></div>
     Use <strong>BIC</strong> when you believe one of your candidate models is close to the true model — BIC penalises complexity more harshly (penalty grows with N), pushing toward simpler models.
   </div>
 
-  <h3>Randomised Feature Selection with AIC/BIC</h3>
+  <h4>Randomised Feature Selection with AIC/BIC</h4>
   <p>AIC/BIC let you score any feature subset using only training data. Randomised selection works by sampling random subsets of features, scoring each, and keeping the best:</p>
 
   <div class="code-block"><pre><code>def sample_candidates(num_samples, p):
@@ -6023,7 +6790,7 @@ best_mask = candidates[np.argmin(scores)]</code></pre></div>
 
   <p>The three strategies — <strong>forward</strong> (add features one at a time), <strong>backward</strong> (remove one at a time), <strong>randomised</strong> (sample subsets) — all use the same AIC/BIC scoring. Randomised is cheapest for high-dimensional problems.</p>
 
-  <h2>3. Tree-based Ensemble Methods</h2>
+  <h3>3. Tree-based Ensemble Methods</h3>
   <p>When relationships aren't linear, ensembles are the default choice for tabular data. The core idea: combine multiple weak learners (decision trees) and average their predictions. Randomness is introduced so each tree is different — diverse models average out their individual errors.</p>
 
   <div class="card" style="padding:0; overflow:hidden">
@@ -6070,11 +6837,11 @@ print("GBM MSE:    ", mean_squared_error(gbm.predict(X_test), y_test))</code></p
   </ul>
   <p><strong>Practical default:</strong> GBM usually wins out of the box. For further performance, look into ensemble stacking.</p>
 
-  <h2>4. Neural Networks with PyTorch</h2>
+  <h3>4. Neural Networks with PyTorch</h3>
   <p>Neural networks are the choice for <strong>unstructured data</strong> (images, text, audio, graphs) or when relationships are extremely complex and you have large amounts of data.</p>
   <p>Three things you configure when building a neural network:</p>
 
-  <h3>1 — Architecture</h3>
+  <h4>1 — Architecture</h4>
   <p><code>torch.nn.Sequential</code> stacks layers in order. Data flows through each layer from top to bottom:</p>
   <div class="code-block"><pre><code>import torch
 
@@ -6086,17 +6853,17 @@ model = torch.nn.Sequential(
     torch.nn.Linear(50, 1)   # 50 → 1 output
 )</code></pre></div>
 
-  <h3>2 — Loss function</h3>
+  <h4>2 — Loss function</h4>
   <div class="code-block"><pre><code>loss_fn = torch.nn.MSELoss()           # regression
 loss_fn = torch.nn.BCELoss()           # binary classification (needs Sigmoid output)
 loss_fn = torch.nn.CrossEntropyLoss() # multi-class (applies Softmax internally)</code></pre></div>
 
-  <h3>3 — Optimiser</h3>
+  <h4>3 — Optimiser</h4>
   <p>Controls how weights are updated using gradients. All are variants of gradient descent: <code>θ = θ − lr · ∂L/∂θ</code></p>
   <div class="code-block"><pre><code>opt = torch.optim.Adam(model.parameters(), lr=0.001)  # adaptive — good default
 opt = torch.optim.SGD(model.parameters(), lr=1e-3)    # simpler, sometimes better</code></pre></div>
 
-  <h3>The training loop</h3>
+  <h4>The training loop</h4>
   <div class="code-block"><pre><code>inputs  = torch.from_numpy(X_train).float()
 targets = torch.from_numpy(y_train).float()
 
@@ -6112,7 +6879,7 @@ for epoch in range(1500):
     <strong>Why zero_grad()?</strong> PyTorch accumulates gradients every time you call <code>loss.backward()</code>. If you don't reset them, the next iteration's gradients add on top of the previous ones — the weights update using combined gradients from multiple steps, which is almost always wrong.
   </div>
 
-  <h3>Regression vs classification — what changes</h3>
+  <h4>Regression vs classification — what changes</h4>
   <div class="card" style="padding:0; overflow:hidden">
     <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
       <tr style="background:var(--surface); border-bottom:1px solid var(--border)">
@@ -6145,7 +6912,7 @@ for epoch in range(1500):
     <li><strong>❌ Hard to tune</strong> — architecture, learning rate, batch size, epochs all interact</li>
   </ul>
 
-  <h2>Decision Guide: Which Model to Use?</h2>
+  <h3>Decision Guide: Which Model to Use?</h3>
 
   <div class="card" style="padding:0; overflow:hidden">
     <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
@@ -18953,7 +19720,7 @@ const TOPICS = {
   w2:  'L2: Feature Engineering',
   w3:  'L3: Linear Regression (GD)',
   w4:  'L4: OLS Method',
-  w5:  'L5: Supervised Learning',
+  w5:  'L5: Generalisation & Regularisation',
   w6:  'L6: Assumptions',
   w7:  'L7: Scikit-Learn',
   w8:  'L8: PCA',
