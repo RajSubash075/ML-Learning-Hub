@@ -21102,13 +21102,19 @@ function toggleChapter(id) {
   arrow.classList.toggle('collapsed', isCollapsed);
 }
 
-// Clicking a chapter name: open its overview AND expand its lesson list.
+// Clicking a chapter name: if already open, collapse it; otherwise expand it AND open its overview.
 function openChapter(id, overviewPage) {
   const items = document.getElementById('chapter-' + id);
   const arrow = document.getElementById('arrow-' + id);
-  if (items) items.classList.remove('collapsed');
-  if (arrow) arrow.classList.remove('collapsed');
-  nav(overviewPage);
+  const isOpen = items && !items.classList.contains('collapsed');
+  if (isOpen) {
+    items.classList.add('collapsed');
+    if (arrow) arrow.classList.add('collapsed');
+  } else {
+    if (items) items.classList.remove('collapsed');
+    if (arrow) arrow.classList.remove('collapsed');
+    nav(overviewPage);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
