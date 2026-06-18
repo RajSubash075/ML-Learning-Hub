@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ML Learning Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #0f1117;
@@ -19,6 +22,7 @@
   --text-muted: #94a3b8;
   --code-bg: #0d1117;
   --radius: 10px;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, 'Fira Code', monospace;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; align-items: stretch; }
@@ -62,11 +66,18 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 .page.active { display: block; }
 
 /* TYPOGRAPHY */
+h1 { font-size: 1.6rem; font-weight: 700; color: var(--text); margin-bottom: 6px; line-height: 1.25; }
 h2 { font-size: 1.6rem; margin-bottom: 6px; color: var(--text); }
 h3 { font-size: 1.1rem; margin: 24px 0 10px; color: var(--accent); }
 h4 { font-size: 0.9rem; margin: 18px 0 8px; color: var(--accent2); }
 p { line-height: 1.7; color: var(--text-muted); margin-bottom: 12px; font-size: 0.9rem; }
 .subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px; }
+
+/* LESSON / PAGE HEADERS — unified across every chapter */
+.lesson-header, .page-header { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--card-border); }
+.breadcrumb, .chapter-badge { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 8px; }
+.lesson-header h1, .page-header h1 { margin-bottom: 6px; }
+.lesson-header .subtitle, .page-header .subtitle { margin-bottom: 0; }
 ul, ol { padding-left: 20px; }
 ul li, ol li { color: var(--text-muted); font-size: 0.88rem; line-height: 1.8; }
 
@@ -80,8 +91,8 @@ ul li, ol li { color: var(--text-muted); font-size: 0.88rem; line-height: 1.8; }
 
 /* CODE */
 .code-block { background: var(--code-bg); border: 1px solid #2d3561; border-radius: 8px; padding: 16px; margin: 14px 0; overflow-x: auto; }
-.code-block pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8rem; color: #c9d1d9; line-height: 1.6; white-space: pre; }
-code { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.79rem; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; color: #c9d1d9; border: 1px solid rgba(45,53,97,0.4); }
+.code-block pre { font-family: var(--mono); font-size: 0.8rem; color: #c9d1d9; line-height: 1.6; white-space: pre; }
+code { font-family: var(--mono); font-size: 0.79rem; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; color: #c9d1d9; border: 1px solid rgba(45,53,97,0.4); }
 .kw { color: #ff7b72; } .fn { color: #d2a8ff; } .st { color: #a5d6ff; } .cm { color: #8b949e; } .nu { color: #79c0ff; }
 
 /* TABLE */
@@ -277,6 +288,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('en2')" id="nav-en2"><span class="icon">⚡</span> L2: Boosting & AdaBoost<span class="check" id="check-en2"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('en3')" id="nav-en3"><span class="icon">🔀</span> L3: Stacking<span class="check" id="check-en3"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('en4')" id="nav-en4"><span class="icon">📉</span> L4: Gradient Boosting<span class="check" id="check-en4"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('ensheet')" id="nav-ensheet"><span class="icon">📋</span> Ensemble Cheat Sheet</div>
   </div>
 
   <div class="nav-item nav-item-chapter" onclick="toggleChapter('prageval')"><span class="icon">📚</span> Pragmatic Model Evaluation<span class="chapter-arrow" id="arrow-prageval">▾</span></div>
@@ -287,6 +299,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('pe3')" id="nav-pe3"><span class="icon">🎯</span> L3: Feature Selection<span class="check" id="check-pe3"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('pe4')" id="nav-pe4"><span class="icon">⚙️</span> L4: Model Optimisation<span class="check" id="check-pe4"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('pe5')" id="nav-pe5"><span class="icon">🧭</span> L5: Model Selection<span class="check" id="check-pe5"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('pesheet')" id="nav-pesheet"><span class="icon">📋</span> Pragmatic Eval Cheat Sheet</div>
   </div>
 
   <div class="nav-item nav-item-chapter" onclick="toggleChapter('unsupervised')"><span class="icon">📚</span> Unsupervised Learning<span class="chapter-arrow" id="arrow-unsupervised">▾</span></div>
@@ -297,6 +310,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('ul3')" id="nav-ul3"><span class="icon">🌳</span> L3: Hierarchical Clustering<span class="check" id="check-ul3"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ul4')" id="nav-ul4"><span class="icon">🔴</span> L4: DBSCAN<span class="check" id="check-ul4"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ul5')" id="nav-ul5"><span class="icon">🌀</span> L5: t-SNE<span class="check" id="check-ul5"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('ulsheet')" id="nav-ulsheet"><span class="icon">📋</span> Unsupervised Cheat Sheet</div>
   </div>
 
   <div class="nav-item nav-item-chapter" onclick="toggleChapter('timeseries')"><span class="icon">📚</span> Time Series Analysis<span class="chapter-arrow" id="arrow-timeseries">▾</span></div>
@@ -311,6 +325,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('ts7')" id="nav-ts7"><span class="icon">📊</span> L7: Exponential Smoothing<span class="check" id="check-ts7"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ts8')" id="nav-ts8"><span class="icon">🔮</span> L8: Prophet<span class="check" id="check-ts8"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('ts9')" id="nav-ts9"><span class="icon">📰</span> L9: Practical Example<span class="check" id="check-ts9"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('tssheet')" id="nav-tssheet"><span class="icon">📋</span> Time Series Cheat Sheet</div>
   </div>
 
   <div class="nav-item nav-item-chapter" onclick="toggleChapter('neural')"><span class="icon">📚</span> Neural Networks & Deep Learning<span class="chapter-arrow" id="arrow-neural">▾</span></div>
@@ -324,6 +339,7 @@ hr { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
     <div class="nav-item nav-item-sub" onclick="nav('nn6')" id="nav-nn6"><span class="icon">🖼️</span> L6: Convolutional Neural Networks<span class="check" id="check-nn6"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('nn7')" id="nav-nn7"><span class="icon">🔄</span> L7: Recurrent Neural Networks<span class="check" id="check-nn7"></span></div>
     <div class="nav-item nav-item-sub" onclick="nav('nn8')" id="nav-nn8"><span class="icon">🕸️</span> L8: Graph Neural Networks<span class="check" id="check-nn8"></span></div>
+    <div class="nav-item nav-item-sub" onclick="nav('nnsheet')" id="nav-nnsheet"><span class="icon">📋</span> Neural Networks Cheat Sheet</div>
   </div>
 
   <div class="nav-item nav-item-chapter" onclick="toggleChapter('explainability')"><span class="icon">📚</span> Model Explainability<span class="chapter-arrow" id="arrow-explainability">▾</span></div>
@@ -650,7 +666,7 @@ X_poly = poly.<span class="fn">fit_transform</span>(X)  <span class="cm"># creat
   <h3>Mean Squared Error (MSE)</h3>
   <p>The cost function — measures how wrong the model is. Lower = better.</p>
   <div class="card">
-    <div style="text-align:center; padding: 10px 0; font-size: 1.1rem; color: var(--accent); font-family: monospace;">MSE = (1/N) × Σ(yᵢ − ŷᵢ)²</div>
+    <div style="text-align:center; padding: 10px 0; font-size: 1.1rem; color: var(--accent); font-family:var(--mono);">MSE = (1/N) × Σ(yᵢ − ŷᵢ)²</div>
     <p style="text-align:center; font-size:0.8rem; margin:0">Square each error (prevents cancellation), average across all N samples.</p>
   </div>
 
@@ -678,7 +694,7 @@ eta = <span class="nu">0.0001</span>
 
   <h3>R² — Coefficient of Determination</h3>
   <div class="card">
-    <div style="text-align:center; padding: 10px 0; font-size: 1.05rem; color: var(--accent); font-family: monospace;">R² = 1 − SSE / SST</div>
+    <div style="text-align:center; padding: 10px 0; font-size: 1.05rem; color: var(--accent); font-family:var(--mono);">R² = 1 − SSE / SST</div>
   </div>
   <table>
     <tr><th>R² value</th><th>Meaning</th></tr>
@@ -714,7 +730,7 @@ eta = <span class="nu">0.0001</span>
 
   <h3>The OLS Formula</h3>
   <div class="card" style="text-align:center; padding:24px">
-    <div style="font-size:1.3rem; color:var(--accent); font-family:monospace; margin-bottom:10px">β* = (XᵀX)⁻¹ Xᵀy</div>
+    <div style="font-size:1.3rem; color:var(--accent); font-family:var(--mono); margin-bottom:10px">β* = (XᵀX)⁻¹ Xᵀy</div>
     <p style="margin:0; font-size:0.82rem">One equation. Gives you the exact optimal weights in a single calculation.</p>
   </div>
 
@@ -794,7 +810,7 @@ model.<span class="fn">score</span>(X_test, y_test)        <span class="cm"># ev
   <div class="card-grid">
     <div class="card">
       <h4 style="margin-top:0">Ridge (L2)</h4>
-      <div style="text-align:center; font-family:monospace; color:var(--accent); margin:10px 0">Cost = MSE + λ × Σβⱼ²</div>
+      <div style="text-align:center; font-family:var(--mono); color:var(--accent); margin:10px 0">Cost = MSE + λ × Σβⱼ²</div>
       <ul>
         <li>Shrinks all weights towards zero</li>
         <li>Never removes a feature entirely</li>
@@ -803,7 +819,7 @@ model.<span class="fn">score</span>(X_test, y_test)        <span class="cm"># ev
     </div>
     <div class="card">
       <h4 style="margin-top:0">Lasso (L1)</h4>
-      <div style="text-align:center; font-family:monospace; color:var(--accent2); margin:10px 0">Cost = MSE + λ × Σ|βⱼ|</div>
+      <div style="text-align:center; font-family:var(--mono); color:var(--accent2); margin:10px 0">Cost = MSE + λ × Σ|βⱼ|</div>
       <ul>
         <li>Can push weights to exactly zero</li>
         <li>Automatic feature selection</li>
@@ -1228,7 +1244,7 @@ pipeline.<span class="fn">predict</span>(X_new)   <span class="cm"># raw 30 feat
   <!-- ── L3 ── -->
   <h3>L3: Linear Regression — Gradient Descent</h3>
   <div class="card" style="text-align:center; padding:16px; margin-bottom:12px">
-    <div style="font-size:1rem; color:var(--accent); font-family:monospace">Model: ŷ = w·x + b &nbsp;&nbsp;|&nbsp;&nbsp; Loss: MSE = (1/N) × Σ(yᵢ − ŷᵢ)²</div>
+    <div style="font-size:1rem; color:var(--accent); font-family:var(--mono)">Model: ŷ = w·x + b &nbsp;&nbsp;|&nbsp;&nbsp; Loss: MSE = (1/N) × Σ(yᵢ − ŷᵢ)²</div>
   </div>
   <table>
     <tr><th>Concept</th><th>Role</th><th>What goes wrong when it's off</th></tr>
@@ -1248,7 +1264,7 @@ pipeline.<span class="fn">predict</span>(X_new)   <span class="cm"># raw 30 feat
   <!-- ── L4 ── -->
   <h3>L4: OLS — Closed-Form Solution</h3>
   <div class="card" style="text-align:center; padding:20px; margin-bottom:12px">
-    <div style="font-size:1.2rem; color:var(--accent); font-family:monospace">β* = (XᵀX)⁻¹ Xᵀy</div>
+    <div style="font-size:1.2rem; color:var(--accent); font-family:var(--mono)">β* = (XᵀX)⁻¹ Xᵀy</div>
     <p style="margin:8px 0 0; font-size:0.82rem">One matrix equation gives the exact optimal weights — no iterations, no learning rate.</p>
   </div>
   <table>
@@ -1839,7 +1855,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
 
   <h3>Bayes' Rule — The Heart of Generative Models</h3>
   <div class="card" style="text-align:center; padding:20px">
-    <div style="font-size:1.1rem; color:var(--accent); font-family:monospace; margin-bottom:10px">P(y|x) = P(x|y) × P(y) / P(x)</div>
+    <div style="font-size:1.1rem; color:var(--accent); font-family:var(--mono); margin-bottom:10px">P(y|x) = P(x|y) × P(y) / P(x)</div>
     <p style="margin:0; font-size:0.82rem">Posterior ∝ Likelihood × Prior. Since P(x) is the same for all classes, we only need the numerator to find the most probable class.</p>
   </div>
   <table>
@@ -1883,7 +1899,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
   <h3>Bayes' Rule — The Foundation</h3>
   <p>Every generative classifier is built on Bayes' Rule. It says: to find the probability of a class given your data, combine what the data looks like for that class (likelihood) with how common that class is (prior).</p>
   <div class="card" style="text-align:center; padding:20px">
-    <div style="font-size:1.15rem; color:var(--accent); font-family:monospace; margin-bottom:10px">P(y | x) = P(x | y) × P(y) / P(x)</div>
+    <div style="font-size:1.15rem; color:var(--accent); font-family:var(--mono); margin-bottom:10px">P(y | x) = P(x | y) × P(y) / P(x)</div>
     <p style="margin:0; font-size:0.82rem">Posterior = Likelihood × Prior / Normalisation</p>
   </div>
   <table>
@@ -1905,7 +1921,7 @@ X_reduced = pca.<span class="fn">transform</span>(X_scaled)          <span class
       <div class="label">The Assumption</div>
       <p>Given the class, each feature is independent of every other feature. So the joint likelihood becomes a simple product of individual likelihoods:</p>
     </div>
-    <div style="text-align:center; padding:14px 0 6px; font-family:monospace; font-size:1rem; color:var(--accent2)">
+    <div style="text-align:center; padding:14px 0 6px; font-family:var(--mono); font-size:1rem; color:var(--accent2)">
       P(x₁, x₂, ..., xₙ | y) = P(x₁|y) × P(x₂|y) × ... × P(xₙ|y)
     </div>
   </div>
@@ -2083,7 +2099,7 @@ sns.<span class="fn">displot</span>(log_proba[:, <span class="nu">1</span>])</pr
   <h3>The Sigmoid Function</h3>
   <p>Logistic regression squashes any real number into (0, 1) using the sigmoid. The input z is the same linear combination from linear regression:</p>
   <div class="card" style="text-align:center; padding:20px">
-    <div style="font-size:1.2rem; color:var(--accent); font-family:monospace; margin-bottom:8px">σ(z) = 1 / (1 + e<sup>−z</sup>)&nbsp;&nbsp; where z = wᵀx + b</div>
+    <div style="font-size:1.2rem; color:var(--accent); font-family:var(--mono); margin-bottom:8px">σ(z) = 1 / (1 + e<sup>−z</sup>)&nbsp;&nbsp; where z = wᵀx + b</div>
     <p style="margin:0; font-size:0.82rem">Always outputs between 0 and 1. Interpreted as P(y = 1 | x).</p>
   </div>
   <table>
@@ -2102,7 +2118,7 @@ sns.<span class="fn">displot</span>(log_proba[:, <span class="nu">1</span>])</pr
   <h3>Loss Function — Log Loss (Binary Cross-Entropy)</h3>
   <p>You can't use MSE here — the loss surface becomes non-convex and gradient descent gets stuck in local minima. Instead logistic regression uses <strong>binary cross-entropy</strong>:</p>
   <div class="card" style="text-align:center; padding:16px">
-    <div style="font-size:0.95rem; color:var(--accent); font-family:monospace">L = −[y·log(ŷ) + (1−y)·log(1−ŷ)]</div>
+    <div style="font-size:0.95rem; color:var(--accent); font-family:var(--mono)">L = −[y·log(ŷ) + (1−y)·log(1−ŷ)]</div>
     <p style="margin:8px 0 0; font-size:0.8rem">Heavily penalises confident wrong predictions. Predicting P=0.99 when truth is 0 → loss → ∞.</p>
   </div>
   <div class="card-grid" style="margin-top:10px">
@@ -2327,7 +2343,7 @@ y_prob = model.<span class="fn">predict_proba</span>(X_test)[:, <span class="nu"
   <h3>Gini Impurity — The Splitting Criterion</h3>
   <p>At every node the tree asks: how mixed are the classes here? Gini impurity measures that mixture. The tree always picks the split that <strong>minimises Gini</strong>.</p>
   <div class="card" style="text-align:center; padding:18px">
-    <div style="font-size:1.1rem; color:var(--accent); font-family:monospace; margin-bottom:8px">G(S) = 1 − Σ pᵢ²</div>
+    <div style="font-size:1.1rem; color:var(--accent); font-family:var(--mono); margin-bottom:8px">G(S) = 1 − Σ pᵢ²</div>
     <p style="margin:0; font-size:0.82rem">pᵢ = proportion of class i in the set S</p>
   </div>
   <table>
@@ -2341,7 +2357,7 @@ y_prob = model.<span class="fn">predict_proba</span>(X_test)[:, <span class="nu"
   <h3>Gini Gain — How the Split is Chosen</h3>
   <p>After splitting set S into children S₁ and S₂, the Gini gain is:</p>
   <div class="card" style="text-align:center; padding:16px">
-    <div style="font-size:0.95rem; color:var(--accent); font-family:monospace">Gini Gain = G(S) − [ (|S₁|/|S|)·G(S₁) + (|S₂|/|S|)·G(S₂) ]</div>
+    <div style="font-size:0.95rem; color:var(--accent); font-family:var(--mono)">Gini Gain = G(S) − [ (|S₁|/|S|)·G(S₁) + (|S₂|/|S|)·G(S₂) ]</div>
     <p style="margin:8px 0 0; font-size:0.82rem">Weighted average impurity of children subtracted from parent impurity. <strong>Maximise this.</strong></p>
   </div>
   <p>The tree tries every feature and every threshold, picks the combination with the highest Gini gain — meaning the children are as pure as possible.</p>
@@ -2630,7 +2646,7 @@ rf.<span class="fn">score</span>(X_test, y_test)
   <div class="card">
     <h4 style="margin-top:0">Example: Age (0–80) vs Income (0–500,000)</h4>
     <p>Distance from Person A (age=25, income=30,000) to Person B (age=26, income=80,000):</p>
-    <p style="font-family:monospace; color:var(--accent)">√((26−25)² + (80000−30000)²) = √(1 + 2,500,000,000) ≈ 50,000</p>
+    <p style="font-family:var(--mono); color:var(--accent)">√((26−25)² + (80000−30000)²) = √(1 + 2,500,000,000) ≈ 50,000</p>
     <p>The age difference of 1 year contributes almost <strong>nothing</strong>. Income dominates entirely. KNN behaves as if age doesn't exist.</p>
     <p style="margin-bottom:0"><strong>After scaling to [0,1]:</strong> age=0.31 vs 0.33, income=0.06 vs 0.16 — both features contribute fairly.</p>
   </div>
@@ -2916,7 +2932,7 @@ pipeline_linear.<span class="fn">fit</span>(X_train, y_train)
   <h3>Bias and Variance — The Fundamental Tradeoff</h3>
   <p>Every model's prediction error has three components:</p>
   <div class="card" style="text-align:center; padding:16px; margin-bottom:14px">
-    <div style="font-size:1rem; color:var(--accent); font-family:monospace">Total Error = Bias² + Variance + Irreducible Noise</div>
+    <div style="font-size:1rem; color:var(--accent); font-family:var(--mono)">Total Error = Bias² + Variance + Irreducible Noise</div>
     <p style="margin:6px 0 0; font-size:0.8rem">Irreducible noise is random noise in the data — you cannot fix it. Focus on Bias and Variance.</p>
   </div>
   <table>
@@ -3581,7 +3597,135 @@ ovo.<span class="fn">fit</span>(X_train, y_train)
 
   <div class="btn-row">
     <button class="btn btn-primary" onclick="startChapterQuiz(['en1','en2','en3','en4'])">📝 Start Quiz</button>
+    <button class="btn btn-outline" onclick="nav('ensheet')">📋 Cheat Sheet</button>
     <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- ENSEMBLE METHODS — Cheat Sheet                                  -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-ensheet">
+  <h2>📋 Ensemble Methods — Cheat Sheet</h2>
+  <p class="subtitle">Everything from L1–L4 in one place. Bagging, boosting, stacking — concepts, formulas, and when to use what.</p>
+
+  <h3>What Each Lesson Covers</h3>
+  <table>
+    <tr><th>Lesson</th><th>Core topic</th><th>Key takeaway</th></tr>
+    <tr><td><strong>L1: Intro to Ensembles</strong></td><td>Bagging, the wisdom of crowds, Random Forest</td><td>Combine many diverse weak learners → one strong model. Averaging uncorrelated errors cancels them out.</td></tr>
+    <tr><td><strong>L2: Boosting & AdaBoost</strong></td><td>Sequential re-weighting, decision stumps</td><td>Each learner fixes the previous one's mistakes. Misclassified points get heavier weights; better stumps get a louder vote (α).</td></tr>
+    <tr><td><strong>L3: Stacking</strong></td><td>Meta-learner blends diverse model families</td><td>Train a level-2 model on the held-out predictions of level-1 models. Diversity is what makes it work.</td></tr>
+    <tr><td><strong>L4: Gradient Boosting</strong></td><td>Fit trees to pseudo-residuals (loss gradient)</td><td>Generalises boosting to any differentiable loss. Powers XGBoost, LightGBM, CatBoost.</td></tr>
+  </table>
+
+  <!-- CORE IDEA -->
+  <h3>The Three Families at a Glance</h3>
+  <table>
+    <tr><th></th><th>Bagging</th><th>Boosting</th><th>Stacking</th></tr>
+    <tr><td><strong>Training</strong></td><td>Parallel — independent models</td><td>Sequential — each fixes the last</td><td>Parallel base models + meta-learner</td></tr>
+    <tr><td><strong>Base models</strong></td><td>Same type (usually trees)</td><td>Same type (usually stumps)</td><td>Different families (RF, SVM, NN…)</td></tr>
+    <tr><td><strong>Combination</strong></td><td>Equal vote / average</td><td>Weighted vote</td><td>Meta-learner learns the blend</td></tr>
+    <tr><td><strong>Mainly reduces</strong></td><td>Variance</td><td>Bias</td><td>Both (via diversity)</td></tr>
+    <tr><td><strong>Examples</strong></td><td>Random Forest, BaggingClassifier</td><td>AdaBoost, Gradient Boosting, XGBoost</td><td>StackingClassifier, Netflix Prize winner</td></tr>
+  </table>
+  <div class="card"><div class="key-concept"><div class="label">Why ensembles work</div><p>When models make <em>uncorrelated</em> errors, averaging their predictions cancels the errors while the shared signal accumulates. The key requirement is <strong>diversity</strong> — identical models making identical mistakes gain nothing. Even a 51% "weak learner" becomes powerful when hundreds are combined.</p></div></div>
+
+  <h4>Every Ensemble Has 3 Components</h4>
+  <table>
+    <tr><th>Component</th><th>Role</th></tr>
+    <tr><td><strong>Base model</strong></td><td>The weak learner (usually a decision tree / stump)</td></tr>
+    <tr><td><strong>Meta-algorithm</strong></td><td>How diverse models are generated (bootstrap, re-weighting, different families)</td></tr>
+    <tr><td><strong>Combination strategy</strong></td><td>How predictions are merged (vote, average, or meta-learner)</td></tr>
+  </table>
+
+  <!-- L1 BAGGING -->
+  <h3>L1: Bagging & Random Forest</h3>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>Bootstrap sampling</strong></td><td>Sample rows <em>with replacement</em>. Some rows repeat, ~37% are left out (out-of-bag). This is the source of diversity.</td></tr>
+    <tr><td><strong>Why unstable trees?</strong></td><td>Small data changes → very different trees. Bagging averages away that variance. Stable models (e.g. linear regression) barely benefit.</td></tr>
+    <tr><td><strong>Random Forest extra step</strong></td><td>At each split, consider only a random feature subset (√N classification, N/3 regression). Decorrelates trees so a dominant feature can't appear in every tree.</td></tr>
+    <tr><td><strong>Out-of-bag (OOB) error</strong></td><td>Free validation estimate — each tree is tested on the rows it didn't see.</td></tr>
+    <tr><td><strong>Key params</strong></td><td><code>n_estimators</code>, <code>max_depth</code>, <code>max_features</code></td></tr>
+  </table>
+
+  <!-- L2 ADABOOST -->
+  <h3>L2: Boosting & AdaBoost</h3>
+  <div class="card" style="text-align:center; padding:18px; margin-bottom:12px">
+    <div style="font-size:1.05rem; color:var(--accent); font-family:var(--mono); margin-bottom:8px">α = ½ · ln((1 − ε) / ε)</div>
+    <div style="font-size:1.05rem; color:var(--accent2); font-family:var(--mono)">F(x) = sign( Σ αₖ · hₖ(x) )</div>
+    <p style="margin:8px 0 0; font-size:0.82rem">α = a stump's vote weight. Low error ε → high α (more say). ε = 0.5 → α = 0 (ignored).</p>
+  </div>
+  <h4>AdaBoost — The 6 Steps</h4>
+  <table>
+    <tr><th>#</th><th>Step</th></tr>
+    <tr><td>1</td><td>Initialise equal sample weights wᵢ = 1/N</td></tr>
+    <tr><td>2</td><td>Train a decision stump (depth-1 tree) on the weighted data</td></tr>
+    <tr><td>3</td><td>Compute weighted error ε = Σ wᵢ · 𝟙[wrong]</td></tr>
+    <tr><td>4</td><td>Compute the stump's vote α = ½·ln((1−ε)/ε)</td></tr>
+    <tr><td>5</td><td>Update weights — increase for misclassified (×eᵅ), decrease for correct (×e⁻ᵅ), then normalise</td></tr>
+    <tr><td>6</td><td>Repeat for K stumps; final prediction = sign of the weighted vote</td></tr>
+  </table>
+  <div class="alert alert-warn">⚠️ <strong>AdaBoost is sensitive to outliers & noise.</strong> Persistently misclassified points keep gaining weight, so the ensemble obsesses over them and generalisation suffers. Clean your data or prefer Gradient Boosting with a robust loss.</div>
+
+  <!-- L3 STACKING -->
+  <h3>L3: Stacking</h3>
+  <table>
+    <tr><th>Step</th><th>What happens</th></tr>
+    <tr><td>1. Train base models</td><td>Fit diverse level-1 models (e.g. RF + SVM + NN) on the training data</td></tr>
+    <tr><td>2. Predict on held-out data</td><td>Get their predictions on a validation set <em>they did not train on</em></td></tr>
+    <tr><td>3. Train meta-learner</td><td>A level-2 model (often Logistic Regression) learns to blend those predictions</td></tr>
+    <tr><td>4. Predict</td><td>New data → base models → meta-learner → final output</td></tr>
+  </table>
+  <div class="card"><div class="key-concept"><div class="label">Why held-out predictions are essential</div><p>If base models predict on their <em>own training data</em>, they look artificially perfect (memorised answers). The meta-learner would then trust them blindly and overfit. Use a held-out split or K-fold out-of-fold predictions. <strong>K-fold stacking</strong> uses all the data but trains base models K+1 times — more compute for less wasted data.</p></div></div>
+  <p><strong>Diversity rule:</strong> correlated errors can't cancel. Combine genuinely different model families. The Netflix Prize winner (BellKor) blended 100+ diverse models this way.</p>
+
+  <!-- L4 GRADIENT BOOSTING -->
+  <h3>L4: Gradient Boosting</h3>
+  <div class="card" style="text-align:center; padding:20px; margin-bottom:12px">
+    <div style="font-size:1.15rem; color:var(--accent); font-family:var(--mono); margin-bottom:8px">F<sub>k</sub>(x) = F<sub>k−1</sub>(x) + η · h<sub>k</sub>(x)</div>
+    <div style="font-size:1.05rem; color:var(--accent2); font-family:var(--mono)">rᵢ = −∂L(yᵢ, F(xᵢ)) / ∂F(xᵢ)</div>
+    <p style="margin:8px 0 0; font-size:0.82rem">Each new tree hₖ is fit to the <strong>pseudo-residuals</strong> (negative gradient). For MSE these are just the ordinary residuals y − F(x).</p>
+  </div>
+  <h4>The 5-Step Algorithm</h4>
+  <table>
+    <tr><th>#</th><th>Step</th></tr>
+    <tr><td>1</td><td>Start with a constant F₀ (mean for regression, log-odds for classification)</td></tr>
+    <tr><td>2</td><td>Compute pseudo-residuals rᵢ = −∂L/∂F</td></tr>
+    <tr><td>3</td><td>Fit a tree hₖ to {(xᵢ, rᵢ)}</td></tr>
+    <tr><td>4</td><td>Update Fₖ = Fₖ₋₁ + η·hₖ</td></tr>
+    <tr><td>5</td><td>Repeat until K trees are built</td></tr>
+  </table>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>learning_rate (η)</strong></td><td>Shrinks each tree's contribution. Small (0.01–0.1) = better generalisation but needs more trees. Large = fast but overfits.</td></tr>
+    <tr><td><strong>staged_predict()</strong></td><td>Predictions at each round — plot train vs validation to find the optimal <code>n_estimators</code> (where validation stops improving).</td></tr>
+    <tr><td><strong>Leaf-wise vs level-wise</strong></td><td>Level-wise (sklearn, XGBoost): split all nodes at a depth before going deeper — balanced. Leaf-wise (LightGBM): always split the highest-gain leaf — faster but can overfit.</td></tr>
+  </table>
+
+  <h4>AdaBoost vs Gradient Boosting</h4>
+  <table>
+    <tr><th></th><th>AdaBoost</th><th>Gradient Boosting</th></tr>
+    <tr><td>How it adapts</td><td>Re-weights samples</td><td>Fits trees to pseudo-residuals</td></tr>
+    <tr><td>Loss function</td><td>Exponential (fixed)</td><td>Any differentiable loss</td></tr>
+    <tr><td>Base learner</td><td>Depth-1 stumps</td><td>Shallow trees (depth 3–8)</td></tr>
+  </table>
+
+  <h4>Gradient Boosting Libraries</h4>
+  <table>
+    <tr><th>Library</th><th>Best for</th></tr>
+    <tr><td><strong>XGBoost</strong></td><td>General purpose, sparse data, column blocks for speed</td></tr>
+    <tr><td><strong>LightGBM</strong></td><td>Fastest on large data, leaf-wise growth, native categoricals</td></tr>
+    <tr><td><strong>CatBoost</strong></td><td>Native categorical handling, strong defaults</td></tr>
+  </table>
+
+  <div class="alert alert-info">✅ <strong>Rule of thumb:</strong> Random Forest = a strong, low-effort baseline (parallel, hard to overfit). Gradient Boosting (XGBoost/LightGBM) = higher ceiling but needs tuning of learning rate, depth, and n_estimators. Stacking = squeeze out the last bit of performance when you already have several good, diverse models.</div>
+
+  <div class="btn-row">
+    <button class="btn btn-outline" onclick="nav('en1')">← L1: Intro</button>
+    <button class="btn btn-outline" onclick="nav('en2')">L2: Boosting</button>
+    <button class="btn btn-outline" onclick="nav('en3')">L3: Stacking</button>
+    <button class="btn btn-outline" onclick="nav('en4')">L4: Gradient Boosting</button>
   </div>
 </div>
 
@@ -4734,7 +4878,112 @@ tuning.<span class="fn">fit</span>(X_train, y_train)
 
   <div class="btn-row">
     <button class="btn btn-primary" onclick="startChapterQuiz(['pe1','pe2','pe3','pe4','pe5'])">📝 Start Quiz</button>
+    <button class="btn btn-outline" onclick="nav('pesheet')">📋 Cheat Sheet</button>
     <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- PRAGMATIC MODEL EVALUATION — Cheat Sheet                        -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-pesheet">
+  <h2>📋 Pragmatic Model Evaluation — Cheat Sheet</h2>
+  <p class="subtitle">Everything from L1–L5 in one place. Validation, pipelines, feature selection, tuning, and model selection.</p>
+
+  <h3>What Each Lesson Covers</h3>
+  <table>
+    <tr><th>Lesson</th><th>Core topic</th><th>Key takeaway</th></tr>
+    <tr><td><strong>L1: Hierarchical Validation</strong></td><td>Grouped splits for non-independent rows</td><td>Random splits leak when rows share a group (patient, trip). Split by <em>group</em>, not row, with GroupKFold.</td></tr>
+    <tr><td><strong>L2: Pipelines & Preprocessing</strong></td><td>Pipeline, ColumnTransformer, custom transformers</td><td>Wrap every preprocessing step so fit happens only on training folds — no leakage during cross-validation.</td></tr>
+    <tr><td><strong>L3: Feature Selection</strong></td><td>Correlation, PCA, Mutual Information</td><td>Correlation catches linear links; Mutual Information catches non-linear ones. Standardise before PCA.</td></tr>
+    <tr><td><strong>L4: Model Optimisation</strong></td><td>Grid / Random / Bayesian search</td><td>Random beats Grid per compute budget; Bayesian uses a surrogate model to search smartly.</td></tr>
+    <tr><td><strong>L5: Model Selection</strong></td><td>Choosing model families, AIC/BIC</td><td>AIC/BIC reward fit and penalise complexity — computed on training data, no test set needed.</td></tr>
+  </table>
+
+  <!-- L1 -->
+  <h3>L1: Validation on Hierarchical Data</h3>
+  <div class="card"><div class="key-concept"><div class="label">The leakage problem</div><p>When rows are <strong>not independent</strong> — multiple trips per driver, visits per patient, sessions per user — a random <code>train_test_split</code> puts rows from the <em>same group</em> in both train and test. The model memorises the group and reports inflated scores that collapse on genuinely unseen groups.</p></div></div>
+  <table>
+    <tr><th>Splitter</th><th>Use for</th></tr>
+    <tr><td><code>GroupKFold</code></td><td>Cross-validation where each group stays wholly in one fold</td></tr>
+    <tr><td><code>GroupShuffleSplit</code></td><td>A single grouped train/test (holdout) split</td></tr>
+    <tr><td><code>StratifiedGroupKFold</code></td><td>Grouped <em>and</em> class-balanced folds</td></tr>
+  </table>
+  <div class="alert alert-warn">⚠️ Use <code>GroupKFold</code> <strong>inside</strong> hyperparameter search (pass <code>groups=</code> / <code>cv=GroupKFold</code>) — otherwise the search itself leaks group information and picks over-optimistic parameters. Leaky splits make models over-rely on group-identifying features.</div>
+
+  <!-- L2 -->
+  <h3>L2: Pipelines & Modular Preprocessing</h3>
+  <table>
+    <tr><th>Tool</th><th>What it does</th></tr>
+    <tr><td><code>Pipeline</code></td><td>Chains steps sequentially (preprocess → model). In <code>cross_val_score</code> it re-fits preprocessing on each training fold only — prevents leakage.</td></tr>
+    <tr><td><code>ColumnTransformer</code></td><td>Applies different transformers to different columns. <code>remainder="passthrough"</code> keeps untouched columns instead of dropping them.</td></tr>
+    <tr><td><code>FeatureUnion</code></td><td>Runs transformers in <em>parallel</em> and concatenates outputs (vs Pipeline's sequential chain).</td></tr>
+  </table>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>Nested params in GridSearch</strong></td><td>Use double-underscore paths: <code>columntransformer__pipeline__pca__n_components</code></td></tr>
+    <tr><td><strong>Valid custom transformer</strong></td><td>Subclass <code>BaseEstimator, TransformerMixin</code> and implement <code>fit()</code> (returns self) + <code>transform()</code></td></tr>
+    <tr><td><strong>PCA n_components</strong></td><td>Integer = exact number of components; float 0–1 (e.g. 0.8) = keep enough components to explain that % of variance</td></tr>
+    <tr><td><strong>Pickle risk</strong></td><td>A saved pipeline depends on library versions — reloading under a different sklearn version can break or silently misbehave</td></tr>
+  </table>
+
+  <!-- L3 -->
+  <h3>L3: Feature Selection & Engineering</h3>
+  <table>
+    <tr><th>Method</th><th>Captures</th><th>Use when</th></tr>
+    <tr><td><strong>Pearson correlation</strong></td><td>Linear relationships only</td><td>Quick linear screen — filter on <code>abs()</code> so strong negatives aren't dropped</td></tr>
+    <tr><td><strong>Kendall Tau</strong></td><td>Monotonic rank relationships</td><td>Ordinal data or small samples with ties</td></tr>
+    <tr><td><strong>Mutual Information</strong></td><td>Any dependency, incl. non-linear</td><td><code>mutual_info_regression</code> / <code>_classif</code> to rank features against the target</td></tr>
+    <tr><td><strong>PCA</strong></td><td>Directions of max variance</td><td>Compress correlated features — <strong>standardise first</strong> or large-scale features dominate</td></tr>
+  </table>
+  <p><strong>Scree plot:</strong> plot explained variance per component and keep components up to the <em>elbow</em> (where added variance levels off). <strong>remove_correlated:</strong> drop one of each highly-correlated pair to avoid multicollinearity before a linear model.</p>
+
+  <!-- L4 -->
+  <h3>L4: Model Optimisation</h3>
+  <table>
+    <tr><th></th><th>Grid Search</th><th>Random Search</th><th>Bayesian Optimisation</th></tr>
+    <tr><td>Strategy</td><td>Try every combination</td><td>Sample random combinations</td><td>Surrogate model proposes promising points</td></tr>
+    <tr><td>Best when</td><td>Few params, small space</td><td>Large space, limited budget</td><td>Expensive models, want fewest evaluations</td></tr>
+    <tr><td>Note</td><td>Cost explodes combinatorially</td><td>Often wins per compute budget — more values per param explored</td><td>Cast float→int inside the wrapper before passing to the model</td></tr>
+  </table>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>Parameter vs hyperparameter</strong></td><td>Parameters are <em>learned</em> during fit (weights). Hyperparameters are <em>set by you</em> before training (C, max_depth).</td></tr>
+    <tr><td><strong>Report mean ± std</strong></td><td>CV std shows stability — a high mean with huge variance is less trustworthy than a slightly lower, stable one.</td></tr>
+    <tr><td><strong>param_grid as a list of dicts</strong></td><td>Lets you search valid sub-spaces independently (e.g. params that only apply to one solver).</td></tr>
+    <tr><td><strong>loguniform for C / α</strong></td><td>Regularisation spans orders of magnitude — log-uniform sampling explores 0.001→1000 evenly instead of clustering at the top.</td></tr>
+    <tr><td><strong>Surrogate model</strong></td><td>Bayesian opt's cheap approximation of the score surface — it predicts where the optimum likely is, balancing exploration vs exploitation.</td></tr>
+  </table>
+
+  <!-- L5 -->
+  <h3>L5: Model Selection</h3>
+  <div class="card" style="text-align:center; padding:20px; margin-bottom:12px">
+    <div style="font-size:1.05rem; color:var(--accent); font-family:var(--mono); margin-bottom:6px">AIC = 2k − 2·ln(L̂)</div>
+    <div style="font-size:1.05rem; color:var(--accent2); font-family:var(--mono)">BIC = k·ln(n) − 2·ln(L̂)</div>
+    <p style="margin:8px 0 0; font-size:0.82rem">k = number of parameters, n = sample size, L̂ = maximised likelihood. <strong>Lower is better.</strong></p>
+  </div>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>Selection vs optimisation</strong></td><td>Selection = choosing <em>which model family</em>. Optimisation = tuning the hyperparameters of a chosen model.</td></tr>
+    <tr><td><strong>What AIC/BIC penalise</strong></td><td>Both reward goodness-of-fit and penalise the number of parameters. BIC's penalty (ln n) is harsher → prefers simpler models on large datasets.</td></tr>
+    <tr><td><strong>Why training-only is an advantage</strong></td><td>They estimate generalisation without spending a test set — useful when data is scarce.</td></tr>
+    <tr><td><strong>Pearson can mislead</strong></td><td>A near-zero correlation can still hide a strong non-linear relationship — don't reject a feature on Pearson alone.</td></tr>
+  </table>
+  <table>
+    <tr><th>Model family</th><th>Reach for it when</th></tr>
+    <tr><td>Linear / Logistic</td><td>Interpretability, small data, a fast baseline</td></tr>
+    <tr><td>Tree ensembles (RF, GB)</td><td>Tabular data, non-linear interactions, top accuracy</td></tr>
+    <tr><td>Neural networks</td><td>Images, text, sequences, very large datasets</td></tr>
+  </table>
+
+  <div class="alert alert-info">✅ <strong>The golden workflow:</strong> split by group → build a Pipeline (preprocess + model) → select features inside it → tune with GroupKFold cross-validation → compare families with CV score (mean ± std) and AIC/BIC → only then touch the final held-out test set once.</div>
+
+  <div class="btn-row">
+    <button class="btn btn-outline" onclick="nav('pe1')">← L1: Validation</button>
+    <button class="btn btn-outline" onclick="nav('pe2')">L2: Pipelines</button>
+    <button class="btn btn-outline" onclick="nav('pe3')">L3: Feature Selection</button>
+    <button class="btn btn-outline" onclick="nav('pe4')">L4: Optimisation</button>
+    <button class="btn btn-outline" onclick="nav('pe5')">L5: Selection</button>
   </div>
 </div>
 
@@ -5984,14 +6233,120 @@ for epoch in range(1500):
 
   <div class="btn-row">
     <button class="btn btn-primary" onclick="startChapterQuiz(['ul1','ul2','ul3','ul4','ul5'])">📝 Start Quiz</button>
+    <button class="btn btn-outline" onclick="nav('ulsheet')">📋 Cheat Sheet</button>
     <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- UNSUPERVISED LEARNING — Cheat Sheet                             -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-ulsheet">
+  <h2>📋 Unsupervised Learning — Cheat Sheet</h2>
+  <p class="subtitle">Everything from L1–L5 in one place. Clustering, density methods, and dimensionality reduction.</p>
+
+  <h3>What Each Lesson Covers</h3>
+  <table>
+    <tr><th>Lesson</th><th>Core topic</th><th>Key takeaway</th></tr>
+    <tr><td><strong>L1: Fundamentals</strong></td><td>Learning without labels</td><td>Find structure in unlabelled data: clustering, dimensionality reduction, anomaly detection, generative modelling.</td></tr>
+    <tr><td><strong>L2: K-Means</strong></td><td>Centroid-based partitioning into k clusters</td><td>Minimise inertia by alternating assign/update. Must scale; pick k with elbow + silhouette.</td></tr>
+    <tr><td><strong>L3: Hierarchical</strong></td><td>Nested clusters → dendrogram</td><td>No k upfront — cut the dendrogram where merge distances jump. Ward linkage is the default.</td></tr>
+    <tr><td><strong>L4: DBSCAN</strong></td><td>Density-based clusters + noise</td><td>Finds arbitrary shapes and labels outliers (−1). No k needed; tune eps & min_samples.</td></tr>
+    <tr><td><strong>L5: t-SNE</strong></td><td>Non-linear 2D/3D visualisation</td><td>Preserves <em>local</em> neighbourhoods for plotting. Distances/sizes between clusters aren't meaningful.</td></tr>
+  </table>
+
+  <!-- L1 -->
+  <h3>L1: Fundamentals</h3>
+  <table>
+    <tr><th>Aspect</th><th>Detail</th></tr>
+    <tr><td><strong>Data</strong></td><td>Unlabelled — no target y. The algorithm finds structure on its own.</td></tr>
+    <tr><td><strong>Main tasks</strong></td><td>Clustering, dimensionality reduction, anomaly detection, generative modelling</td></tr>
+    <tr><td><strong>Evaluation</strong></td><td>No ground truth → use intrinsic metrics (silhouette, inertia) or downstream task performance, not accuracy</td></tr>
+    <tr><td><strong>Helps supervised pipelines</strong></td><td>Feature compression (PCA), cluster features, outlier removal before training</td></tr>
+    <tr><td><strong>Note on generative models</strong></td><td>Not always unsupervised — they can be trained with labels too</td></tr>
+  </table>
+
+  <!-- L2 -->
+  <h3>L2: K-Means Clustering</h3>
+  <div class="card" style="text-align:center; padding:18px; margin-bottom:12px">
+    <div style="font-size:1rem; color:var(--accent); font-family:var(--mono); margin-bottom:6px">Inertia = Σ ‖xᵢ − μ_cluster(i)‖²</div>
+    <div style="font-size:1rem; color:var(--accent2); font-family:var(--mono)">silhouette s(i) = (b − a) / max(a, b)</div>
+    <p style="margin:8px 0 0; font-size:0.82rem">a = mean distance to own cluster, b = mean distance to nearest other cluster. s near +1 = well clustered.</p>
+  </div>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>The K</strong></td><td>Number of clusters — you choose it before fitting</td></tr>
+    <tr><td><strong>Algorithm</strong></td><td>Assign each point to nearest centroid → recompute centroids → repeat until stable</td></tr>
+    <tr><td><strong>Must scale features</strong></td><td>Uses Euclidean distance — large-scale features would dominate</td></tr>
+    <tr><td><strong>Inertia</strong></td><td>Total within-cluster squared distance — always decreases as k rises (so can't pick k alone)</td></tr>
+    <tr><td><strong>Different results per run</strong></td><td>Random centroid init → use <code>n_init</code> / k-means++ to stabilise</td></tr>
+    <tr><td><strong>Elbow method</strong></td><td>Plot inertia vs k, pick the elbow. Limitation: the elbow is often ambiguous → confirm with silhouette</td></tr>
+  </table>
+  <div class="alert alert-warn">⚠️ K-Means assumes roughly spherical, equally-sized clusters. It struggles with elongated or differently-sized shapes — clusters can look "mixed" in a 2D projection even when valid in full dimensions.</div>
+
+  <!-- L3 -->
+  <h3>L3: Hierarchical Clustering</h3>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>Agglomerative vs divisive</strong></td><td>Agglomerative = bottom-up (merge); divisive = top-down (split). Agglomerative is the common one.</td></tr>
+    <tr><td><strong>Dendrogram</strong></td><td>Tree of merges. A <em>tall</em> vertical line before a merge = those clusters are very dissimilar.</td></tr>
+    <tr><td><strong>Choosing k</strong></td><td>Cut the dendrogram horizontally where the vertical gaps are largest — count the lines you cross</td></tr>
+    <tr><td><strong>Ward linkage (default)</strong></td><td>Merges the pair that minimises the increase in within-cluster variance — compact, balanced clusters</td></tr>
+    <tr><td><strong>Single linkage</strong></td><td>Distance = closest pair. Prone to "chaining" — clusters string together through bridge points</td></tr>
+    <tr><td><strong>scipy</strong></td><td><code>linkage()</code> builds the linkage matrix (which clusters merged, at what distance, cluster size)</td></tr>
+    <tr><td><strong>Advantage over K-Means</strong></td><td>No need to pick k upfront; the dendrogram reveals structure at every level</td></tr>
+  </table>
+
+  <!-- L4 -->
+  <h3>L4: DBSCAN</h3>
+  <table>
+    <tr><th>Term</th><th>Meaning</th></tr>
+    <tr><td><strong>Core point</strong></td><td>Has ≥ <code>min_samples</code> neighbours within radius <code>eps</code></td></tr>
+    <tr><td><strong>Border point</strong></td><td>Within eps of a core point but not itself core</td></tr>
+    <tr><td><strong>Noise (label −1)</strong></td><td>Neither core nor border — an outlier, explicitly flagged</td></tr>
+    <tr><td><strong>eps</strong></td><td>Neighbourhood radius — pick from the "knee" of the k-nearest-neighbour distance plot</td></tr>
+    <tr><td><strong>min_samples</strong></td><td>Density threshold — rule of thumb ≥ dimensions + 1 (often 2×dims)</td></tr>
+  </table>
+  <table>
+    <tr><th>Strength</th><th>Limitation</th></tr>
+    <tr><td>Finds arbitrary shapes; no k needed; isolates outliers</td><td>Struggles when clusters have <em>varying densities</em> (one eps can't fit all)</td></tr>
+    <tr><td>Robust to outliers (unlike K-Means, which forces every point into a cluster)</td><td>Sensitive to eps/min_samples; must scale features first</td></tr>
+  </table>
+
+  <!-- L5 -->
+  <h3>L5: t-SNE</h3>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>Purpose</strong></td><td>Non-linear dimensionality reduction for <em>visualising</em> high-dimensional data in 2D/3D</td></tr>
+    <tr><td><strong>perplexity</strong></td><td>Roughly "number of effective neighbours" (typical 5–50). Balances local vs global structure</td></tr>
+    <tr><td><strong>Student t-distribution</strong></td><td>Heavy tails in the low-D space fix the <strong>crowding problem</strong> — gives distant points room so clusters don't collapse together</td></tr>
+    <tr><td><strong>Non-deterministic</strong></td><td>Random init → set <code>random_state</code> for reproducibility</td></tr>
+    <tr><td><strong>PCA before t-SNE</strong></td><td>Reduce to ~50 dims first → faster and denoises before the non-linear step</td></tr>
+  </table>
+  <div class="alert alert-warn">⚠️ <strong>Read t-SNE plots carefully.</strong> Only <em>local</em> neighbourhoods are meaningful. Cluster sizes, inter-cluster distances, and empty gaps are <strong>not</strong> interpretable. It's for visualisation, not for measuring or for feeding distances downstream.</div>
+
+  <h4>Clustering Method Selector</h4>
+  <table>
+    <tr><th>Situation</th><th>Use</th></tr>
+    <tr><td>Roughly spherical clusters, know k, large data</td><td>K-Means</td></tr>
+    <tr><td>Don't know k, want to see structure at all levels</td><td>Hierarchical (dendrogram)</td></tr>
+    <tr><td>Arbitrary shapes, outliers present, unknown k</td><td>DBSCAN</td></tr>
+    <tr><td>Just want to <em>visualise</em> high-dim clusters</td><td>t-SNE (or PCA for a linear view)</td></tr>
+  </table>
+
+  <div class="btn-row">
+    <button class="btn btn-outline" onclick="nav('ul1')">← L1: Fundamentals</button>
+    <button class="btn btn-outline" onclick="nav('ul2')">L2: K-Means</button>
+    <button class="btn btn-outline" onclick="nav('ul3')">L3: Hierarchical</button>
+    <button class="btn btn-outline" onclick="nav('ul4')">L4: DBSCAN</button>
+    <button class="btn btn-outline" onclick="nav('ul5')">L5: t-SNE</button>
   </div>
 </div>
 
 <div class="page" id="page-ul1">
   <div class="page-header">
-    <div class="chapter-badge">Unsupervised Learning</div>
-    <h1>L1: Fundamentals of Unsupervised Learning</h1>
+    <div class="chapter-badge">Unsupervised Learning · L1</div>
+    <h1>🌐 Fundamentals of Unsupervised Learning</h1>
     <p class="subtitle">Learning patterns from unlabelled data — clustering, dimensionality reduction, anomaly detection, and generative modelling.</p>
   </div>
 
@@ -6177,8 +6532,8 @@ for epoch in range(1500):
 
 <div class="page" id="page-ul2">
   <div class="page-header">
-    <div class="chapter-badge">Unsupervised Learning</div>
-    <h1>L2: K-Means Clustering</h1>
+    <div class="chapter-badge">Unsupervised Learning · L2</div>
+    <h1>🔵 K-Means Clustering</h1>
     <p class="subtitle">Partitioning data into k groups by iteratively assigning points to the nearest centroid — the most widely used clustering algorithm.</p>
   </div>
 
@@ -6822,9 +7177,9 @@ print(<span class="str">f'Silhouette: {score:.3f}'</span>)
   <h3>1. Distance Metric — how far apart are two individual points?</h3>
   <table>
     <tr><th>Metric</th><th>Formula</th><th>Best for</th></tr>
-    <tr><td><strong>Euclidean ✅</strong></td><td style="font-family:monospace;font-size:0.8rem">√Σ(xᵢ−yᵢ)²</td><td>Continuous, well-scaled numeric data (default)</td></tr>
-    <tr><td><strong>Manhattan</strong></td><td style="font-family:monospace;font-size:0.8rem">Σ|xᵢ−yᵢ|</td><td>High-dimensional data; less sensitive to outliers</td></tr>
-    <tr><td><strong>Cosine</strong></td><td style="font-family:monospace;font-size:0.8rem">1 − (x·y)/(‖x‖‖y‖)</td><td>Text / sparse vectors — direction matters, not magnitude</td></tr>
+    <tr><td><strong>Euclidean ✅</strong></td><td style="font-family:var(--mono);font-size:0.8rem">√Σ(xᵢ−yᵢ)²</td><td>Continuous, well-scaled numeric data (default)</td></tr>
+    <tr><td><strong>Manhattan</strong></td><td style="font-family:var(--mono);font-size:0.8rem">Σ|xᵢ−yᵢ|</td><td>High-dimensional data; less sensitive to outliers</td></tr>
+    <tr><td><strong>Cosine</strong></td><td style="font-family:var(--mono);font-size:0.8rem">1 − (x·y)/(‖x‖‖y‖)</td><td>Text / sparse vectors — direction matters, not magnitude</td></tr>
   </table>
 
   <h3>2. Linkage — how far apart are two multi-point clusters?</h3>
@@ -7983,8 +8338,8 @@ labels = hdb.fit_predict(X_scaled)
 
 <div class="page" id="page-ul5">
   <div class="page-header">
-    <div class="chapter-badge">Unsupervised Learning</div>
-    <h1>L5: t-SNE</h1>
+    <div class="chapter-badge">Unsupervised Learning · L5</div>
+    <h1>🌀 t-SNE</h1>
     <p class="subtitle">t-Distributed Stochastic Neighbour Embedding — nonlinear dimensionality reduction for visualising high-dimensional data.</p>
   </div>
 
@@ -8222,14 +8577,134 @@ plt.show()</pre></div>
 
   <div class="btn-row">
     <button class="btn btn-primary" onclick="startChapterQuiz(['ts1','ts2','ts3','ts4','ts5','ts6','ts7','ts8','ts9'])">📝 Start Quiz</button>
+    <button class="btn btn-outline" onclick="nav('tssheet')">📋 Cheat Sheet</button>
     <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- TIME SERIES ANALYSIS — Cheat Sheet                              -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-tssheet">
+  <h2>📋 Time Series Analysis — Cheat Sheet</h2>
+  <p class="subtitle">Everything from L1–L9 in one place. Stationarity, ACF/PACF, AR/ARMA, smoothing, and Prophet.</p>
+
+  <h3>What Each Lesson Covers</h3>
+  <table>
+    <tr><th>Lesson</th><th>Core topic</th><th>Key takeaway</th></tr>
+    <tr><td><strong>L1: Introduction</strong></td><td>Trend, seasonality, stationarity, ACF/PACF</td><td>Order matters. Most models need a stationary series — constant mean & variance over time.</td></tr>
+    <tr><td><strong>L2–L4: Preprocessing</strong></td><td>Resampling, differencing, rolling windows</td><td>Difference to remove trend; resample to change frequency; rolling windows smooth and build features.</td></tr>
+    <tr><td><strong>L5: Autoregressive Models</strong></td><td>AR & ARMA, lag selection</td><td>Predict from past values. Pick the order p with PACF / lowest BIC. Residuals must be white noise.</td></tr>
+    <tr><td><strong>L6: Testing</strong></td><td>Residual diagnostics, forward-chaining CV</td><td>Always split chronologically. Good residuals = zero mean + flat ACF.</td></tr>
+    <tr><td><strong>L7: Exponential Smoothing</strong></td><td>SES, Holt, Holt-Winters</td><td>Weight recent points more. Holt-Winters adds trend + seasonality; no stationarity needed.</td></tr>
+    <tr><td><strong>L8: Prophet</strong></td><td>Decomposition + holidays</td><td>Additive model: trend + seasonality + events. Great for business forecasting with little prep.</td></tr>
+    <tr><td><strong>L9: Practical</strong></td><td>End-to-end on real pageviews</td><td>Compare AR, Holt-Winters, Prophet; read Prophet components for business insight.</td></tr>
+  </table>
+
+  <!-- L1 -->
+  <h3>L1: Foundations</h3>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>vs standard ML</strong></td><td>Rows are <em>ordered</em> and dependent in time — you cannot shuffle them</td></tr>
+    <tr><td><strong>3 components</strong></td><td>Trend (long-term direction), Seasonality (repeating cycle), Residual/noise</td></tr>
+    <tr><td><strong>Autocorrelation</strong></td><td>Correlation of the series with a lagged copy of itself</td></tr>
+    <tr><td><strong>ACF</strong></td><td>Correlation at each lag incl. indirect effects. Spikes at 4, 8, 12 → seasonality of period 4</td></tr>
+    <tr><td><strong>PACF</strong></td><td>Correlation at a lag with intermediate lags removed (direct effect) — used to pick AR order p</td></tr>
+    <tr><td><strong>Stationary</strong></td><td>Constant mean, variance, autocorrelation over time. Required by AR/ARMA</td></tr>
+    <tr><td><strong>ADF test</strong></td><td>Augmented Dickey-Fuller. p &lt; 0.05 → reject non-stationarity → series <em>is</em> stationary. p = 0.12 → difference it</td></tr>
+  </table>
+
+  <!-- L2-L4 -->
+  <h3>L2–L4: Preprocessing</h3>
+  <table>
+    <tr><th>Operation</th><th>Code / Note</th></tr>
+    <tr><td><strong>Downsample to monthly mean</strong></td><td><code>df.resample("M").mean()</code> (requires a DatetimeIndex)</td></tr>
+    <tr><td><strong>Differencing</strong></td><td><code>series.diff(1)</code> removes trend; <code>diff(period)</code> removes seasonality — first fix for a failed ADF test</td></tr>
+    <tr><td><strong>Rolling mean</strong></td><td><code>series.rolling(7).mean()</code> — first 6 rows are NaN (window not yet full)</td></tr>
+    <tr><td><strong>Shift / lag</strong></td><td><code>series.shift(1)</code> moves values down one step — builds lag features & the target for supervised framing</td></tr>
+    <tr><td><strong>SMA vs EMA</strong></td><td>Simple MA weights all window points equally; Exponential MA weights recent points more heavily</td></tr>
+    <tr><td><strong>Custom date parsing</strong></td><td>Formats like "2009Q3" / "2009-Q3" won't auto-parse — convert to a proper datetime before <code>.resample()</code></td></tr>
+  </table>
+  <div class="alert alert-warn">⚠️ Forward-fill (<code>ffill</code>) is wrong for <em>count</em>/flow columns — it repeats a stale total and invents demand. Fine for slow-moving state (e.g. temperature), not for rentals or sales.</div>
+
+  <!-- L5 -->
+  <h3>L5: Autoregressive Models (AR / ARMA)</h3>
+  <div class="card" style="text-align:center; padding:18px; margin-bottom:12px">
+    <div style="font-size:1.05rem; color:var(--accent); font-family:var(--mono)">yₜ = c + φ₁yₜ₋₁ + φ₂yₜ₋₂ + … + φₚyₜ₋ₚ + εₜ</div>
+    <p style="margin:8px 0 0; font-size:0.82rem">AR(p): today is a linear function of the previous p values. ARMA adds MA terms on past <em>errors</em>.</p>
+  </div>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>Core assumption</strong></td><td>Future values depend linearly on recent past values</td></tr>
+    <tr><td><strong>Needs stationarity</strong></td><td>The φ coefficients only make sense if statistical properties don't drift</td></tr>
+    <tr><td><strong>Choosing p</strong></td><td>PACF cutoff, or fit several orders and take the lowest BIC (e.g. AR(4) wins → 4 lags matter)</td></tr>
+    <tr><td><strong>AR ≡ LinearRegression on lags</strong></td><td>An AR model and a linear regression on lagged features give identical predictions</td></tr>
+    <tr><td><strong>ARMA extra info</strong></td><td>Uses past <em>errors</em> (MA terms) as well as past values — absorbs patterns AR leaves in the residuals</td></tr>
+    <tr><td><strong>Residual ACF spikes</strong></td><td>Means structure was missed → increase p or add MA terms</td></tr>
+  </table>
+
+  <!-- L6 -->
+  <h3>L6: Testing & Validation</h3>
+  <table>
+    <tr><th>Rule</th><th>Why</th></tr>
+    <tr><td><strong>Chronological split only</strong></td><td>Random splitting leaks the future into training — meaningless for forecasting</td></tr>
+    <tr><td><strong>Good residuals</strong></td><td>Zero mean (unbiased) + flat ACF / white noise (no structure left). Bonus: pass Shapiro-Wilk normality</td></tr>
+    <tr><td><strong>Test MAE ≫ in-sample MAE</strong></td><td>Overfitting or a regime change — model doesn't generalise forward</td></tr>
+    <tr><td><strong>ARMA beats AR on test</strong></td><td>The AR residuals still held autocorrelation that MA terms captured</td></tr>
+    <tr><td><strong>Forward-chaining CV</strong></td><td>Expanding-window folds (train on past, test on next block) — averaging MAE across folds beats one split</td></tr>
+  </table>
+
+  <!-- L7 -->
+  <h3>L7: Exponential Smoothing</h3>
+  <table>
+    <tr><th>Model</th><th>Handles</th><th>Note</th></tr>
+    <tr><td><strong>Simple (SES)</strong></td><td>Level only</td><td>Forecast is a <em>flat line</em> — correct, since it has no trend/seasonality component</td></tr>
+    <tr><td><strong>Holt's</strong></td><td>Level + trend</td><td>Forecast follows a slope</td></tr>
+    <tr><td><strong>Holt-Winters</strong></td><td>Level + trend + seasonality</td><td>Set <code>seasonal_periods</code> to the cycle length (12 monthly, 7 daily)</td></tr>
+  </table>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>α (smoothing)</strong></td><td>Weight on the most recent observation. α→1 = reactive/noisy, α→0 = smooth/sluggish</td></tr>
+    <tr><td><strong>Additive vs multiplicative</strong></td><td>Additive = seasonal swing is constant size; multiplicative = swing grows with the level</td></tr>
+    <tr><td><strong>Why preferred</strong></td><td>Fast, practical, no stationarity requirement — strong quick baseline</td></tr>
+  </table>
+
+  <!-- L8 -->
+  <h3>L8: Prophet</h3>
+  <div class="card" style="text-align:center; padding:18px; margin-bottom:12px">
+    <div style="font-size:1.05rem; color:var(--accent); font-family:var(--mono)">y(t) = g(t) + s(t) + h(t) + εₜ</div>
+    <p style="margin:8px 0 0; font-size:0.82rem">trend g(t) + seasonality s(t) + holidays/events h(t). A curve-fitting decomposition, not a lag model.</p>
+  </div>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>Input format</strong></td><td>Columns must be named <code>ds</code> (date) and <code>y</code> (value) — else it errors</td></tr>
+    <tr><td><strong>vs AR</strong></td><td>AR extrapolates recent values; Prophet fits global trend + seasonal curves over the whole history</td></tr>
+    <tr><td><strong>Named holidays</strong></td><td>Give different events different names so Prophet learns a separate effect each (a suppressor vs a booster shouldn't be averaged)</td></tr>
+    <tr><td><strong>Changepoints</strong></td><td>Points where the trend slope shifts — searched only in the first 80% to avoid overfitting the end</td></tr>
+    <tr><td><strong>plot_components()</strong></td><td>Splits the forecast into trend / weekly / yearly / holiday panels — the key for business insight. Noisy yearly panel = overfit seasonality</td></tr>
+  </table>
+
+  <h4>Model Selector</h4>
+  <table>
+    <tr><th>You want…</th><th>Use</th></tr>
+    <tr><td>A fast statistical forecast on a stationary series</td><td>AR / ARMA</td></tr>
+    <tr><td>A quick baseline with trend + seasonality, no prep</td><td>Holt-Winters</td></tr>
+    <tr><td>Business forecasting with holidays & interpretable components</td><td>Prophet</td></tr>
+    <tr><td>Long sequences with complex non-linear patterns</td><td>LSTM (see Neural Networks L7)</td></tr>
+  </table>
+
+  <div class="btn-row">
+    <button class="btn btn-outline" onclick="nav('ts1')">← L1: Intro</button>
+    <button class="btn btn-outline" onclick="nav('ts5')">L5: AR Models</button>
+    <button class="btn btn-outline" onclick="nav('ts7')">L7: Smoothing</button>
+    <button class="btn btn-outline" onclick="nav('ts8')">L8: Prophet</button>
   </div>
 </div>
 
 <div class="page" id="page-ts1">
   <div class="page-header">
-    <div class="chapter-badge">Time Series Analysis</div>
-    <h1>L1: Introduction to Time Series</h1>
+    <div class="chapter-badge">Time Series Analysis · L1</div>
+    <h1>📈 Introduction to Time Series</h1>
     <p class="subtitle">Understanding time-ordered data — trend, seasonality, autocorrelation, and stationarity.</p>
   </div>
 
@@ -8334,7 +8809,7 @@ plt.show()</pre></div>
     <h3>How to read an ACF plot</h3>
     <div class="vis-container">
       <div class="vis-label">ACF plot — quarterly seasonality (alcohol consumption data)</div>
-      <pre style="font-family:monospace; font-size:0.82rem; line-height:1.7; background:var(--bg-secondary); padding:1rem; border-radius:8px; overflow-x:auto;">
+      <pre style="font-family:var(--mono); font-size:0.82rem; line-height:1.7; background:var(--bg-secondary); padding:1rem; border-radius:8px; overflow-x:auto;">
  Autocorrelation
   1.0 │
   0.9 │         ████                    ████
@@ -8373,7 +8848,7 @@ plt.show()</pre></div>
     <h3>How to read a PACF plot</h3>
     <div class="vis-container">
       <div class="vis-label">PACF plot — same quarterly data</div>
-      <pre style="font-family:monospace; font-size:0.82rem; line-height:1.7; background:var(--bg-secondary); padding:1rem; border-radius:8px; overflow-x:auto;">
+      <pre style="font-family:var(--mono); font-size:0.82rem; line-height:1.7; background:var(--bg-secondary); padding:1rem; border-radius:8px; overflow-x:auto;">
  Partial Autocorrelation
   1.0 │ ████
   0.8 │ ████        ████
@@ -8473,8 +8948,8 @@ print(test_stationarity(alcohol_consumption.TotalWine))</pre></div>
 <!-- TS3: PREPROCESSING PRACTICAL -->
 <div class="page" id="page-ts3">
   <div class="page-header">
-    <div class="chapter-badge">Time Series Analysis</div>
-    <h1>L3: Preprocessing Practical</h1>
+    <div class="chapter-badge">Time Series Analysis · L3</div>
+    <h1>🔬 Preprocessing Practical</h1>
     <p class="subtitle">Worked exercises — custom date parsing, differencing, ACF/PACF, stationarity testing, resampling, and moving windows on real datasets.</p>
   </div>
 
@@ -8725,8 +9200,8 @@ plt.plot(rolling_autocorr)</pre></div>
 <!-- TS4: PREPROCESSING PRACTICAL 2 -->
 <div class="page" id="page-ts4">
   <div class="page-header">
-    <div class="chapter-badge">Time Series Analysis</div>
-    <h1>L4: Preprocessing Practical 2</h1>
+    <div class="chapter-badge">Time Series Analysis · L4</div>
+    <h1>🧪 Preprocessing Practical 2</h1>
     <p class="subtitle">Resampling the bikes dataset, interactive exploration with ipywidgets, multi-column plotting, and rolling windows as feature engineering tools.</p>
   </div>
 
@@ -8912,8 +9387,8 @@ plt.plot(rolling_autocorr)</pre></div>
 <!-- TS5: AUTOREGRESSIVE MODELS -->
 <div class="page" id="page-ts5">
   <div class="page-header">
-    <div class="chapter-badge">Time Series Analysis</div>
-    <h1>L5: Autoregressive Models</h1>
+    <div class="chapter-badge">Time Series Analysis · L5</div>
+    <h1>📉 Autoregressive Models</h1>
     <p class="subtitle">Fitting AR and ARMA models on the NZ alcohol dataset — automatic lag selection, in-sample prediction, MAE evaluation, and implementing AR from scratch with sklearn.</p>
   </div>
 
@@ -9154,8 +9629,8 @@ print(<span class="str">'MAE = {0:.3f}'</span>.format(mean_absolute_error(time_s
 <!-- TS6: TIME SERIES TESTING -->
 <div class="page" id="page-ts6">
   <div class="page-header">
-    <div class="chapter-badge">Time Series Analysis</div>
-    <h1>L6: Time Series Testing</h1>
+    <div class="chapter-badge">Time Series Analysis · L6</div>
+    <h1>🔎 Time Series Testing</h1>
     <p class="subtitle">Residual diagnostics, genuine forecasting on held-out data, automatic ARMA selection, and cross-validation for time series — using Google Trends climate change data.</p>
   </div>
 
@@ -9504,8 +9979,8 @@ Forecasting_crossValidation(time_series, int(len(time_series) * <span class="num
 <!-- TS7: EXPONENTIAL SMOOTHING -->
 <div class="page" id="page-ts7">
   <div class="page-header">
-    <div class="chapter-badge">Time Series Analysis</div>
-    <h1>L7: Exponential Smoothing</h1>
+    <div class="chapter-badge">Time Series Analysis · L7</div>
+    <h1>📊 Exponential Smoothing</h1>
     <p class="subtitle">A family of forecasting methods that weight recent observations more heavily — from simple smoothing to handling trends and seasonality — without requiring stationarity.</p>
   </div>
 
@@ -9786,8 +10261,8 @@ print(<span class="str">"TES MAE:"</span>, mean_absolute_error(test, tes_pred))<
 <!-- TS8: PROPHET -->
 <div class="page" id="page-ts8">
   <div class="page-header">
-    <div class="chapter-badge">Time Series Analysis</div>
-    <h1>L8: Prophet</h1>
+    <div class="chapter-badge">Time Series Analysis · L8</div>
+    <h1>🔮 Prophet</h1>
     <p class="subtitle">Facebook's open-source forecasting library — decompose time series into trend, seasonality, and one-off events, then forecast with minimal preprocessing.</p>
   </div>
 
@@ -10061,8 +10536,8 @@ plt.show()</pre></div>
 <!-- TS9: PRACTICAL EXAMPLE -->
 <div class="page" id="page-ts9">
   <div class="page-header">
-    <div class="chapter-badge">Time Series Analysis</div>
-    <h1>L9: Practical Example</h1>
+    <div class="chapter-badge">Time Series Analysis · L9</div>
+    <h1>📰 Practical Example</h1>
     <p class="subtitle">End-to-end time series analysis on real daily pageviews data — full preprocessing pipeline, three models compared, and business insights extracted from Prophet components.</p>
   </div>
 
@@ -10382,8 +10857,8 @@ plt.show()</pre></div>
 <!-- TS2: PREPROCESSING FOR TIME SERIES -->
 <div class="page" id="page-ts2">
   <div class="page-header">
-    <div class="chapter-badge">Time Series Analysis</div>
-    <h1>L2: Preprocessing for Time Series</h1>
+    <div class="chapter-badge">Time Series Analysis · L2</div>
+    <h1>🧹 Preprocessing for Time Series</h1>
     <p class="subtitle">Handling missing data, resampling, smoothing, shifting, and making your series stationary.</p>
   </div>
 
@@ -10696,15 +11171,15 @@ plt.show()</code></pre></div>
     <div id="nn3-slope-info" style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; font-size:0.83rem">
       <div style="padding:8px 12px; background:rgba(91,138,245,0.1); border-radius:6px; border-left:3px solid #5b8af5">
         <div style="color:var(--text-muted); font-size:0.75rem">Current θ</div>
-        <div id="nn3-info-theta" style="color:#5b8af5; font-weight:700; font-family:monospace"></div>
+        <div id="nn3-info-theta" style="color:#5b8af5; font-weight:700; font-family:var(--mono)"></div>
       </div>
       <div style="padding:8px 12px; background:rgba(52,211,153,0.1); border-radius:6px; border-left:3px solid #34d399">
         <div style="color:var(--text-muted); font-size:0.75rem">Loss L(θ)</div>
-        <div id="nn3-info-loss" style="color:#34d399; font-weight:700; font-family:monospace"></div>
+        <div id="nn3-info-loss" style="color:#34d399; font-weight:700; font-family:var(--mono)"></div>
       </div>
       <div style="padding:8px 12px; background:rgba(248,113,113,0.1); border-radius:6px; border-left:3px solid #f87171">
         <div style="color:var(--text-muted); font-size:0.75rem">Gradient g(θ)</div>
-        <div id="nn3-info-grad" style="color:#f87171; font-weight:700; font-family:monospace"></div>
+        <div id="nn3-info-grad" style="color:#f87171; font-weight:700; font-family:var(--mono)"></div>
       </div>
     </div>
   </div>
@@ -11227,7 +11702,7 @@ plt.show()</code></pre></div>
       </tr>
       <tr>
         <td style="padding:8px 14px; color:var(--text-muted)">theta -= lmbda * g(theta)</td>
-        <td style="padding:8px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">loss.backward(); optimizer.step() — same logic, different tools</td>
+        <td style="padding:8px 14px; font-family:var(--mono); font-size:0.78rem; color:var(--text-muted)">loss.backward(); optimizer.step() — same logic, different tools</td>
       </tr>
     </table>
   </div>
@@ -11453,15 +11928,15 @@ clf.fit(X_train, y_train)</code></pre></div>
     <p style="margin:0 0 8px; font-weight:600; color:#fbbf24">The <code>loss</code> parameter selects the model</p>
     <table style="width:100%; font-size:0.82rem; border-collapse:collapse">
       <tr style="border-bottom:1px solid var(--card-border)">
-        <td style="padding:6px 12px; font-family:monospace; color:var(--text)">loss='log_loss'</td>
+        <td style="padding:6px 12px; font-family:var(--mono); color:var(--text)">loss='log_loss'</td>
         <td style="padding:6px 12px; color:var(--text-muted)"><strong>Logistic Regression</strong> — optimises cross-entropy loss. Outputs class probabilities. Good default for classification.</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
-        <td style="padding:6px 12px; font-family:monospace; color:var(--text)">loss='hinge'</td>
+        <td style="padding:6px 12px; font-family:var(--mono); color:var(--text)">loss='hinge'</td>
         <td style="padding:6px 12px; color:var(--text-muted)"><strong>Support Vector Machine (SVM)</strong> — maximises the margin between classes. No probabilities, just hard class predictions.</td>
       </tr>
       <tr>
-        <td style="padding:6px 12px; font-family:monospace; color:var(--text)">loss='modified_huber'</td>
+        <td style="padding:6px 12px; font-family:var(--mono); color:var(--text)">loss='modified_huber'</td>
         <td style="padding:6px 12px; color:var(--text-muted)"><strong>Smooth SVM variant</strong> — robust to outliers, still provides probabilities. A practical middle ground.</td>
       </tr>
     </table>
@@ -11472,11 +11947,11 @@ clf.fit(X_train, y_train)</code></pre></div>
     <p style="margin:0 0 8px; font-weight:600; color:#5b8af5">The <code>learning_rate</code> parameter controls annealing</p>
     <table style="width:100%; font-size:0.82rem; border-collapse:collapse">
       <tr style="border-bottom:1px solid var(--card-border)">
-        <td style="padding:6px 12px; font-family:monospace; color:var(--text)">learning_rate='constant'</td>
+        <td style="padding:6px 12px; font-family:var(--mono); color:var(--text)">learning_rate='constant'</td>
         <td style="padding:6px 12px; color:var(--text-muted)">Fixed step size = <code>eta0</code> throughout. Simple. The value you set is exactly what gets used every step.</td>
       </tr>
       <tr>
-        <td style="padding:6px 12px; font-family:monospace; color:var(--text)">learning_rate='adaptive'</td>
+        <td style="padding:6px 12px; font-family:var(--mono); color:var(--text)">learning_rate='adaptive'</td>
         <td style="padding:6px 12px; color:var(--text-muted)">Starts at <code>eta0</code>. Each time the loss <em>fails to decrease</em>, the learning rate is divided by 5. Automatically finds a good lr without manual tuning.</td>
       </tr>
     </table>
@@ -11860,7 +12335,7 @@ print(f'Test: {images_test.shape}')        # (10000, 784)</code></pre></div>
   <h2>Step 2: Cross-Entropy Loss from Scratch</h2>
   <p>The formula for multi-class cross-entropy over a mini-batch of N examples and C classes:</p>
   <div class="card" style="border-left:3px solid var(--accent); margin-bottom:12px">
-    <p style="margin:0 0 4px; font-size:0.92rem; font-family:monospace; color:var(--text)">CE = −(1/N) × Σᵢ Σⱼ y_{i,j} × log(ŷ_{i,j})</p>
+    <p style="margin:0 0 4px; font-size:0.92rem; font-family:var(--mono); color:var(--text)">CE = −(1/N) × Σᵢ Σⱼ y_{i,j} × log(ŷ_{i,j})</p>
     <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">where y_{i,j} = true label (one-hot, 0 or 1), ŷ_{i,j} = predicted probability from softmax, i = example index, j = class index.</p>
   </div>
 
@@ -11915,7 +12390,7 @@ my_relu_activation(tensor).numpy()
   <p>The question of how to set initial weights is critical. <strong>All zeros</strong> → every neuron computes the same gradient → network never learns. <strong>Too large</strong> → activations saturate, gradients vanish. Glorot initialisation keeps activations in a healthy range by scaling based on layer size:</p>
 
   <div class="card" style="border-left:3px solid #34d399; margin-bottom:12px">
-    <p style="margin:0 0 4px; font-size:0.92rem; font-family:monospace; color:var(--text)">w ~ Uniform(−limit, +limit)  where  limit = √(6 / (n_in + n_out))</p>
+    <p style="margin:0 0 4px; font-size:0.92rem; font-family:var(--mono); color:var(--text)">w ~ Uniform(−limit, +limit)  where  limit = √(6 / (n_in + n_out))</p>
     <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">n_in = neurons in the previous layer. n_out = neurons in the next layer. The limit shrinks as layers get larger, keeping the variance of activations constant as signals flow forward.</p>
   </div>
 
@@ -11951,7 +12426,7 @@ weights = my_glorot_weight_init([784, 500])
   <p>L2 regularisation adds a penalty proportional to the sum of squared weights to the loss. This discourages large weights, prevents overfitting, and improves generalisation.</p>
 
   <div class="card" style="border-left:3px solid #a78bfa; margin-bottom:12px">
-    <p style="margin:0 0 4px; font-size:0.92rem; font-family:monospace; color:var(--text)">L₂ = α × Σᵢ wᵢ²</p>
+    <p style="margin:0 0 4px; font-size:0.92rem; font-family:var(--mono); color:var(--text)">L₂ = α × Σᵢ wᵢ²</p>
     <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">α = regularisation strength (hyperparameter). Higher α = stronger penalty on large weights. Total loss = cross-entropy + L₂ penalty.</p>
   </div>
 
@@ -12331,22 +12806,22 @@ optimizer = keras.optimizers.SGD(learning_rate=lr_schedule, momentum=0.9, nester
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
         <td style="padding:8px 14px; font-weight:600">SGD</td>
-        <td style="padding:8px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">w = w − η·∇L</td>
+        <td style="padding:8px 14px; font-family:var(--mono); font-size:0.78rem; color:var(--text-muted)">w = w − η·∇L</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Simple. Predictable. Used in many state-of-the-art vision models.</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
         <td style="padding:8px 14px; font-weight:600">SGD + Momentum</td>
-        <td style="padding:8px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">v = β·v − η·∇L; w = w + v</td>
+        <td style="padding:8px 14px; font-family:var(--mono); font-size:0.78rem; color:var(--text-muted)">v = β·v − η·∇L; w = w + v</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Accumulates velocity → dampens oscillations, accelerates consistent directions.</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
         <td style="padding:8px 14px; font-weight:600">Nesterov (NAG)</td>
-        <td style="padding:8px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">∇L evaluated at w+β·v</td>
+        <td style="padding:8px 14px; font-family:var(--mono); font-size:0.78rem; color:var(--text-muted)">∇L evaluated at w+β·v</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Look-ahead gradient is more accurate → faster convergence than plain momentum.</td>
       </tr>
       <tr>
         <td style="padding:8px 14px; font-weight:600; color:#34d399">Adam ✅</td>
-        <td style="padding:8px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">Adaptive lr per weight using 1st+2nd moment estimates</td>
+        <td style="padding:8px 14px; font-family:var(--mono); font-size:0.78rem; color:var(--text-muted)">Adaptive lr per weight using 1st+2nd moment estimates</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Default for most tasks. Self-tunes learning rate per weight. Works with lr=0.001.</td>
       </tr>
     </table>
@@ -12488,7 +12963,7 @@ Same filter scans the whole image</pre></div>
   <h3>The Mathematics</h3>
   <p>For a 2D image <em>I</em> and a filter <em>K</em> of size H×W, the output at position (i, j) is:</p>
   <div class="card" style="border-left:3px solid var(--accent); margin-bottom:12px">
-    <p style="margin:0 0 4px; font-size:0.95rem; font-family:monospace; color:var(--text)">O(i,j) = Σₕ Σ_w  I(i+h, j+w) × K(h, w)</p>
+    <p style="margin:0 0 4px; font-size:0.95rem; font-family:var(--mono); color:var(--text)">O(i,j) = Σₕ Σ_w  I(i+h, j+w) × K(h, w)</p>
     <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">In words: <strong>element-wise multiply the filter with the patch directly beneath it, then sum everything up.</strong> Repeat at every position in the image.</p>
   </div>
 
@@ -12525,7 +13000,7 @@ result = np.sum(patch_under_filter * filter_matrix)
 
   <h3>Output Size Formula</h3>
   <div class="card" style="border-left:3px solid #fbbf24; margin-bottom:16px">
-    <p style="margin:0 0 4px; font-size:0.92rem; font-family:monospace; color:var(--text)">Output size = Input size − Filter size + 1</p>
+    <p style="margin:0 0 4px; font-size:0.92rem; font-family:var(--mono); color:var(--text)">Output size = Input size − Filter size + 1</p>
     <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">A 3×3 filter on a 28×28 image → 26×26 output. A 5×5 filter → 24×24. Without padding, the image shrinks with every layer.</p>
   </div>
 
@@ -12565,22 +13040,22 @@ brown_filter = np.array([
         <th style="padding:9px 14px; color:var(--text-muted); text-align:left">Why</th>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
-        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">[-1,-1,-1]<br>[0,0,0]<br>[+1,+1,+1]</td>
+        <td style="padding:8px 14px; font-family:var(--mono); color:var(--text)">[-1,-1,-1]<br>[0,0,0]<br>[+1,+1,+1]</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Horizontal edges (bottom brighter)</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Negative top row, positive bottom row → fires when pixel values increase top to bottom</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
-        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">[-1,0,+1]<br>[-1,0,+1]<br>[-1,0,+1]</td>
+        <td style="padding:8px 14px; font-family:var(--mono); color:var(--text)">[-1,0,+1]<br>[-1,0,+1]<br>[-1,0,+1]</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Vertical edges (right brighter)</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Negative left column, positive right column → fires when pixel values increase left to right</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
-        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">[1/9, 1/9, 1/9]<br>[1/9, 1/9, 1/9]<br>[1/9, 1/9, 1/9]</td>
+        <td style="padding:8px 14px; font-family:var(--mono); color:var(--text)">[1/9, 1/9, 1/9]<br>[1/9, 1/9, 1/9]<br>[1/9, 1/9, 1/9]</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Blur (averaging filter)</td>
         <td style="padding:8px 14px; color:var(--text-muted)">All equal positive weights → averages the neighbourhood → smooths sharp changes</td>
       </tr>
       <tr>
-        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">[0,-1,0]<br>[-1,+5,-1]<br>[0,-1,0]</td>
+        <td style="padding:8px 14px; font-family:var(--mono); color:var(--text)">[0,-1,0]<br>[-1,+5,-1]<br>[0,-1,0]</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Sharpen (enhances centre vs neighbours)</td>
         <td style="padding:8px 14px; color:var(--text-muted)">High centre weight, negative surroundings → fires when centre is brighter than its neighbours</td>
       </tr>
@@ -12745,7 +13220,7 @@ datagen.fit(X_train)
   <h3>The Loss Function: Categorical Cross-Entropy</h3>
   <p>For multi-class classification with one-hot labels, use <code>categorical_crossentropy</code>:</p>
   <div class="card" style="border-left:3px solid var(--accent); margin-bottom:12px">
-    <p style="margin:0 0 4px; font-size:0.92rem; font-family:monospace; color:var(--text)">CE = −Σⱼ  y_j × log(ŷ_j)</p>
+    <p style="margin:0 0 4px; font-size:0.92rem; font-family:var(--mono); color:var(--text)">CE = −Σⱼ  y_j × log(ŷ_j)</p>
     <p style="margin:0; font-size:0.83rem; color:var(--text-muted)">y_j = true label (one-hot: 1 for true class, 0 for all others). ŷ_j = predicted probability from softmax. Only the true class term survives the sum. High predicted probability for the true class → low loss. Confident wrong prediction → very high loss.</p>
   </div>
 
@@ -12834,7 +13309,7 @@ ax2.plot(epochs, history_dict['val_accuracy'], label='Validation accuracy', line
 ax2.set_title('Accuracy over epochs')
 ax2.set_xlabel('Epoch')
 ax2.set_ylabel('Accuracy')
-ax2.legend()</pre></div>
+ax2.legend()</code></pre></div>
 
   <h3>Diagnosing from the Curves</h3>
 
@@ -12914,32 +13389,32 @@ plt.title('Confusion Matrix')</code></pre></div>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
         <td style="padding:8px 14px; font-weight:600">True Positives (TP)</td>
-        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">cm[i, i]</td>
+        <td style="padding:8px 14px; font-family:var(--mono); color:var(--text)">cm[i, i]</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Predicted class i and it actually is class i</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
         <td style="padding:8px 14px; font-weight:600">False Positives (FP)</td>
-        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">sum(cm[:, i]) − cm[i, i]</td>
+        <td style="padding:8px 14px; font-family:var(--mono); color:var(--text)">sum(cm[:, i]) − cm[i, i]</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Predicted class i but actually a different class</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
         <td style="padding:8px 14px; font-weight:600">False Negatives (FN)</td>
-        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">sum(cm[i, :]) − cm[i, i]</td>
+        <td style="padding:8px 14px; font-family:var(--mono); color:var(--text)">sum(cm[i, :]) − cm[i, i]</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Predicted something else but it was actually class i</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
         <td style="padding:8px 14px; font-weight:600; color:#5b8af5">Precision</td>
-        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">TP / (TP + FP)</td>
+        <td style="padding:8px 14px; font-family:var(--mono); color:var(--text)">TP / (TP + FP)</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Of all predicted class i: what fraction were actually class i? (Avoids false alarms)</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
         <td style="padding:8px 14px; font-weight:600; color:#34d399">Recall</td>
-        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">TP / (TP + FN)</td>
+        <td style="padding:8px 14px; font-family:var(--mono); color:var(--text)">TP / (TP + FN)</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Of all real class i examples: what fraction did we catch? (Avoids misses)</td>
       </tr>
       <tr>
         <td style="padding:8px 14px; font-weight:600; color:#a78bfa">F1 Score</td>
-        <td style="padding:8px 14px; font-family:monospace; color:var(--text)">2 × (P × R) / (P + R)</td>
+        <td style="padding:8px 14px; font-family:var(--mono); color:var(--text)">2 × (P × R) / (P + R)</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Harmonic mean of precision and recall. Use when you want a single balanced metric.</td>
       </tr>
     </table>
@@ -13247,7 +13722,7 @@ Large (&gt;10k)   Very different            Train from scratch OR fine-tune all<
   <p>At each timestep <em>t</em>, an RNN receives the current input <strong>x<sub>t</sub></strong> and the previous hidden state <strong>h<sub>t-1</sub></strong>. It produces an updated hidden state <strong>h<sub>t</sub></strong>:</p>
 
   <div class="card" style="border-left:3px solid var(--accent); margin-bottom:12px">
-    <p style="margin:0 0 6px; font-size:0.95rem; font-family:monospace; color:var(--text)">h<sub>t</sub> = tanh( W<sub>h</sub> · h<sub>t-1</sub> &nbsp;+&nbsp; W<sub>x</sub> · x<sub>t</sub> &nbsp;+&nbsp; b )</p>
+    <p style="margin:0 0 6px; font-size:0.95rem; font-family:var(--mono); color:var(--text)">h<sub>t</sub> = tanh( W<sub>h</sub> · h<sub>t-1</sub> &nbsp;+&nbsp; W<sub>x</sub> · x<sub>t</sub> &nbsp;+&nbsp; b )</p>
     <p style="margin:0; font-size:0.83rem; color:var(--text-muted)"><strong>W<sub>h</sub></strong>: weight matrix for the previous hidden state (captures temporal dependency) &nbsp;|&nbsp; <strong>W<sub>x</sub></strong>: weight matrix for the current input &nbsp;|&nbsp; <strong>tanh</strong>: squashes output to [−1, +1]</p>
   </div>
 
@@ -14160,7 +14635,7 @@ comparable scale regardless of degree.</pre></div>
   <p>For node classification (e.g. CORA: classify each paper into one of 7 topics), the loss is cross-entropy over nodes with known labels:</p>
 
   <div class="card" style="border-left:3px solid var(--accent); margin-bottom:12px">
-    <p style="margin:0 0 6px; font-size:0.9rem; font-family:monospace; color:var(--text)">L = Σ<sub>v∈V<sub>train</sub></sub> CrossEntropy( y<sub>v</sub>, softmax(z<sub>v</sub><sup>T</sup> θ) )</p>
+    <p style="margin:0 0 6px; font-size:0.9rem; font-family:var(--mono); color:var(--text)">L = Σ<sub>v∈V<sub>train</sub></sub> CrossEntropy( y<sub>v</sub>, softmax(z<sub>v</sub><sup>T</sup> θ) )</p>
     <p style="margin:0; font-size:0.83rem; color:var(--text-muted)"><strong>y<sub>v</sub></strong>: true label of node v &nbsp;|&nbsp; <strong>z<sub>v</sub></strong>: learned embedding of node v &nbsp;|&nbsp; <strong>θ</strong>: classification head weights &nbsp;|&nbsp; Gradient descent backpropagates through the graph layers.</p>
   </div>
 
@@ -15688,7 +16163,7 @@ print('Coverage: %.2f' % exp.coverage())</pre></div>
 
   <h3>Interpreting ANCHOR Output — Worked Example</h3>
   <div class="card" style="margin-bottom:16px; border-left:3px solid #34d399">
-    <p style="margin:0 0 10px; font-size:0.9rem; font-family:monospace; color:var(--text)">Anchor: radius_error &gt; 0.32 AND worst_concave_points &lt;= 0.06<br>Precision: 0.99 &nbsp;&nbsp; Coverage: 0.09</p>
+    <p style="margin:0 0 10px; font-size:0.9rem; font-family:var(--mono); color:var(--text)">Anchor: radius_error &gt; 0.32 AND worst_concave_points &lt;= 0.06<br>Precision: 0.99 &nbsp;&nbsp; Coverage: 0.09</p>
     <div class="card" style="margin:0; padding:0; overflow:hidden">
       <table style="width:100%; font-size:0.83rem; border-collapse:collapse">
         <tr style="border-bottom:1px solid var(--card-border)">
@@ -16938,19 +17413,19 @@ import matplotlib.pylab as plt</code></pre></div>
         <th style="padding:9px 14px; color:var(--text-muted); text-align:left">What it gives you</th>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
-        <td style="padding:8px 14px; font-family:monospace">Sequential</td>
+        <td style="padding:8px 14px; font-family:var(--mono)">Sequential</td>
         <td style="padding:8px 14px; color:var(--text-muted)">A container that holds layers stacked left-to-right. Data flows through them one by one.</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
-        <td style="padding:8px 14px; font-family:monospace">Dense</td>
+        <td style="padding:8px 14px; font-family:var(--mono)">Dense</td>
         <td style="padding:8px 14px; color:var(--text-muted)">A fully-connected layer. Every neuron in this layer connects to every neuron in the previous layer with its own weight.</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
-        <td style="padding:8px 14px; font-family:monospace">Activation</td>
+        <td style="padding:8px 14px; font-family:var(--mono)">Activation</td>
         <td style="padding:8px 14px; color:var(--text-muted)">Applies an activation function (ReLU or softmax) to the output of a Dense layer.</td>
       </tr>
       <tr>
-        <td style="padding:8px 14px; font-family:monospace">to_categorical</td>
+        <td style="padding:8px 14px; font-family:var(--mono)">to_categorical</td>
         <td style="padding:8px 14px; color:var(--text-muted)">One-hot encodes integer labels. The digit <code>7</code> becomes the vector <code>[0,0,0,0,0,0,0,1,0,0]</code> — needed for cross-entropy loss.</td>
       </tr>
     </table>
@@ -17516,42 +17991,42 @@ print(f"Prediction: {prediction}")</code></pre></div>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
         <td style="padding:7px 14px; font-weight:600">Load</td>
-        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">np.load("mnist.npz")</td>
+        <td style="padding:7px 14px; font-family:var(--mono); font-size:0.78rem; color:var(--text-muted)">np.load("mnist.npz")</td>
         <td style="padding:7px 14px; color:var(--text-muted)">70,000 images + labels</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
         <td style="padding:7px 14px; font-weight:600">Flatten</td>
-        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">reshape(60000, 784)</td>
+        <td style="padding:7px 14px; font-family:var(--mono); font-size:0.78rem; color:var(--text-muted)">reshape(60000, 784)</td>
         <td style="padding:7px 14px; color:var(--text-muted)">Dense layers need 1D input, not 2D grids</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
         <td style="padding:7px 14px; font-weight:600">Normalise</td>
-        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">/= 255</td>
+        <td style="padding:7px 14px; font-family:var(--mono); font-size:0.78rem; color:var(--text-muted)">/= 255</td>
         <td style="padding:7px 14px; color:var(--text-muted)">Stable gradients; faster training</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
         <td style="padding:7px 14px; font-weight:600">One-hot encode</td>
-        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">to_categorical(y, 10)</td>
+        <td style="padding:7px 14px; font-family:var(--mono); font-size:0.78rem; color:var(--text-muted)">to_categorical(y, 10)</td>
         <td style="padding:7px 14px; color:var(--text-muted)">Required for cross-entropy with softmax output</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
         <td style="padding:7px 14px; font-weight:600">Architecture</td>
-        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">Sequential + Dense + Activation</td>
+        <td style="padding:7px 14px; font-family:var(--mono); font-size:0.78rem; color:var(--text-muted)">Sequential + Dense + Activation</td>
         <td style="padding:7px 14px; color:var(--text-muted)">784→500→300→10 with ReLU hidden, softmax output</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
         <td style="padding:7px 14px; font-weight:600">Compile</td>
-        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">model.compile(...)</td>
+        <td style="padding:7px 14px; font-family:var(--mono); font-size:0.78rem; color:var(--text-muted)">model.compile(...)</td>
         <td style="padding:7px 14px; color:var(--text-muted)">Cross-entropy loss + Adam optimiser</td>
       </tr>
       <tr style="border-bottom:1px solid var(--card-border)">
         <td style="padding:7px 14px; font-weight:600">Train</td>
-        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">model.fit(...)</td>
+        <td style="padding:7px 14px; font-family:var(--mono); font-size:0.78rem; color:var(--text-muted)">model.fit(...)</td>
         <td style="padding:7px 14px; color:var(--text-muted)">10 epochs, batch=100 → ~98.3% val accuracy</td>
       </tr>
       <tr>
         <td style="padding:7px 14px; font-weight:600">Predict</td>
-        <td style="padding:7px 14px; font-family:monospace; font-size:0.78rem; color:var(--text-muted)">model.predict().argmax()</td>
+        <td style="padding:7px 14px; font-family:var(--mono); font-size:0.78rem; color:var(--text-muted)">model.predict().argmax()</td>
         <td style="padding:7px 14px; color:var(--text-muted)">10 probabilities → pick the highest → predicted digit</td>
       </tr>
     </table>
@@ -17635,7 +18110,143 @@ print(f"Prediction: {prediction}")</code></pre></div>
 
   <div class="btn-row">
     <button class="btn btn-primary" onclick="startChapterQuiz(['nn1','nn2','nn3','nn4','nn5','nn6','nn7','nn8'])">📝 Start Quiz</button>
+    <button class="btn btn-outline" onclick="nav('nnsheet')">📋 Cheat Sheet</button>
     <button class="btn btn-outline" onclick="nav('flashcards')">🃏 Flashcard Revision</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- NEURAL NETWORKS & DEEP LEARNING — Cheat Sheet                   -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-nnsheet">
+  <h2>📋 Neural Networks & Deep Learning — Cheat Sheet</h2>
+  <p class="subtitle">Everything from L1–L8 in one place. Perceptrons, gradient descent, training, CNNs, RNNs, GNNs.</p>
+
+  <h3>What Each Lesson Covers</h3>
+  <table>
+    <tr><th>Lesson</th><th>Core topic</th><th>Key takeaway</th></tr>
+    <tr><td><strong>L1: Fundamentals</strong></td><td>Perceptron, activations, backprop</td><td>Non-linear activations + hidden layers let a network approximate any function (Universal Approximation).</td></tr>
+    <tr><td><strong>L2: MNIST (Keras)</strong></td><td>Dense network on digits</td><td>Flatten → normalise → Dense → Softmax. One-hot the labels; ~98% on MNIST.</td></tr>
+    <tr><td><strong>L3: Gradient Descent</strong></td><td>The optimiser from scratch</td><td>w ← w − η·∇L. Learning rate and starting point decide success; too big diverges.</td></tr>
+    <tr><td><strong>L4: Classification with GD</strong></td><td>SGD on Iris</td><td>Centre features; adaptive vs constant LR; read the confusion matrix.</td></tr>
+    <tr><td><strong>L5: Training a NN</strong></td><td>Cross-entropy, ReLU, init, regularisation</td><td>Glorot init, L2 / Dropout, momentum, checkpointing, LR tuning.</td></tr>
+    <tr><td><strong>L6: CNNs</strong></td><td>Convolution, pooling, transfer learning</td><td>Weight-sharing filters slash parameters; freeze a pretrained base, train a new head.</td></tr>
+    <tr><td><strong>L7: RNNs</strong></td><td>Sequence memory, LSTM</td><td>Recurrent state carries the past; LSTM gates fix vanishing gradients. Split time series chronologically.</td></tr>
+    <tr><td><strong>L8: GNNs</strong></td><td>Message passing, GCN</td><td>Aggregate neighbour features over a graph using the normalised adjacency.</td></tr>
+  </table>
+
+  <!-- L1 -->
+  <h3>L1: Fundamentals</h3>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>Activation function</strong></td><td>Adds non-linearity — without it, stacked layers collapse into one linear map</td></tr>
+    <tr><td><strong>ReLU vs sigmoid</strong></td><td>ReLU = max(0, x). No saturation for positive inputs → avoids vanishing gradients; sigmoid saturates at both ends</td></tr>
+    <tr><td><strong>Backpropagation</strong></td><td>Computes the gradient of the loss w.r.t. every weight via the chain rule (backward pass)</td></tr>
+    <tr><td><strong>Weight count</strong></td><td>Fully-connected layer = n_in × n_out weights (6→10 = 60 weights, + 10 biases)</td></tr>
+    <tr><td><strong>Vanishing gradient</strong></td><td>Gradients shrink through deep sigmoid/tanh layers → early layers barely learn. ReLU (+ good init) largely solved it</td></tr>
+    <tr><td><strong>Universal Approximation</strong></td><td>A network with one sufficiently wide hidden layer can approximate any continuous function</td></tr>
+  </table>
+
+  <!-- L2 -->
+  <h3>L2: MNIST with Keras</h3>
+  <table>
+    <tr><th>Step</th><th>Why</th></tr>
+    <tr><td><strong>Reshape (28,28) → (784,)</strong></td><td>A Dense layer expects a flat vector, not a 2D grid</td></tr>
+    <tr><td><strong>Divide pixels by 255</strong></td><td>Scales 0–255 → 0–1 so gradient descent converges smoothly</td></tr>
+    <tr><td><strong>Softmax output</strong></td><td>Turns logits into a probability distribution over the 10 classes (sums to 1)</td></tr>
+    <tr><td><strong>to_categorical(y, 10)</strong></td><td>One-hot encodes labels to match the 10-way softmax + categorical cross-entropy</td></tr>
+    <tr><td><strong>batch_size vs epochs</strong></td><td>batch_size = samples per weight update; epochs = full passes over the data</td></tr>
+    <tr><td><strong>Train ≫ val accuracy</strong></td><td>A widening gap (99.6% vs 98.3%) signals mild overfitting</td></tr>
+  </table>
+
+  <!-- L3/L4 -->
+  <h3>L3–L4: Gradient Descent</h3>
+  <div class="card" style="text-align:center; padding:18px; margin-bottom:12px">
+    <div style="font-size:1.15rem; color:var(--accent); font-family:var(--mono)">w ← w − η · ∇L(w)</div>
+    <p style="margin:8px 0 0; font-size:0.82rem">η = learning rate (step size), ∇L = gradient (direction of steepest increase) — we step opposite to it.</p>
+  </div>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>Learning rate η</strong></td><td>Too large → overshoots / diverges (e.g. η = 1.05 on θ²). Too small → painfully slow. Step shrinks naturally near a minimum as the gradient flattens</td></tr>
+    <tr><td><strong>Starting point</strong></td><td>Non-convex losses have multiple minima — different inits converge to different solutions</td></tr>
+    <tr><td><strong>Gradient = 0 at minimum</strong></td><td>No gradient → no update → GD has converged (or stalled at a saddle/local min)</td></tr>
+    <tr><td><strong>Centre features</strong></td><td>Zero-mean inputs make the loss surface rounder → faster, more stable convergence</td></tr>
+    <tr><td><strong>SGDClassifier loss</strong></td><td><code>log_loss</code> = logistic regression, <code>hinge</code> = linear SVM, <code>modified_huber</code> = robust + probabilities</td></tr>
+    <tr><td><strong>constant vs adaptive LR</strong></td><td>Constant keeps η fixed; adaptive lowers η when progress stalls</td></tr>
+  </table>
+
+  <!-- L5 -->
+  <h3>L5: Training a Neural Network</h3>
+  <table>
+    <tr><th>Component</th><th>Detail</th></tr>
+    <tr><td><strong>Cross-entropy loss</strong></td><td>CE = −(1/N) Σ Σ y·log(ŷ) — the standard classification loss</td></tr>
+    <tr><td><strong>Glorot/Xavier init</strong></td><td>limit = √(6 / (n_in + n_out)). Scales down for larger layers to keep signal variance stable across depth</td></tr>
+    <tr><td><strong>Normalise with train stats</strong></td><td>Use the <em>train</em> mean/std on both train and test — separate test stats leak information</td></tr>
+    <tr><td><strong>L2 vs Dropout</strong></td><td>L2 shrinks weights smoothly; Dropout randomly zeroes neurons to force redundancy. Dropout shines in large nets</td></tr>
+    <tr><td><strong>Momentum SGD</strong></td><td>v = β·v − η·∇L; w = w + v — accelerates along consistent directions, damps oscillation</td></tr>
+    <tr><td><strong>Checkpointing</strong></td><td>Save the best-validation weights during long training so a late overfit doesn't lose your best model</td></tr>
+    <tr><td><strong>LR sweet spot</strong></td><td>In a 0.1 / 0.01 / 0.001 sweep, 0.01 often wins — 0.1 overshoots, 0.001 is too slow</td></tr>
+  </table>
+
+  <!-- L6 -->
+  <h3>L6: Convolutional Neural Networks</h3>
+  <div class="card" style="text-align:center; padding:18px; margin-bottom:12px">
+    <div style="font-size:1rem; color:var(--accent); font-family:var(--mono)">Output size = (Input − Filter + 1)  ·  (per dimension, stride 1, no padding)</div>
+  </div>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>Why not Dense on images?</strong></td><td>A 224×224×3 image into 512 Dense neurons = 77M weights in one layer. Convolution shares small filters → far fewer params</td></tr>
+    <tr><td><strong>Convolution</strong></td><td>Slide a small kernel over the image computing weighted sums → feature maps detecting edges, textures</td></tr>
+    <tr><td><strong>Max pooling 2×2</strong></td><td>Takes the max in each 2×2 block → halves spatial size, adds translation tolerance</td></tr>
+    <tr><td><strong>Data augmentation</strong></td><td>Match the task — keep <code>horizontal_flip=False</code> for MNIST (a flipped digit is wrong)</td></tr>
+    <tr><td><strong>Overfit signature</strong></td><td>Train acc ↑ to 99% while val plateaus at 93% and val loss rises → regularise / augment / stop early</td></tr>
+    <tr><td><strong>Transfer learning</strong></td><td>Freeze a pretrained base (VGG16), train a new head; later unfreeze top layers with a <em>small</em> LR to fine-tune</td></tr>
+  </table>
+
+  <!-- L7 -->
+  <h3>L7: Recurrent Neural Networks</h3>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>vs feedforward</strong></td><td>An RNN has a recurrent hidden <em>state</em> carrying information across time steps — feedforward nets have none</td></tr>
+    <tr><td><strong>Vanishing gradients</strong></td><td>Backprop-through-time multiplies many small gradients → long-range signal dies. LSTM gates (forget/input/output) + a cell state preserve it</td></tr>
+    <tr><td><strong>Stacked LSTM</strong></td><td>Inner LSTM layers need <code>return_sequences=True</code> to feed the full sequence to the next layer</td></tr>
+    <tr><td><strong>Chronological split</strong></td><td>Never shuffle a time series before splitting — it leaks the future into training</td></tr>
+    <tr><td><strong>Task setup</strong></td><td>Regression target (e.g. tomorrow's price) → linear output + MSE loss</td></tr>
+    <tr><td><strong>Autoregressive drift</strong></td><td>Feeding predictions back as inputs compounds errors — long generations can spiral off</td></tr>
+  </table>
+
+  <!-- L8 -->
+  <h3>L8: Graph Neural Networks</h3>
+  <div class="card" style="text-align:center; padding:18px; margin-bottom:12px">
+    <div style="font-size:1.05rem; color:var(--accent); font-family:var(--mono)">Â = D<sup>−½</sup> A D<sup>−½</sup></div>
+    <p style="margin:8px 0 0; font-size:0.82rem">Symmetric-normalised adjacency. A GCN layer = aggregate neighbour features via Â, then a linear+activation.</p>
+  </div>
+  <table>
+    <tr><th>Concept</th><th>Detail</th></tr>
+    <tr><td><strong>Why not CNN/Dense?</strong></td><td>Graphs have no fixed grid/order — nodes have varying numbers of neighbours. GNNs handle irregular structure</td></tr>
+    <tr><td><strong>A and D</strong></td><td>A = adjacency (who connects to whom); D = degree (neighbour counts). Â normalises so high-degree nodes don't dominate</td></tr>
+    <tr><td><strong>Message passing</strong></td><td>Each layer = gather + aggregate neighbour features, then update the node embedding</td></tr>
+    <tr><td><strong>Task levels</strong></td><td>Node (classify a paper), Edge (link prediction), Graph (classify a molecule)</td></tr>
+    <tr><td><strong>Depth</strong></td><td>More layers = wider neighbourhood, but too many → <em>over-smoothing</em> (all nodes look alike). 2–3 is typical</td></tr>
+    <tr><td><strong>GCN vs GAT</strong></td><td>GCN weights neighbours by degree; GAT <em>learns</em> attention weights per neighbour</td></tr>
+    <tr><td><strong>Semi-supervised power</strong></td><td>CORA: ~5% labelled nodes → ~81% accuracy, because graph structure propagates label signal</td></tr>
+  </table>
+
+  <h4>Architecture Selector</h4>
+  <table>
+    <tr><th>Data type</th><th>Use</th></tr>
+    <tr><td>Tabular / vectors</td><td>Dense (fully-connected) network</td></tr>
+    <tr><td>Images, grids</td><td>CNN (+ transfer learning)</td></tr>
+    <tr><td>Sequences, time series, text</td><td>RNN / LSTM</td></tr>
+    <tr><td>Graphs, networks, molecules</td><td>GNN / GCN / GAT</td></tr>
+  </table>
+
+  <div class="btn-row">
+    <button class="btn btn-outline" onclick="nav('nn1')">← L1: Fundamentals</button>
+    <button class="btn btn-outline" onclick="nav('nn5')">L5: Training</button>
+    <button class="btn btn-outline" onclick="nav('nn6')">L6: CNNs</button>
+    <button class="btn btn-outline" onclick="nav('nn7')">L7: RNNs</button>
+    <button class="btn btn-outline" onclick="nav('nn8')">L8: GNNs</button>
   </div>
 </div>
 
@@ -17728,12 +18339,12 @@ print(f"Prediction: {prediction}")</code></pre></div>
   <div class="card-grid">
     <div class="card" style="border-top:3px solid #5b8af5">
       <div class="badge badge-blue" style="margin-bottom:8px">Step 1: Weighted Sum</div>
-      <p style="margin:0 0 8px; font-family:monospace; font-size:0.9rem; color:var(--text)">z = w₁x₁ + w₂x₂ + ... + wₙxₙ + b</p>
+      <p style="margin:0 0 8px; font-family:var(--mono); font-size:0.9rem; color:var(--text)">z = w₁x₁ + w₂x₂ + ... + wₙxₙ + b</p>
       <p style="margin:0; font-size:0.84rem; color:var(--text-muted)">z is called the <strong>pre-activation</strong> or <strong>logit</strong>. Each input xᵢ is multiplied by its weight wᵢ and summed. The bias b shifts the result — it lets the neuron "fire" even when all inputs are zero.</p>
     </div>
     <div class="card" style="border-top:3px solid #34d399">
       <div class="badge badge-green" style="margin-bottom:8px">Step 2: Activation Function</div>
-      <p style="margin:0 0 8px; font-family:monospace; font-size:0.9rem; color:var(--text)">a = f(z)</p>
+      <p style="margin:0 0 8px; font-family:var(--mono); font-size:0.9rem; color:var(--text)">a = f(z)</p>
       <p style="margin:0; font-size:0.84rem; color:var(--text-muted)">a is the <strong>activation</strong> — what the neuron outputs to the next layer. Without f, stacking neurons is useless (a chain of linear operations is still linear). f introduces the <strong>non-linearity</strong> that makes neural networks powerful.</p>
     </div>
   </div>
@@ -17774,7 +18385,7 @@ print(f"Prediction: {prediction}")</code></pre></div>
       <label style="font-size:0.82rem; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:4px"><input type="radio" name="nn1act" value="tanh" onchange="nn1NeuronUpdate('act',-1,'tanh')"> Tanh</label>
       <label style="font-size:0.82rem; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:4px"><input type="radio" name="nn1act" value="leakyrelu" onchange="nn1NeuronUpdate('act',-1,'leakyrelu')"> Leaky ReLU</label>
     </div>
-    <div style="margin-top:12px; padding:10px 14px; background:rgba(91,138,245,0.08); border-radius:8px; border-left:3px solid var(--accent); font-family:monospace; font-size:0.85rem">
+    <div style="margin-top:12px; padding:10px 14px; background:rgba(91,138,245,0.08); border-radius:8px; border-left:3px solid var(--accent); font-family:var(--mono); font-size:0.85rem">
       <div id="nn1-formula" style="color:var(--text-muted)"></div>
       <div id="nn1-activation-out" style="color:#34d399; margin-top:4px"></div>
       <div id="nn1-firing" style="margin-top:4px; font-size:0.82rem"></div>
@@ -17882,7 +18493,7 @@ print(f"Prediction: {prediction}")</code></pre></div>
       <span style="color:var(--accent); font-weight:700" id="nn1-act-name">ReLU</span>
       <span id="nn1-act-desc" style="color:var(--text-muted)"></span>
       <span style="color:var(--text-muted)">Formula:</span>
-      <span id="nn1-act-formula" style="font-family:monospace; color:var(--text)"></span>
+      <span id="nn1-act-formula" style="font-family:var(--mono); color:var(--text)"></span>
       <span style="color:var(--text-muted)">Output range:</span>
       <span id="nn1-act-range" style="color:#34d399"></span>
     </div>
@@ -17987,7 +18598,7 @@ print(f"Prediction: {prediction}")</code></pre></div>
   <p>A single neuron is just a glorified linear equation. The real power comes from stacking neurons into <strong>layers</strong> and layers into a <strong>network</strong>:</p>
 
   <div class="card" style="background:var(--card-bg); padding:18px">
-    <pre style="font-family:monospace; font-size:0.83rem; color:var(--text-muted); line-height:2; margin:0">
+    <pre style="font-family:var(--mono); font-size:0.83rem; color:var(--text-muted); line-height:2; margin:0">
     Input        Hidden Layer 1     Hidden Layer 2      Output
     x₁ ─────┐    [●][●][●][●]       [●][●][●]           [ŷ₁]
     x₂ ─────┤──→ [●][●][●][●]  ──→ [●][●][●]  ──────→  [ŷ₂]
@@ -18121,9 +18732,9 @@ A[l] = f(Z[l])                  # Non-linear: apply activation function
   <p>After forward propagation gives a prediction ŷ, the <strong>loss function</strong> measures how wrong it is. Training = minimising this number.</p>
   <table>
     <tr><th>Task</th><th>Loss Function</th><th>Formula</th><th>Why</th></tr>
-    <tr><td>Regression</td><td><strong>MSE</strong></td><td style="font-family:monospace; font-size:0.8rem">(1/n)Σ(y − ŷ)²</td><td>Penalises large errors heavily</td></tr>
-    <tr><td>Binary classification</td><td><strong>Binary Cross-Entropy</strong></td><td style="font-family:monospace; font-size:0.8rem">−[y·log(ŷ)+(1−y)·log(1−ŷ)]</td><td>Perfect for probability outputs</td></tr>
-    <tr><td>Multi-class</td><td><strong>Categorical Cross-Entropy</strong></td><td style="font-family:monospace; font-size:0.8rem">−Σ yᵢ·log(ŷᵢ)</td><td>Works with softmax output</td></tr>
+    <tr><td>Regression</td><td><strong>MSE</strong></td><td style="font-family:var(--mono); font-size:0.8rem">(1/n)Σ(y − ŷ)²</td><td>Penalises large errors heavily</td></tr>
+    <tr><td>Binary classification</td><td><strong>Binary Cross-Entropy</strong></td><td style="font-family:var(--mono); font-size:0.8rem">−[y·log(ŷ)+(1−y)·log(1−ŷ)]</td><td>Perfect for probability outputs</td></tr>
+    <tr><td>Multi-class</td><td><strong>Categorical Cross-Entropy</strong></td><td style="font-family:var(--mono); font-size:0.8rem">−Σ yᵢ·log(ŷᵢ)</td><td>Works with softmax output</td></tr>
   </table>
 
   <div class="alert alert-info">
@@ -18136,7 +18747,7 @@ A[l] = f(Z[l])                  # Non-linear: apply activation function
 
   <div class="card" style="border-left:3px solid var(--accent)">
     <p style="margin:0 0 8px; font-weight:600">The Chain Rule — propagating blame backwards</p>
-    <p style="margin:0 0 6px; font-family:monospace; font-size:0.87rem; color:var(--text)">∂L/∂w = ∂L/∂a · ∂a/∂z · ∂z/∂w</p>
+    <p style="margin:0 0 6px; font-family:var(--mono); font-size:0.87rem; color:var(--text)">∂L/∂w = ∂L/∂a · ∂a/∂z · ∂z/∂w</p>
     <ul style="margin:0; font-size:0.84rem; color:var(--text-muted); padding-left:18px">
       <li><strong>∂L/∂a</strong> — how much the loss changes when the activation changes (from the layer above)</li>
       <li><strong>∂a/∂z</strong> — the derivative of the activation function (ReLU's = 1 or 0; sigmoid's = s(1−s))</li>
@@ -18255,7 +18866,7 @@ for epoch in range(100):
   <p>Deep networks trained with sigmoid/tanh activations hit a critical failure: <strong>gradients shrink exponentially as they travel backwards through many layers</strong>.</p>
   <div class="card" style="background:var(--card-bg); padding:16px">
     <p style="margin:0 0 8px; font-size:0.85rem; color:var(--text-muted)">The sigmoid derivative is at most 0.25. Backpropagating through 10 layers:</p>
-    <p style="margin:0; font-family:monospace; font-size:0.9rem; color:#f87171">0.25¹⁰ = 0.0000001 ≈ 0   →   early layers receive almost zero gradient signal → stop learning</p>
+    <p style="margin:0; font-family:var(--mono); font-size:0.9rem; color:#f87171">0.25¹⁰ = 0.0000001 ≈ 0   →   early layers receive almost zero gradient signal → stop learning</p>
   </div>
 
   <div class="card" style="margin-top:10px; border-left:3px solid #34d399">
